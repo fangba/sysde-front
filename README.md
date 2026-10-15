@@ -37,7 +37,7 @@ src/app/
   shared/      design system (ui/), modèles et utilitaires sans dépendance métier
   layout/      coque de l'application : barre latérale, tiroir mobile
   features/    un dossier par domaine, chargé à la demande
-    dashboard/   vue d'ensemble (data/, state/, page)
+    dashboard/   tableau de bord (data/, state/, page)
     placeholder/ pages des modules à venir
 src/styles/    jetons (couleurs, rayons, ombres), mixins, base
 ```

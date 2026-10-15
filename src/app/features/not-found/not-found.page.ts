@@ -17,7 +17,7 @@ import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.componen
         title="Page introuvable"
         description="L'adresse demandée n'existe pas ou a été déplacée."
       >
-        <a ui-button variant="primary" routerLink="/tableau-de-bord">Retour à la vue d'ensemble</a>
+        <a ui-button variant="primary" routerLink="/tableau-de-bord">Retour au dashboard</a>
       </ui-empty-state>
     </ui-card>
   `,

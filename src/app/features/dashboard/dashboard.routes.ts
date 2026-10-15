@@ -8,7 +8,7 @@ import { DashboardStore } from './state/dashboard.store';
 export const DASHBOARD_ROUTES: Routes = [
   {
     path: '',
-    title: "Vue d'ensemble",
+    title: 'Dashboard',
     providers: [
       DashboardStore,
       DemoDashboardApi,

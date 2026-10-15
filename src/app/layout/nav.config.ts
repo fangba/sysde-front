@@ -8,14 +8,10 @@ export interface NavItem {
 
 /** Sections de l'application, dans l'ordre d'affichage du menu. */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { label: "Vue d'ensemble", path: 'tableau-de-bord', icon: 'home' },
-  { label: 'Opérateurs', path: 'operateurs', icon: 'building' },
-  { label: 'Secteurs et lots', path: 'secteurs', icon: 'map' },
-  { label: 'Contrats', path: 'contrats', icon: 'contract' },
-  { label: 'Planteurs', path: 'planteurs', icon: 'users' },
-  { label: 'Suivi technique', path: 'suivi-technique', icon: 'clipboard' },
-  { label: 'Calendrier', path: 'calendrier', icon: 'calendar' },
-  { label: 'Rapports', path: 'rapports', icon: 'chart' },
+  { label: 'Dashboard', path: 'tableau-de-bord', icon: 'home' },
+  { label: 'Tâches', path: 'taches', icon: 'clipboard' },
+  { label: 'Carte', path: 'carte', icon: 'map' },
+  { label: 'Paramètres', path: 'parametres', icon: 'settings' },
 ];
 
 /** Libellé d'une section à partir de son chemin (titre des pages « bientôt disponibles »). */

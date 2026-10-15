@@ -1,5 +1,5 @@
 <ui-page-header
-  title="Vue d'ensemble"
+  title="Dashboard"
   subtitle="Suivi de la production et de l'encadrement technique des plantations d'hévéa."
 >
   <ui-period-select
@@ -8,9 +8,9 @@
     [value]="store.period()"
     (valueChange)="onPeriodChange($event)"
   />
-  <a ui-button variant="primary" routerLink="/suivi-technique">
+  <a ui-button variant="primary" routerLink="/taches">
     <ui-icon name="plus" />
-    Saisir une visite
+    Voir les tâches
   </a>
 </ui-page-header>
 

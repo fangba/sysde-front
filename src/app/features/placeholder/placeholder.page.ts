@@ -19,7 +19,7 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
         title="Ce module arrive bientôt"
         description="Cette section sera disponible dans une prochaine version, avec les données du back-end."
       >
-        <a ui-button variant="primary" routerLink="/tableau-de-bord">Retour à la vue d'ensemble</a>
+        <a ui-button variant="primary" routerLink="/tableau-de-bord">Retour au dashboard</a>
       </ui-empty-state>
     </ui-card>
   `,
