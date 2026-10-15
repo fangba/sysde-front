@@ -1,0 +1,49 @@
+// Mixins partagés. Import dans un composant : @use 'styles/mixins' as m;
+
+// Points de rupture (largeurs maximales)
+$bp-xl: 1180px;
+$bp-lg: 1080px;
+$bp-md: 960px;
+$bp-sm: 640px;
+
+@mixin max-width($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}
+
+// Surface de carte : fond blanc, bordure discrète, ombre douce
+@mixin card-surface {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+// Anneau de focus visible
+@mixin focus-ring {
+  outline: 2px solid var(--spark-green);
+  outline-offset: 2px;
+}
+
+// Texte réservé aux lecteurs d'écran
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Étiquette de section : petites majuscules espacées
+@mixin eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}

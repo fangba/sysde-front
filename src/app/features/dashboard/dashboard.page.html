@@ -1,0 +1,102 @@
+<ui-page-header
+  title="Vue d'ensemble"
+  subtitle="Suivi de la production et de l'encadrement technique des plantations d'hévéa."
+>
+  <ui-period-select
+    label="Période du graphique"
+    [options]="periods"
+    [value]="store.period()"
+    (valueChange)="onPeriodChange($event)"
+  />
+  <a ui-button variant="primary" routerLink="/suivi-technique">
+    <ui-icon name="plus" />
+    Saisir une visite
+  </a>
+</ui-page-header>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="kpis" aria-busy="true" aria-label="Chargement des indicateurs">
+      @for (i of skeletons; track i) {
+        <ui-card><ui-skeleton height="112px" /></ui-card>
+      }
+    </div>
+    <div class="lower">
+      <ui-card><ui-skeleton height="340px" /></ui-card>
+      <ui-card><ui-skeleton height="340px" /></ui-card>
+    </div>
+  }
+
+  @case ('error') {
+    <ui-card>
+      <ui-empty-state
+        icon="alert"
+        tone="red"
+        title="Impossible de charger le tableau de bord"
+        [description]="store.error()"
+      >
+        <button ui-button variant="primary" type="button" (click)="store.load()">
+          <ui-icon name="refresh" />
+          Réessayer
+        </button>
+      </ui-empty-state>
+    </ui-card>
+  }
+
+  @case ('ready') {
+    <section class="kpis" aria-label="Indicateurs clés">
+      @for (kpi of store.kpis(); track kpi.id) {
+        <ui-kpi-card
+          [label]="kpi.label"
+          [value]="kpi.value"
+          [delta]="kpi.delta"
+          [icon]="kpi.icon"
+          [tone]="kpi.tone"
+          [trend]="kpi.trend"
+          [hint]="kpi.hint"
+        />
+      }
+    </section>
+
+    <div class="lower">
+      <ui-card
+        heading="Production mensuelle"
+        subheading="Caoutchouc sec, en tonnes, face à l'objectif du mois"
+      >
+        <ui-area-chart
+          ariaLabel="Production mensuelle de caoutchouc sec comparée à l'objectif"
+          unit="t"
+          [labels]="store.chartLabels()"
+          [series]="store.chartSeries()"
+        />
+      </ui-card>
+
+      <div class="side">
+        <ui-card
+          heading="Visites du mois"
+          [subheading]="formatPercentRounded(store.visitCompletion()) + ' du programme réalisé'"
+        >
+          <ui-donut
+            ariaLabel="Répartition des visites du mois : réalisées, planifiées et reportées"
+            caption="visites"
+            [slices]="store.visitSlices()"
+          />
+        </ui-card>
+
+        <ui-card heading="Échéances" subheading="Contrats, rapports et programmes à venir">
+          @for (item of store.deadlines(); track item.id) {
+            <ui-deadline-item
+              [title]="item.title"
+              [meta]="item.meta"
+              [date]="item.date"
+              [daysLeft]="item.daysLeft"
+              [icon]="item.icon"
+            />
+          } @empty {
+            <ui-empty-state icon="check" title="Aucune échéance" />
+          }
+        </ui-card>
+      </div>
+    </div>
+  }
+}

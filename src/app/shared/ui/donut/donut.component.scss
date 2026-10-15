@@ -1,0 +1,71 @@
+:host {
+  display: block;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 0;
+}
+
+svg {
+  width: 176px;
+  height: 176px;
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--green-50);
+  stroke-width: 14;
+}
+
+.arc {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.total,
+.caption {
+  transform: rotate(90deg);
+  transform-origin: 70px 70px;
+}
+
+.total {
+  font-size: 22px;
+  font-weight: 700;
+  fill: var(--ink-900);
+}
+
+.caption {
+  font-size: 10.5px;
+  font-weight: 500;
+  fill: var(--ink-500);
+}
+
+.legend {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.name {
+  flex: 1;
+  color: var(--ink-700);
+}

@@ -1,0 +1,15 @@
+@use 'styles/mixins' as m;
+
+:host {
+  display: inline-flex;
+}
+
+.triangle {
+  width: 8px;
+  height: 8px;
+  fill: currentColor;
+}
+
+.sr-only {
+  @include m.sr-only;
+}

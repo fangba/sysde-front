@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>SysDE</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="SysDE : gestion, suivi et supervision de l'encadrement technique de l'hévéa."
+    />
+    <meta name="theme-color" content="#0c7a48" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      // Applique le thème avant le premier rendu pour éviter tout clignotement.
+      (function () {
+        try {
+          var saved = localStorage.getItem('sysde-theme');
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = saved === 'dark' || saved === 'light' ? saved : dark ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <sysde-root></sysde-root>
+    <noscript>SysDE nécessite JavaScript pour fonctionner.</noscript>
+  </body>
+</html>

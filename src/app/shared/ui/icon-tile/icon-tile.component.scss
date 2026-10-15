@@ -1,0 +1,33 @@
+:host {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+}
+
+:host([data-tone='green']) {
+  background: var(--green-100);
+  color: var(--green-ink);
+}
+
+:host([data-tone='violet']) {
+  background: var(--violet-100);
+  color: var(--violet-ink);
+}
+
+:host([data-tone='amber']) {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+:host([data-tone='red']) {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+
+:host([data-tone='neutral']) {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}

@@ -1,0 +1,37 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  --ui-icon-size: 12px;
+}
+
+:host([data-tone='green']) {
+  background: var(--ok-100);
+  color: var(--ok-700);
+}
+
+:host([data-tone='red']) {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+
+:host([data-tone='amber']) {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+:host([data-tone='violet']) {
+  background: var(--violet-100);
+  color: var(--violet-ink);
+}
+
+:host([data-tone='neutral']) {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}

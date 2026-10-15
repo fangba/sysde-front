@@ -1,0 +1,36 @@
+<div class="brand">
+  <span class="logo" aria-hidden="true">S</span>
+  <span>Sys<b>DE</b></span>
+</div>
+
+<div class="org">
+  <span class="avatar" aria-hidden="true">H</span>
+  <span class="org-meta">
+    <strong>Encadrement hévéa</strong>
+    <span>Direction technique</span>
+  </span>
+</div>
+
+<p class="eyebrow" id="nav-title">Menu</p>
+<nav class="nav" aria-labelledby="nav-title">
+  @for (item of items; track item.path) {
+    <a
+      class="nav-item"
+      [routerLink]="['/', item.path]"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      (click)="navigated.emit()"
+    >
+      <ui-icon [name]="item.icon" />
+      {{ item.label }}
+    </a>
+  }
+</nav>
+
+<div class="me">
+  <span class="avatar avatar--round" aria-hidden="true">FA</span>
+  <div>
+    <strong>Franck Angba</strong>
+    <span>Administrateur</span>
+  </div>
+</div>

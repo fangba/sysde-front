@@ -1,0 +1,140 @@
+// Tokens de design SysDE : vert + blanc, Montserrat.
+// Toute couleur, tout rayon et toute ombre des composants vient de ces variables.
+
+:root {
+  // Typographie
+  --font: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  // Surfaces et texte (neutres teintés de vert)
+  --canvas: #f4f7f5;
+  --paper: #ffffff;
+  --ink-900: #0e1a14;
+  --ink-700: #2b3a32;
+  --ink-500: #5b6b62;
+  --ink-300: #8b9b92;
+  --line: #e6ece8;
+
+  // Verts de marque
+  --green-950: #0b2a1c;
+  --green-900: #0f3d28;
+  --green-800: #0f6b47;
+  --green-700: #0c7a48;
+  --green-600: #1fa463;
+  --green-500: #34c38f;
+  --green-300: #9ddfbf;
+  --green-100: #dff3e6;
+  --green-50: #f1faf4;
+  --green-ink: #0c7a48; // texte vert sur fond clair (contraste AA)
+
+  // Action primaire : départ assombri pour tenir 4,5:1 avec du texte blanc
+  --action-from: #138553;
+  --action-to: #0c7a48;
+  --on-action: #ffffff;
+
+  // Marque (logo)
+  --logo-bg: #0f2a1d;
+  --logo-fg: #ffffff;
+
+  // Couleurs de données (graphiques, pastilles de catégorie)
+  --chart-green: #0f6b47;
+  --chart-mint: #34c38f;
+  --chart-violet: #6d4fd1;
+  --spark-green: #1fa463;
+  --violet-100: #ece8fb;
+  --violet-ink: #6d4fd1;
+
+  // États
+  --red-100: #fde8e8;
+  --red-700: #b42318;
+  --amber-100: #fdf1d6;
+  --amber-700: #8a5d06;
+  --ok-100: #dff3e6;
+  --ok-700: #14532d;
+  --neutral-100: #eef2ef;
+  --neutral-700: #3d4c44;
+
+  // Infobulle (inversée par rapport à la surface)
+  --tip-bg: #0e1a14;
+  --tip-fg: #ffffff;
+  --tip-muted: #9fb3a8;
+
+  // Rayons
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  // Ombres
+  --shadow-sm: 0 1px 2px rgba(14, 26, 20, 0.06);
+  --shadow-card: 0 1px 2px rgba(14, 26, 20, 0.04), 0 10px 28px -14px rgba(14, 26, 20, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(14, 26, 20, 0.05), 0 16px 32px -14px rgba(14, 26, 20, 0.18);
+  --shadow-pop: 0 14px 34px -8px rgba(14, 26, 20, 0.28);
+  --shadow-cta: 0 8px 18px -6px rgba(12, 122, 72, 0.5);
+
+  // Mouvement
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration: 180ms;
+
+  // Mise en page
+  --sidebar-width: 248px;
+  --content-max: 1320px;
+
+  color-scheme: light;
+}
+
+@mixin dark-tokens {
+  --canvas: #0a120e;
+  --paper: #111d17;
+  --ink-900: #eaf3ee;
+  --ink-700: #c3d2c9;
+  --ink-500: #8da198;
+  --ink-300: #667a6f;
+  --line: #1f3128;
+
+  --green-50: #15281d;
+  --green-100: #173a28;
+  --green-ink: #5fd9a3;
+
+  --action-from: #1a9a60;
+  --action-to: #0f7f4d;
+  --logo-bg: #1d4630;
+
+  --chart-green: #2fbf80;
+  --chart-mint: #9be6c6;
+  --chart-violet: #a58cf5;
+  --spark-green: #3fcf90;
+  --violet-100: #2a2150;
+  --violet-ink: #a58cf5;
+
+  --red-100: #3a1b1b;
+  --red-700: #ff938a;
+  --amber-100: #3a2e10;
+  --amber-700: #f2c35c;
+  --ok-100: #173a28;
+  --ok-700: #7fe3b4;
+  --neutral-100: #1c2b23;
+  --neutral-700: #b9c8bf;
+
+  --tip-bg: #f1faf4;
+  --tip-fg: #0e1a14;
+  --tip-muted: #4f6258;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 32px -14px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 14px 34px -8px rgba(0, 0, 0, 0.7);
+
+  color-scheme: dark;
+}
+
+// Thème sombre : préférence système tant que l'utilisateur n'a rien choisi,
+// puis attribut `data-theme` posé par le ThemeService.
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-tokens;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include dark-tokens;
+}

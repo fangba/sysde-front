@@ -1,0 +1,35 @@
+<a class="skip-link" href="#contenu">Aller au contenu</a>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">S</span><span>Sys<b>DE</b></span>
+  </div>
+  <div class="topbar__actions">
+    <ui-theme-toggle />
+    <button
+      type="button"
+      class="icon-btn"
+      aria-label="Ouvrir le menu"
+      aria-controls="sidebar"
+      [attr.aria-expanded]="drawerOpen()"
+      (click)="openDrawer()"
+    >
+      <ui-icon name="menu" />
+    </button>
+  </div>
+</header>
+
+<div class="scrim" [class.show]="drawerOpen()" aria-hidden="true" (click)="closeDrawer()"></div>
+
+<aside id="sidebar" class="sidebar" [class.open]="drawerOpen()" aria-label="Navigation principale">
+  <sysde-sidebar (navigated)="closeDrawer()" />
+</aside>
+
+<main id="contenu" class="main" tabindex="-1">
+  <div class="main__inner">
+    <div class="main__tools">
+      <ui-theme-toggle />
+    </div>
+    <router-outlet />
+  </div>
+</main>
