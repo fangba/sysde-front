@@ -2,15 +2,15 @@ import type { Routes } from '@angular/router';
 
 import { NAV_ITEMS } from './layout/nav.config';
 
-const placeholderRoutes: Routes = NAV_ITEMS.filter((item) => item.path !== 'tableau-de-bord').map(
-  (item) => ({
-    path: item.path,
-    title: item.label,
-    data: { title: item.label },
-    loadComponent: () =>
-      import('./features/placeholder/placeholder.page').then((m) => m.PlaceholderPage),
-  }),
-);
+const placeholderRoutes: Routes = NAV_ITEMS.filter(
+  (item) => item.path !== 'tableau-de-bord' && item.path !== 'parametres',
+).map((item) => ({
+  path: item.path,
+  title: item.label,
+  data: { title: item.label },
+  loadComponent: () =>
+    import('./features/placeholder/placeholder.page').then((m) => m.PlaceholderPage),
+}));
 
 export const routes: Routes = [
   {
@@ -22,6 +22,11 @@ export const routes: Routes = [
         path: 'tableau-de-bord',
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
+      },
+      {
+        path: 'parametres',
+        loadChildren: () =>
+          import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
       },
       ...placeholderRoutes,
       {

@@ -27,15 +27,16 @@ import { IconComponent } from '../icon/icon.component';
       place-items: center;
       width: 42px;
       height: 42px;
-      border: 1px solid var(--line);
+      border: 0;
       border-radius: var(--radius-md);
-      background: var(--paper);
-      color: var(--ink-700);
+      background: linear-gradient(135deg, var(--action-from), var(--action-to));
+      color: var(--on-action);
+      box-shadow: var(--shadow-cta);
       cursor: pointer;
-      transition: background var(--duration) var(--ease);
+      transition: filter var(--duration) var(--ease);
     }
     .btn:hover {
-      background: var(--green-50);
+      filter: brightness(1.08);
     }
     .btn:focus-visible {
       outline: 2px solid var(--green-600);

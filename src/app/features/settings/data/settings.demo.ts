@@ -1,0 +1,153 @@
+import type { Attribution, Contract, Exercise, Operator, Sector, User } from './settings.models';
+
+const operator = (id: string, code: string, name: string, type: Operator['type']): Operator => ({
+  id,
+  code,
+  name,
+  type,
+  email: `contact@${code.toLowerCase()}.ci`,
+  phone: '',
+  active: true,
+});
+
+export const DEMO_OPERATORS: readonly Operator[] = [
+  operator(
+    'op-1',
+    'APROMAC',
+    'Association professionnelle des producteurs de caoutchouc naturel',
+    'ORGANISME',
+  ),
+  operator(
+    'op-2',
+    'FIRCA',
+    'Fonds interprofessionnel pour la recherche et le conseil agricoles',
+    'ORGANISME',
+  ),
+  operator('op-3', 'SAPH', 'SAPH', 'TECHNIQUE'),
+  operator('op-4', 'SOGB', 'SOGB', 'TECHNIQUE'),
+  operator('op-5', 'TRCI', 'TRCI', 'TECHNIQUE'),
+  operator('op-6', 'EXAT', 'EXAT', 'TECHNIQUE'),
+  operator('op-7', 'CCP', 'CCP', 'TECHNIQUE'),
+  operator('op-8', 'IDH', 'IDH', 'TECHNIQUE'),
+  operator('op-9', 'CHC', 'CHC', 'TECHNIQUE'),
+];
+
+export const DEMO_SECTORS: readonly Sector[] = [
+  { id: 'sec-1', code: 'S01', name: 'Aboisso' },
+  { id: 'sec-2', code: 'S02', name: 'Adiaké' },
+  { id: 'sec-3', code: 'S03', name: 'Soubré' },
+  { id: 'sec-4', code: 'S04', name: 'Gagnoa' },
+  { id: 'sec-5', code: 'S05', name: 'Grand-Béréby' },
+  { id: 'sec-6', code: 'S06', name: 'Dabou' },
+];
+
+export const DEMO_CONTRACTS: readonly Contract[] = [
+  {
+    id: 'ct-1',
+    reference: 'CT-SAPH-2024',
+    operatorId: 'op-3',
+    startDate: '2024-01-01',
+    endDate: '2026-12-31',
+  },
+  {
+    id: 'ct-2',
+    reference: 'CT-SOGB-2024',
+    operatorId: 'op-4',
+    startDate: '2024-01-01',
+    endDate: '2026-12-31',
+  },
+  {
+    id: 'ct-3',
+    reference: 'CT-TRCI-2025',
+    operatorId: 'op-5',
+    startDate: '2025-01-01',
+    endDate: '2027-12-31',
+  },
+  {
+    id: 'ct-4',
+    reference: 'CT-EXAT-2023',
+    operatorId: 'op-6',
+    startDate: '2023-01-01',
+    endDate: '2025-12-31',
+  },
+  {
+    id: 'ct-5',
+    reference: 'CT-CCP-2026',
+    operatorId: 'op-7',
+    startDate: '2026-01-01',
+    endDate: '2028-12-31',
+  },
+  {
+    id: 'ct-6',
+    reference: 'CT-IDH-2024',
+    operatorId: 'op-8',
+    startDate: '2024-07-01',
+    endDate: '2027-06-30',
+  },
+  {
+    id: 'ct-7',
+    reference: 'CT-CHC-2024',
+    operatorId: 'op-9',
+    startDate: '2024-01-01',
+    endDate: '2026-12-31',
+  },
+];
+
+const lots = (
+  contractId: string,
+  sectorId: string,
+  numbers: readonly number[],
+  n: number,
+): Attribution[] => numbers.map((lot, i) => ({ id: `at-${n + i}`, contractId, sectorId, lot }));
+
+export const DEMO_ATTRIBUTIONS: readonly Attribution[] = [
+  ...lots('ct-1', 'sec-1', [1, 2], 1),
+  ...lots('ct-2', 'sec-1', [3], 3),
+  ...lots('ct-3', 'sec-2', [1, 2, 3], 4),
+  ...lots('ct-4', 'sec-3', [1, 2, 3], 7),
+  ...lots('ct-5', 'sec-3', [1, 2, 3], 10),
+  ...lots('ct-6', 'sec-4', [1, 2], 13),
+  ...lots('ct-7', 'sec-4', [3], 15),
+  ...lots('ct-2', 'sec-5', [1, 2, 3], 16),
+];
+
+export const DEMO_EXERCISES: readonly Exercise[] = [
+  { id: 'ex-1', contractId: 'ct-1', sectorId: 'sec-1', year: 2024, closingDate: '2024-12-31' },
+  { id: 'ex-2', contractId: 'ct-1', sectorId: 'sec-1', year: 2025, closingDate: '2025-12-31' },
+  { id: 'ex-3', contractId: 'ct-1', sectorId: 'sec-1', year: 2026, closingDate: '2026-12-31' },
+  { id: 'ex-4', contractId: 'ct-2', sectorId: 'sec-5', year: 2025, closingDate: '2025-12-31' },
+  { id: 'ex-5', contractId: 'ct-3', sectorId: 'sec-2', year: 2026, closingDate: '2026-12-31' },
+  { id: 'ex-6', contractId: 'ct-5', sectorId: 'sec-3', year: 2026, closingDate: '2026-12-31' },
+];
+
+const user = (
+  n: number,
+  lastName: string,
+  firstName: string,
+  operatorId: string,
+  poste: User['poste'],
+): User => ({
+  id: `us-${n}`,
+  lastName,
+  firstName,
+  email:
+    `${firstName}.${lastName}`
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[^a-z.]/g, '') + '@sysde.ci',
+  phone: '',
+  operatorId,
+  poste,
+  active: true,
+});
+
+export const DEMO_USERS: readonly User[] = [
+  user(1, 'Koné', 'Mariam', 'op-2', 'DI'),
+  user(2, 'Yao', 'Konan', 'op-2', 'SU'),
+  user(3, 'Diabaté', 'Salif', 'op-1', 'SU'),
+  user(4, 'Traoré', 'Ibrahim', 'op-3', 'CD'),
+  user(5, "N'Guessan", 'Paul', 'op-4', 'CD'),
+  user(6, 'Kouassi', 'Anne', 'op-5', 'CD'),
+  user(7, 'Bamba', 'Awa', 'op-7', 'CD'),
+  { ...user(8, 'Ouattara', 'Fatou', 'op-8', 'CD'), active: false },
+];

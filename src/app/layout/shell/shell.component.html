@@ -6,6 +6,7 @@
   </div>
   <div class="topbar__actions">
     <ui-theme-toggle />
+    <sysde-user-menu />
     <button
       type="button"
       class="icon-btn"
@@ -26,10 +27,13 @@
 </aside>
 
 <main id="contenu" class="main" tabindex="-1">
-  <div class="main__inner">
-    <div class="main__tools">
+  <div class="toolbar" role="toolbar" aria-label="Barre d'outils">
+    <div class="toolbar__inner">
       <ui-theme-toggle />
+      <sysde-user-menu />
     </div>
+  </div>
+  <div class="main__inner">
     <router-outlet />
   </div>
 </main>

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 
 import { NAV_ITEMS } from '../nav.config';
@@ -18,4 +19,5 @@ export class SidebarComponent {
   readonly navigated = output<void>();
 
   protected readonly items = NAV_ITEMS;
+  protected readonly currentUser = inject(CurrentUser);
 }

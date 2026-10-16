@@ -1,0 +1,120 @@
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import type { Observable } from 'rxjs';
+import { forkJoin, tap } from 'rxjs';
+
+import { toApiError } from '@core/http/api-error';
+
+import { SettingsApi, type Crud } from '../data/settings.api';
+import type { Sector } from '../data/settings.models';
+
+export type LoadStatus = 'loading' | 'ready' | 'error';
+
+/** Liste d'une ressource, mise à jour au fil des créations et modifications. */
+export class EntityState<T extends { readonly id: string }, I> {
+  private readonly _items = signal<readonly T[]>([]);
+  readonly items = this._items.asReadonly();
+
+  constructor(private readonly crud: Crud<T, I>) {}
+
+  setAll(items: readonly T[]): void {
+    this._items.set(items);
+  }
+
+  /** Crée (`id` nul) ou modifie une ressource et répercute le résultat dans la liste. */
+  save(id: string | null, input: I): Observable<T> {
+    const request = id === null ? this.crud.create(input) : this.crud.update(id, input);
+    return request.pipe(
+      tap((saved) =>
+        this._items.update((list) =>
+          id === null
+            ? [...list, saved]
+            : list.map((item) => (item.id === saved.id ? saved : item)),
+        ),
+      ),
+    );
+  }
+}
+
+/** État de l'écran Paramètres : toutes les listes sont chargées ensemble car elles se référencent. */
+@Injectable()
+export class SettingsStore {
+  private readonly api = inject(SettingsApi);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly operators = new EntityState(this.api.operators);
+  readonly contracts = new EntityState(this.api.contracts);
+  readonly attributions = new EntityState(this.api.attributions);
+  readonly exercises = new EntityState(this.api.exercises);
+  readonly users = new EntityState(this.api.users);
+
+  private readonly _sectors = signal<readonly Sector[]>([]);
+  readonly sectors = this._sectors.asReadonly();
+
+  private readonly _status = signal<LoadStatus>('loading');
+  private readonly _error = signal('');
+  readonly status = this._status.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  private readonly operatorById = computed(
+    () => new Map(this.operators.items().map((o) => [o.id, o])),
+  );
+  private readonly contractById = computed(
+    () => new Map(this.contracts.items().map((c) => [c.id, c])),
+  );
+  private readonly sectorById = computed(() => new Map(this._sectors().map((s) => [s.id, s])));
+
+  operatorOf(id: string) {
+    return this.operatorById().get(id);
+  }
+
+  contractOf(id: string) {
+    return this.contractById().get(id);
+  }
+
+  sectorOf(id: string) {
+    return this.sectorById().get(id);
+  }
+
+  operatorLabel(id: string): string {
+    return this.operatorById().get(id)?.code ?? '—';
+  }
+
+  sectorLabel(id: string): string {
+    const sector = this.sectorById().get(id);
+    return sector ? `${sector.code} · ${sector.name}` : '—';
+  }
+
+  contractLabel(id: string): string {
+    const contract = this.contractById().get(id);
+    return contract ? `${contract.reference} (${this.operatorLabel(contract.operatorId)})` : '—';
+  }
+
+  load(): void {
+    this._status.set('loading');
+    forkJoin({
+      operators: this.api.operators.list(),
+      contracts: this.api.contracts.list(),
+      attributions: this.api.attributions.list(),
+      exercises: this.api.exercises.list(),
+      users: this.api.users.list(),
+      sectors: this.api.sectors(),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.operators.setAll(data.operators);
+          this.contracts.setAll(data.contracts);
+          this.attributions.setAll(data.attributions);
+          this.exercises.setAll(data.exercises);
+          this.users.setAll(data.users);
+          this._sectors.set(data.sectors);
+          this._status.set('ready');
+        },
+        error: (error: unknown) => {
+          this._error.set(toApiError(error).message);
+          this._status.set('error');
+        },
+      });
+  }
+}

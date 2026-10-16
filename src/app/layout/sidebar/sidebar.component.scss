@@ -59,6 +59,12 @@
     font-weight: 500;
     color: var(--ink-500);
   }
+
+  .org-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .avatar {

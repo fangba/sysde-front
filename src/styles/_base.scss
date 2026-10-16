@@ -120,3 +120,149 @@ svg {
     color: var(--green-ink);
   }
 }
+
+// ---- Formulaires et fenêtres modales ----
+
+.ui-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color var(--duration) var(--ease);
+
+  &::placeholder {
+    color: var(--ink-500);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--green-300);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--spark-green);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    background: var(--neutral-100);
+    color: var(--ink-500);
+    cursor: not-allowed;
+  }
+}
+
+.ui-field:has(.error) .ui-input {
+  border-color: var(--red-700);
+}
+
+.ui-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--green-600);
+  }
+}
+
+.ui-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  .span-2 {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ui-form__note {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--green-50);
+  color: var(--ink-700);
+  font-size: 13px;
+}
+
+.ui-dialog-backdrop {
+  background: rgb(8 20 14 / 50%);
+}
+
+.ui-dialog-panel {
+  width: min(640px, calc(100vw - 32px));
+  background: var(--paper);
+  color: var(--ink-900);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-pop);
+  font-family: var(--font);
+}
+
+.ui-form__error {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--red-100);
+  color: var(--red-700);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ui-dialog-shell [dialogActions] {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+// Panneau latéral (tiroir) : s'encastre à droite, pleine hauteur, glisse à l'ouverture.
+.ui-drawer-panel {
+  margin-left: auto;
+  background: var(--paper);
+  color: var(--ink-900);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-pop);
+  font-family: var(--font);
+  animation: ui-drawer-in 260ms var(--ease);
+
+  .cdk-dialog-container,
+  .ui-dialog-shell {
+    height: 100%;
+    max-height: none;
+  }
+
+  .ui-dialog-shell .body {
+    flex: 1;
+    padding-top: 20px;
+  }
+
+  .ui-dialog-shell .foot {
+    padding-bottom: 18px;
+  }
+}
+
+@keyframes ui-drawer-in {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-drawer-panel {
+    animation: none;
+  }
+}

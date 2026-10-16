@@ -1,0 +1,101 @@
+<div class="toolbar">
+  <label class="search">
+    <ui-icon name="search" />
+    <span class="sr-only">Rechercher dans le tableau</span>
+    <input
+      type="search"
+      class="ui-input"
+      [placeholder]="searchPlaceholder()"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </label>
+  <div class="actions"><ng-content select="[tableActions]" /></div>
+</div>
+
+@if (loading()) {
+  <div class="loading" aria-busy="true" aria-label="Chargement des données">
+    @for (i of skeletons; track i) {
+      <ui-skeleton height="44px" />
+    }
+  </div>
+} @else if (rows().length === 0) {
+  <ui-empty-state [title]="emptyTitle()" [description]="emptyDescription()" />
+} @else if (filtered().length === 0) {
+  <ui-empty-state
+    icon="search"
+    title="Aucun résultat"
+    description="Aucun élément ne correspond à votre recherche."
+  />
+} @else {
+  <div class="scroll">
+    <table>
+      <caption class="sr-only">
+        {{
+          caption()
+        }}
+      </caption>
+      <thead>
+        <tr>
+          @for (column of columns(); track column.id) {
+            <th scope="col">{{ column.header }}</th>
+          }
+          <th scope="col" class="end"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visible(); track row.id) {
+          <tr>
+            @for (column of columns(); track column.id) {
+              <td>
+                @if (column.pill) {
+                  @let pill = column.pill(row);
+                  <ui-status-pill [tone]="pill.tone">{{ pill.label }}</ui-status-pill>
+                } @else {
+                  <span class="main">{{ column.text(row) }}</span>
+                  @if (column.sub) {
+                    <span class="sub">{{ column.sub(row) }}</span>
+                  }
+                }
+              </td>
+            }
+            <td class="end">
+              <button
+                type="button"
+                class="edit"
+                [attr.aria-label]="'Modifier ' + rowLabel()(row)"
+                (click)="rowEdit.emit(row)"
+              >
+                <ui-icon name="edit" />
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <span class="range" aria-live="polite">{{ range() }}</span>
+    <div class="pager__buttons">
+      <button
+        type="button"
+        class="page-btn"
+        aria-label="Page précédente"
+        [disabled]="page() === 0"
+        (click)="goTo(page() - 1)"
+      >
+        <ui-icon name="chevronLeft" />
+      </button>
+      <button
+        type="button"
+        class="page-btn"
+        aria-label="Page suivante"
+        [disabled]="page() >= pageCount() - 1"
+        (click)="goTo(page() + 1)"
+      >
+        <ui-icon name="chevronRight" />
+      </button>
+    </div>
+  </div>
+}

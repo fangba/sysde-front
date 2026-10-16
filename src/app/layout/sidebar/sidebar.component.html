@@ -4,10 +4,10 @@
 </div>
 
 <div class="org">
-  <span class="avatar" aria-hidden="true">H</span>
+  <span class="avatar" aria-hidden="true">{{ currentUser.user().operator.code.charAt(0) }}</span>
   <span class="org-meta">
-    <strong>Encadrement hévéa</strong>
-    <span>Direction technique</span>
+    <strong>{{ currentUser.user().operator.code }}</strong>
+    <span class="org-sub">{{ currentUser.sectorLabel() || currentUser.user().operator.name }}</span>
   </span>
 </div>
 
@@ -28,9 +28,9 @@
 </nav>
 
 <div class="me">
-  <span class="avatar avatar--round" aria-hidden="true">FA</span>
+  <span class="avatar avatar--round" aria-hidden="true">{{ currentUser.initials() }}</span>
   <div>
-    <strong>Franck Angba</strong>
-    <span>Administrateur</span>
+    <strong>{{ currentUser.fullName() }}</strong>
+    <span>{{ currentUser.user().role }}</span>
   </div>
 </div>
