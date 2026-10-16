@@ -10,6 +10,8 @@ export interface DashboardScope {
   readonly sector?: string;
   /** Administrateur : opérateur sélectionné dans la liste, absent pour « tous ». */
   readonly filterOperator?: string;
+  /** Chef de département : secteur sélectionné dans la liste, absent pour « tous ». */
+  readonly filterSector?: string;
 }
 
 /** Opérateurs techniques proposés à l'administrateur pour filtrer le dashboard. */
@@ -23,6 +25,7 @@ export const FILTER_OPERATORS: readonly string[] = [
   'CHC',
 ];
 export const ALL_OPERATORS = 'ALL';
+export const ALL_SECTORS = 'ALL';
 
 export interface DashboardProfile {
   readonly id: DashboardProfileId;

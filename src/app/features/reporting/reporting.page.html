@@ -1,4 +1,20 @@
-<ui-page-header [title]="text().title" [subtitle]="text().subtitle">
+<ui-page-header [title]="pageText().title" [subtitle]="pageText().subtitle">
+  @if (filtersByOperator()) {
+    <ui-period-select
+      label="Opérateur"
+      [options]="operatorOptions"
+      [value]="operator()"
+      (valueChange)="operator.set($event)"
+    />
+  }
+  @if (filtersBySector()) {
+    <ui-period-select
+      label="Secteur"
+      [options]="sectorOptions()"
+      [value]="sector()"
+      (valueChange)="sector.set($event)"
+    />
+  }
   <button ui-button variant="secondary" type="button" (click)="exportCsv()">
     <ui-icon name="clipboard" />
     Exporter en CSV

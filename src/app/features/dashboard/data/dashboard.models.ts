@@ -54,4 +54,6 @@ export interface DashboardData {
   /** Visites du mois en cours. */
   readonly visits: VisitBreakdown;
   readonly deadlines: readonly Deadline[];
+  /** Secteurs de l'opérateur, pour le filtre du chef de département. */
+  readonly sectors?: readonly { readonly code: string; readonly name: string }[];
 }

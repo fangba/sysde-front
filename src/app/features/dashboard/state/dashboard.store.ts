@@ -14,6 +14,7 @@ import { monthShortLabel } from '@shared/util/months';
 import { DashboardApi } from '../data/dashboard.api';
 import {
   ALL_OPERATORS,
+  ALL_SECTORS,
   DASHBOARD_PROFILES,
   FILTER_OPERATORS,
   profileFor,
@@ -68,12 +69,21 @@ export class DashboardStore {
   private readonly _data = signal<DashboardData | null>(null);
   private readonly _error = signal('');
   private readonly _operator = signal(ALL_OPERATORS);
+  private readonly _sector = signal(ALL_SECTORS);
+  private readonly _sectors = signal<readonly { code: string; name: string }[]>([]);
   private readonly _period = signal<PeriodId>(DEFAULT_PERIOD);
 
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly period = this._period.asReadonly();
   readonly operator = this._operator.asReadonly();
+  readonly sector = this._sector.asReadonly();
+  readonly sectorOptions = computed(() => [
+    { value: ALL_SECTORS, label: 'Tous les secteurs' },
+    ...this._sectors().map((s) => ({ value: s.code, label: `${s.code} · ${s.name}` })),
+  ]);
+  /** Le chef de département filtre par secteur de son opérateur. */
+  readonly filtersBySector = computed(() => this.profile().id === 'operateur');
   readonly operatorOptions = [
     { value: ALL_OPERATORS, label: 'Tous les opérateurs' },
     ...FILTER_OPERATORS.map((o) => ({ value: o, label: o })),
@@ -100,6 +110,9 @@ export class DashboardStore {
       operator: user.operator.acronym,
       ...(this.filtersByOperator() && this._operator() !== ALL_OPERATORS
         ? { filterOperator: this._operator() }
+        : {}),
+      ...(this.filtersBySector() && this._sector() !== ALL_SECTORS
+        ? { filterSector: this._sector() }
         : {}),
       ...(user.sector ? { sector: user.sector.code } : {}),
     };
@@ -204,6 +217,9 @@ export class DashboardStore {
       .subscribe({
         next: (data) => {
           this._data.set(data);
+          if (data.sectors) {
+            this._sectors.set(data.sectors);
+          }
           this._status.set('ready');
         },
         error: (error: unknown) => {
@@ -211,6 +227,11 @@ export class DashboardStore {
           this._status.set('error');
         },
       });
+  }
+
+  setSector(sector: string): void {
+    this._sector.set(sector);
+    this.load();
   }
 
   setOperator(operator: string): void {

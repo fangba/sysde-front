@@ -6,6 +6,18 @@
   min-height: 100vh;
   // Hauteur de la barre figée en haut (barre d'outils, ou barre mobile) ; les pages s'y calent.
   --app-bar-height: 63px;
+  transition: grid-template-columns 200ms var(--ease);
+}
+
+// Barre latérale réduite (bureau) : la largeur est aussi lue par la carte.
+@media (min-width: 961px) {
+  :host(.collapsed) {
+    --sidebar-width: 76px;
+  }
+
+  .sidebar.collapsed {
+    padding-inline: 18px;
+  }
 }
 
 .skip-link {

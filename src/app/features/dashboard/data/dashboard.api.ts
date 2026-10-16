@@ -26,6 +26,9 @@ export class HttpDashboardApi extends DashboardApi {
     if (scope.filterOperator) {
       params = params.set('filterOperator', scope.filterOperator);
     }
+    if (scope.filterSector) {
+      params = params.set('filterSector', scope.filterSector);
+    }
     return this.http.get<DashboardData>('/dashboard', { params });
   }
 }

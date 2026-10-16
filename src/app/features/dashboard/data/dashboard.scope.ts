@@ -1,3 +1,4 @@
+import { demoSectorsOfOperator } from '../../reporting/data/reporting.demo';
 import type { DashboardData } from './dashboard.models';
 import type { DashboardProfileId, DashboardScope } from './dashboard.profile';
 
@@ -23,7 +24,10 @@ const OPERATOR_SHARE: Readonly<Record<string, number>> = {
 /** Restreint les données nationales au périmètre demandé (équivalent du filtrage côté back). */
 export function scopeDashboard(data: DashboardData, scope: DashboardScope): DashboardData {
   const filter = scope.profile === 'organisme' ? scope.filterOperator : undefined;
-  const k = filter ? (OPERATOR_SHARE[filter] ?? 0) : SHARE[scope.profile];
+  const sectors = scope.profile === 'operateur' ? demoSectorsOfOperator(scope.operator) : undefined;
+  const sector = sectors?.find((s) => s.code === scope.filterSector);
+  const base = filter ? (OPERATOR_SHARE[filter] ?? 0) : SHARE[scope.profile];
+  const k = base * (sector?.share ?? 1);
   const scale = (n: number): number => Math.round(n * k);
   const own = scope.profile === 'operateur' || scope.profile === 'secteur' || !!filter;
   return {
@@ -40,6 +44,7 @@ export function scopeDashboard(data: DashboardData, scope: DashboardScope): Dash
       planned: scale(data.visits.planned),
       postponed: scale(data.visits.postponed),
     },
+    ...(sectors ? { sectors: sectors.map(({ code, name }) => ({ code, name })) } : {}),
     deadlines: data.deadlines.filter((d) => {
       if (!own) {
         return true;
@@ -47,7 +52,8 @@ export function scopeDashboard(data: DashboardData, scope: DashboardScope): Dash
       if (d.operator !== (filter ?? scope.operator)) {
         return false;
       }
-      return scope.profile !== 'secteur' || !d.sector || d.sector === scope.sector;
+      const wanted = scope.profile === 'secteur' ? scope.sector : sector?.code;
+      return !wanted || !d.sector || d.sector === wanted;
     }),
   };
 }

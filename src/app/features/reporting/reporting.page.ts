@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { CurrentUser } from '@core/auth/current-user';
 import { ButtonComponent } from '@shared/ui/button/button.component';
@@ -6,11 +6,17 @@ import { CardComponent } from '@shared/ui/card/card.component';
 import { DataTableComponent, type TableColumn } from '@shared/ui/data-table/data-table.component';
 import { DonutComponent, type DonutSlice } from '@shared/ui/donut/donut.component';
 import { IconComponent } from '@shared/ui/icon/icon.component';
+import { PeriodSelectComponent } from '@shared/ui/period-select/period-select.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
 import { formatInteger, formatPercentRounded } from '@shared/util/format';
 
 import { toCsv, totalsOf } from './data/reporting.calculations';
-import { REPORT_PERIOD, buildReport } from './data/reporting.demo';
+import {
+  DEMO_REPORT_OPERATORS,
+  REPORT_PERIOD,
+  buildReport,
+  demoSectorsOfOperator,
+} from './data/reporting.demo';
 import {
   REPORT_STATUS_LABEL,
   REPORT_STATUS_TONE,
@@ -27,6 +33,9 @@ interface LevelText {
   readonly unit: string;
   readonly planters: string;
 }
+
+const ALL_SECTORS = 'ALL';
+const ALL_OPERATORS = 'ALL';
 
 const TEXT: Readonly<Record<ReportLevel, LevelText>> = {
   organisme: {
@@ -64,6 +73,7 @@ const TEXT: Readonly<Record<ReportLevel, LevelText>> = {
     DonutComponent,
     IconComponent,
     PageHeaderComponent,
+    PeriodSelectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reporting.page.html',
@@ -80,7 +90,28 @@ export class ReportingPage {
         : 'secteur',
   );
 
-  protected readonly text = computed(() => TEXT[this.level()]);
+  /** Titre de la page : dépend du rôle ; le tableau, lui, suit le niveau affiché. */
+  protected readonly pageText = computed(() => TEXT[this.level()]);
+  protected readonly text = computed(() => TEXT[this.report().level]);
+
+  /** Administrateur : filtre par opérateur technique. */
+  protected readonly filtersByOperator = computed(() => this.level() === 'organisme');
+  protected readonly operator = signal(ALL_OPERATORS);
+  protected readonly operatorOptions = [
+    { value: ALL_OPERATORS, label: 'Tous les opérateurs' },
+    ...DEMO_REPORT_OPERATORS.map((o) => ({ value: o, label: o })),
+  ];
+
+  /** Chef de département : filtre par secteur de son opérateur. */
+  protected readonly filtersBySector = computed(() => this.level() === 'operateur');
+  protected readonly sector = signal(ALL_SECTORS);
+  protected readonly sectorOptions = computed(() => [
+    { value: ALL_SECTORS, label: 'Tous les secteurs' },
+    ...demoSectorsOfOperator(this.currentUser.user().operator.acronym).map((s) => ({
+      value: s.code,
+      label: `${s.code} · ${s.name}`,
+    })),
+  ]);
   protected readonly period = REPORT_PERIOD;
 
   private readonly report = computed(() => {
@@ -88,6 +119,12 @@ export class ReportingPage {
     const scope: ReportScope = {
       level: this.level(),
       operator: user.operator.acronym,
+      ...(this.filtersByOperator() && this.operator() !== ALL_OPERATORS
+        ? { filterOperator: this.operator() }
+        : {}),
+      ...(this.filtersBySector() && this.sector() !== ALL_SECTORS
+        ? { filterSector: this.sector() }
+        : {}),
       ...(user.sector ? { sector: user.sector.code } : {}),
     };
     return buildReport(scope);

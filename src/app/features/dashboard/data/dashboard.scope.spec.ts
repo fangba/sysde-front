@@ -46,3 +46,17 @@ describe('profileFor', () => {
     expect(profileFor(f)).toBe('supervision');
   });
 });
+
+describe('filtre par secteur', () => {
+  it('liste les secteurs du chef de département et réduit les volumes', () => {
+    const all = scopeDashboard(DEMO_DASHBOARD, { profile: 'operateur', operator: 'SAPH' });
+    expect(all.sectors).toHaveLength(3);
+    const one = scopeDashboard(DEMO_DASHBOARD, {
+      profile: 'operateur',
+      operator: 'SAPH',
+      filterSector: 'S01',
+    });
+    expect(one.planters.at(-1)).toBeLessThan(all.planters.at(-1) ?? 0);
+    expect(one.deadlines.every((d) => !d.sector || d.sector === 'S01')).toBe(true);
+  });
+});

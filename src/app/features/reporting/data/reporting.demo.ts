@@ -110,7 +110,12 @@ function sectorsOf(index: number): readonly { code: string; name: string }[] {
 }
 
 /** Rapports du périmètre demandé (équivalent de `GET /reporting` côté back). */
-export function buildReport(scope: ReportScope): ReportView {
+export function buildReport(input: ReportScope): ReportView {
+  // Un administrateur qui choisit un opérateur lit le reporting de cet opérateur.
+  const scope: ReportScope =
+    input.level === 'organisme' && input.filterOperator
+      ? { level: 'operateur', operator: input.filterOperator }
+      : input;
   if (scope.level === 'organisme') {
     return {
       level: 'organisme',
@@ -119,7 +124,7 @@ export function buildReport(scope: ReportScope): ReportView {
   }
   const { row, index } = operatorRow(scope.operator);
   const sectors = sectorsOf(index);
-  if (scope.level === 'operateur') {
+  if (scope.level === 'operateur' && !scope.filterSector) {
     return {
       level: 'operateur',
       rows: sectors.map((s, i) =>
@@ -135,9 +140,10 @@ export function buildReport(scope: ReportScope): ReportView {
       ),
     };
   }
+  const wanted = scope.level === 'operateur' ? scope.filterSector : scope.sector;
   const sectorPos = Math.max(
     0,
-    sectors.findIndex((s) => s.code === scope.sector),
+    sectors.findIndex((s) => s.code === wanted),
   );
   const sector = part('s', '', '', row, SECTOR_SPLIT[sectorPos] ?? 0.3, 0, 'transmis');
   return {
@@ -147,3 +153,16 @@ export function buildReport(scope: ReportScope): ReportView {
     ),
   };
 }
+
+/** Secteurs d'un opérateur avec leur part de ses volumes (démo, partagés avec le dashboard). */
+export function demoSectorsOfOperator(
+  acronym: string,
+): readonly { code: string; name: string; share: number }[] {
+  return sectorsOf(operatorRow(acronym).index).map((s, i) => ({
+    ...s,
+    share: SECTOR_SPLIT[i] ?? 0,
+  }));
+}
+
+/** Opérateurs techniques dont l'administrateur peut consulter le reporting. */
+export const DEMO_REPORT_OPERATORS: readonly string[] = OPERATOR_ROWS.map((r) => r.name);

@@ -22,8 +22,18 @@
 
 <div class="scrim" [class.show]="drawerOpen()" aria-hidden="true" (click)="closeDrawer()"></div>
 
-<aside id="sidebar" class="sidebar" [class.open]="drawerOpen()" aria-label="Navigation principale">
-  <sysde-sidebar (navigated)="closeDrawer()" />
+<aside
+  id="sidebar"
+  class="sidebar"
+  [class.open]="drawerOpen()"
+  [class.collapsed]="collapsed()"
+  aria-label="Navigation principale"
+>
+  <sysde-sidebar
+    [collapsed]="collapsed()"
+    (navigated)="closeDrawer()"
+    (toggled)="toggleCollapsed()"
+  />
 </aside>
 
 <main id="contenu" class="main" tabindex="-1">

@@ -30,3 +30,19 @@ describe('reporting', () => {
     expect(toCsv(['a'], [['x"y']])).toBe('"a"\r\n"x""y"');
   });
 });
+
+describe('reporting : filtre par secteur', () => {
+  it('affiche les collaborateurs du secteur choisi par le chef de département', () => {
+    const view = buildReport({ level: 'operateur', operator: 'SAPH', filterSector: 'S02' });
+    expect(view.level).toBe('secteur');
+    expect(view.rows).toHaveLength(4);
+  });
+});
+
+describe('reporting : filtre par opérateur', () => {
+  it("affiche les secteurs de l'opérateur choisi par l'administrateur", () => {
+    const view = buildReport({ level: 'organisme', operator: 'FIRCA', filterOperator: 'SOGB' });
+    expect(view.level).toBe('operateur');
+    expect(view.rows).toHaveLength(3);
+  });
+});

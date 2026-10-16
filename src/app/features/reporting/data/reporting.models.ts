@@ -35,6 +35,10 @@ export interface ReportScope {
   readonly level: ReportLevel;
   readonly operator: string;
   readonly sector?: string;
+  /** Chef de département : secteur choisi dans la liste, absent pour « tous ». */
+  readonly filterSector?: string;
+  /** Administrateur : opérateur choisi dans la liste, absent pour « tous ». */
+  readonly filterOperator?: string;
 }
 
 export interface ReportView {

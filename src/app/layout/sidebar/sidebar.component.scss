@@ -155,9 +155,71 @@
   }
 }
 
-.org-user {
+.org-role {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 4px 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--green-50, rgb(0 0 0 / 5%));
+  color: var(--green-700, var(--ink-700, inherit));
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapse-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 12px;
+  height: 42px;
+  margin-top: auto;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-500);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+
+  &:hover {
+    background: var(--green-50);
+    color: var(--ink-700);
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+
+  @include m.max-width(m.$bp-md) {
+    display: none;
+  }
+}
+
+// Mode réduit : uniquement sur grand écran, le tiroir mobile reste toujours complet.
+@media (min-width: 961px) {
+  :host(.collapsed) {
+    .brand {
+      justify-content: center;
+    }
+
+    .brand-name,
+    .org,
+    .eyebrow,
+    .nav-label {
+      display: none;
+    }
+
+    .nav-item,
+    .collapse-btn {
+      justify-content: center;
+      padding: 0;
+    }
+  }
 }

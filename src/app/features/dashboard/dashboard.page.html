@@ -6,6 +6,13 @@
       [value]="store.operator()"
       (valueChange)="store.setOperator($event)"
     />
+  } @else if (store.filtersBySector()) {
+    <ui-period-select
+      label="Secteur"
+      [options]="store.sectorOptions()"
+      [value]="store.sector()"
+      (valueChange)="store.setSector($event)"
+    />
   } @else {
     <ui-period-select
       label="Période du graphique"

@@ -1,20 +1,14 @@
 <div class="brand">
   <span class="logo" aria-hidden="true">S</span>
-  <span>Sys<b>DE</b></span>
+  <span class="brand-name">Sys<b>DE</b></span>
 </div>
 
-<section class="org" aria-label="Organisation et profil">
+<section class="org" [attr.aria-hidden]="collapsed() || null" aria-label="Organisation et profil">
   <div class="org-head">
     <strong>{{ currentUser.user().operator.acronym }}</strong>
     <span class="org-sub">{{ currentUser.sectorLabel() || currentUser.user().operator.name }}</span>
   </div>
-  <div class="org-user">
-    <span class="avatar avatar--round" aria-hidden="true">{{ currentUser.initials() }}</span>
-    <span class="org-meta">
-      <strong>{{ currentUser.fullName() }}</strong>
-      <span class="org-sub">{{ currentUser.user().role }}</span>
-    </span>
-  </div>
+  <span class="org-role">{{ currentUser.user().role }}</span>
 </section>
 
 <p class="eyebrow" id="nav-title">Menu</p>
@@ -25,10 +19,24 @@
       [routerLink]="['/', item.path]"
       routerLinkActive="is-active"
       ariaCurrentWhenActive="page"
+      [attr.aria-label]="item.label"
+      [attr.title]="collapsed() ? item.label : null"
       (click)="navigated.emit()"
     >
       <ui-icon [name]="item.icon" />
-      {{ item.label }}
+      <span class="nav-label">{{ item.label }}</span>
     </a>
   }
 </nav>
+
+<button
+  type="button"
+  class="collapse-btn"
+  [attr.aria-label]="collapsed() ? 'Agrandir la barre latérale' : 'Réduire la barre latérale'"
+  [attr.aria-expanded]="!collapsed()"
+  [attr.title]="collapsed() ? 'Agrandir la barre latérale' : null"
+  (click)="toggled.emit()"
+>
+  <ui-icon [name]="collapsed() ? 'chevronsRight' : 'chevronsLeft'" />
+  <span class="nav-label">Réduire</span>
+</button>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { CurrentUser } from '@core/auth/current-user';
@@ -11,12 +11,16 @@ import { NAV_ITEMS } from '../nav.config';
   selector: 'sysde-sidebar',
   imports: [RouterLink, RouterLinkActive, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.collapsed]': 'collapsed()' },
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
   /** Émis après un choix de section, pour refermer le tiroir sur mobile. */
   readonly navigated = output<void>();
+  /** Barre réduite à ses icônes (bureau uniquement ; le tiroir mobile reste complet). */
+  readonly collapsed = input(false);
+  readonly toggled = output<void>();
 
   protected readonly currentUser = inject(CurrentUser);
   /** Un administrateur voit toutes les sections ; les autres, celles qui ne lui sont pas réservées. */
