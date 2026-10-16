@@ -1,8 +1,14 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
   // Décalages des barres figées : la barre d'outils du tableau se cale sous les onglets.
   --sticky-top: var(--app-bar-height, 0px);
   --tabs-height: 49px;
+}
+
+// Le <router-outlet> n'est qu'un repère : sans cela il compte comme un élément de la colonne
+// et double l'espace entre les onglets et le contenu.
+router-outlet {
+  display: none;
 }

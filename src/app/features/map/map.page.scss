@@ -1,18 +1,27 @@
 @use 'styles/mixins' as m;
 
-// La carte occupe tout l'espace sous la barre d'outils, à droite de la barre latérale.
+// La carte suit les mêmes marges que les autres pages (--page-pad), sous la barre
+// d'outils, avec la largeur maximale du contenu, dans un cadre arrondi.
 :host {
   position: fixed;
-  top: var(--app-bar-height, 63px);
-  right: 0;
-  bottom: 0;
-  left: var(--sidebar-width);
+  top: calc(var(--app-bar-height, 63px) + 12px);
+  right: var(--page-pad);
+  bottom: var(--page-pad);
+  left: calc(var(--sidebar-width) + var(--page-pad));
   z-index: 1;
   isolation: isolate;
   display: block;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
 
   @include m.max-width(m.$bp-md) {
-    left: 0;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
   }
 }
 

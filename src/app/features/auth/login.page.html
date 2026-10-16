@@ -1,0 +1,111 @@
+<div class="login">
+  <aside class="brand" aria-hidden="false">
+    <svg class="brand__pattern" viewBox="0 0 400 400" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="1">
+        <circle cx="400" cy="400" r="120" />
+        <circle cx="400" cy="400" r="200" />
+        <circle cx="400" cy="400" r="280" />
+        <circle cx="400" cy="400" r="360" />
+      </g>
+    </svg>
+    <div class="brand__top">
+      <span class="logo" aria-hidden="true">S</span>
+      <span class="brand__name">SysDE</span>
+    </div>
+    <div class="brand__body">
+      <p class="eyebrow">Encadrement technique hévéa</p>
+      <h1>Piloter l’hévéaculture, du bureau jusqu’à la parcelle.</h1>
+      <ul>
+        @for (point of points; track point.text) {
+          <li>
+            <span class="tick"><ui-icon [name]="point.icon" /></span>
+            {{ point.text }}
+          </li>
+        }
+      </ul>
+    </div>
+    <p class="brand__foot">Côte d’Ivoire · Plateforme de suivi</p>
+  </aside>
+
+  <main class="panel">
+    <div class="panel__tools"><ui-theme-toggle /></div>
+
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <header>
+        <span class="logo logo--small" aria-hidden="true">S</span>
+        <h2>Connexion</h2>
+        <p>Entrez vos identifiants pour accéder à votre espace.</p>
+      </header>
+
+      @if (error()) {
+        <div class="alert" role="alert">{{ error() }}</div>
+      }
+
+      <ui-field label="Adresse e-mail" [control]="form.controls.email">
+        <span class="input-wrap">
+          <ui-icon name="mail" />
+          <input
+            class="ui-input"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="prenom.nom@organisation.ci"
+            inputmode="email"
+          />
+        </span>
+      </ui-field>
+
+      <ui-field label="Mot de passe" [control]="form.controls.password">
+        <span class="input-wrap">
+          <ui-icon name="lock" />
+          <input
+            class="ui-input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Votre mot de passe"
+          />
+          <button
+            type="button"
+            class="reveal"
+            [attr.aria-label]="
+              showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+            "
+            [attr.aria-pressed]="showPassword()"
+            (click)="showPassword.set(!showPassword())"
+          >
+            <ui-icon [name]="showPassword() ? 'eyeOff' : 'eye'" />
+          </button>
+        </span>
+      </ui-field>
+
+      <div class="row">
+        <label class="ui-check">
+          <input type="checkbox" formControlName="remember" />
+          Rester connecté
+        </label>
+        <span class="help">Mot de passe oublié ? Contactez votre administrateur.</span>
+      </div>
+
+      <button ui-button variant="primary" type="submit" class="submit" [loading]="loading()">
+        Se connecter <ui-icon name="arrowRight" />
+      </button>
+
+      @if (demo) {
+        <section class="demo" aria-label="Comptes de démonstration">
+          <p class="demo__title">Mode démonstration : choisissez un compte</p>
+          <ul class="demo__list">
+            @for (account of accounts; track account.email) {
+              <li>
+                <button type="button" class="demo__item" (click)="useAccount(account)">
+                  <span class="demo__name">{{ account.label }}</span>
+                  <span class="demo__detail">{{ account.detail }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </form>
+  </main>
+</div>

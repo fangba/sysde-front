@@ -21,9 +21,9 @@ export const POSTE_LABEL: Readonly<Record<Poste, string>> = {
 };
 
 /**
- * Postes que l'on peut créer depuis les paramètres, selon le type d'organisation.
- * Les administrateurs créent les chefs de département ; ceux-ci créent ensuite les chefs
- * de secteur, qui créent les techniciens. Directeur et superviseur sont réservés aux organismes.
+ * Postes d'un compte « utilisateur » selon le type d'organisation : directeur et superviseur
+ * pour les organismes (APROMAC, FIRCA). Les opérateurs techniques ont leur propre hiérarchie,
+ * gérée dans les onglets Chef département, Chef secteur et Collaborateur.
  */
 export const POSTES_BY_OPERATOR_TYPE: Readonly<Record<OperatorType, readonly Poste[]>> = {
   ORGANISME: ['DI', 'SU'],
@@ -34,3 +34,6 @@ export const ACTIVE_TONE: Readonly<Record<'true' | 'false', Tone>> = {
   true: 'green',
   false: 'neutral',
 };
+
+/** Postes des collaborateurs d'un opérateur technique, placés sous un chef de secteur. */
+export const COLLABORATOR_POSTES: readonly Poste[] = ['CF', 'CO', 'FO', 'MO', 'ES', 'SE'];

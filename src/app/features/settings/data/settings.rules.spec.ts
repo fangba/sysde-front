@@ -5,6 +5,7 @@ import {
   DEMO_CONTRACTS,
   DEMO_EXERCISES,
   DEMO_OPERATORS,
+  DEMO_SECTORS,
   DEMO_USERS,
 } from './settings.demo';
 import {
@@ -17,6 +18,7 @@ import {
   findLotConflict,
   findOperatorAcronymConflict,
   sectorIdsOfContract,
+  sectorsOfOperator,
 } from './settings.rules';
 
 describe('settings.rules', () => {
@@ -92,5 +94,25 @@ describe('settings.rules', () => {
     const email = DEMO_USERS[0].email.toUpperCase();
     expect(findEmailConflict(email, DEMO_USERS)?.id).toBe(DEMO_USERS[0].id);
     expect(findEmailConflict(email, DEMO_USERS, DEMO_USERS[0].id)).toBeUndefined();
+  });
+
+  it('liste les secteurs attribués à un opérateur', () => {
+    const codes = (operatorId: string) =>
+      sectorsOfOperator(operatorId, DEMO_CONTRACTS, DEMO_ATTRIBUTIONS, DEMO_SECTORS).map(
+        (s) => s.code,
+      );
+    expect(codes('op-4')).toEqual(['S01', 'S05']);
+    expect(codes('op-3')).toEqual(['S01']);
+    expect(codes('op-1')).toEqual([]);
+  });
+
+  it('place chaque compte de démonstration au poste de son type d’organisation', () => {
+    for (const user of DEMO_USERS) {
+      const operator = DEMO_OPERATORS.find((o) => o.id === user.operatorId);
+      expect(operator, user.email).toBeDefined();
+      if (operator?.type === 'ORGANISME') {
+        expect(['DI', 'SU']).toContain(user.poste);
+      }
+    }
   });
 });

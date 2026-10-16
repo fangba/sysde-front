@@ -126,6 +126,7 @@ const user = (
   firstName: string,
   operatorId: string,
   poste: User['poste'],
+  sectorId?: string,
 ): User => ({
   id: `us-${n}`,
   lastName,
@@ -138,6 +139,7 @@ const user = (
   phone: '',
   operatorId,
   poste,
+  ...(sectorId ? { sectorId } : {}),
   active: true,
 });
 
@@ -150,4 +152,19 @@ export const DEMO_USERS: readonly User[] = [
   user(6, 'Kouassi', 'Anne', 'op-5', 'CD'),
   user(7, 'Bamba', 'Awa', 'op-7', 'CD'),
   { ...user(8, 'Ouattara', 'Fatou', 'op-8', 'CD'), active: false },
+  user(9, 'Coulibaly', 'Adama', 'op-1', 'DI'),
+  user(10, 'Soro', 'Adama', 'op-3', 'CS', 'sec-1'),
+  user(11, 'Kouadio', 'Marie', 'op-4', 'CS', 'sec-5'),
+  user(12, 'Dosso', 'Lanciné', 'op-5', 'CS', 'sec-2'),
+  user(13, 'Gnahoré', 'Eric', 'op-7', 'CS', 'sec-3'),
+  user(14, 'Aka', 'Jean', 'op-3', 'FO', 'sec-1'),
+  user(15, 'Yéo', 'Salimata', 'op-3', 'SE'),
+  user(16, 'Tano', 'Koffi', 'op-5', 'MO', 'sec-2'),
+  user(17, 'Zadi', 'Rose', 'op-4', 'CO', 'sec-5'),
+  // Comptes de connexion de démonstration (voir features/auth/data/demo-accounts.ts).
+  { ...user(18, 'Bamba', 'Seydou', 'op-2', 'DI'), email: 'admin.firca@sysde.ci' },
+  { ...user(19, 'Kouamé', 'Yves', 'op-1', 'DI'), email: 'admin.apromac@sysde.ci' },
+  { ...user(20, 'Konaté', 'Mamadou', 'op-3', 'CD'), email: 'chef.departement@sysde.ci' },
+  { ...user(21, 'Brou', 'Clarisse', 'op-3', 'CS', 'sec-1'), email: 'chef.secteur@sysde.ci' },
+  { ...user(22, 'Gbané', 'Jules', 'op-1', 'SU'), email: 'superviseur@sysde.ci' },
 ];

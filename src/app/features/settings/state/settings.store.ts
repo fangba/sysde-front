@@ -68,6 +68,12 @@ export class SettingsStore {
     return this.operatorById().get(id);
   }
 
+  /** Retrouve un opérateur par son acronyme (insensible à la casse), ex. celui de l'utilisateur connecté. */
+  operatorByAcronym(acronym: string) {
+    const wanted = acronym.trim().toUpperCase();
+    return this.operators.items().find((o) => o.acronym.toUpperCase() === wanted);
+  }
+
   contractOf(id: string) {
     return this.contractById().get(id);
   }

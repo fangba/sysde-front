@@ -1,6 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, Injector, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, computed, inject } from '@angular/core';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
 import { DataTableComponent, type TableColumn } from '@shared/ui/data-table/data-table.component';
@@ -16,10 +17,15 @@ import { UserDialog } from './users.dialog';
   imports: [ButtonComponent, CardComponent, DataTableComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ui-card heading="Utilisateur" subheading="Comptes d’accès à la plateforme.">
+    <ui-card
+      heading="Utilisateur"
+      [subheading]="
+        own() ? 'Comptes d’accès de ' + own()!.acronym + '.' : 'Comptes d’accès de votre organisme.'
+      "
+    >
       <ui-data-table
         [columns]="columns"
-        [rows]="store.users.items()"
+        [rows]="users()"
         [loading]="store.status() === 'loading'"
         caption="Liste des comptes utilisateur"
         [rowLabel]="rowLabel"
@@ -28,7 +34,14 @@ import { UserDialog } from './users.dialog';
         emptyDescription="Créez le premier compte utilisateur."
         (rowEdit)="open($event)"
       >
-        <button tableActions ui-button variant="primary" type="button" (click)="open(null)">
+        <button
+          tableActions
+          ui-button
+          variant="primary"
+          type="button"
+          [disabled]="!own()"
+          (click)="open(null)"
+        >
           <ui-icon name="plus" /> Nouveau compte
         </button>
       </ui-data-table>
@@ -38,12 +51,22 @@ import { UserDialog } from './users.dialog';
 export class UsersTab {
   protected readonly store = inject(SettingsStore);
   private readonly dialog = inject(Dialog);
+  private readonly currentUser = inject(CurrentUser);
+
+  /** Organisme de l'utilisateur connecté (APROMAC ou FIRCA) : seul son personnel est géré ici. */
+  protected readonly own = computed(() =>
+    this.store.operatorByAcronym(this.currentUser.user().operator.acronym),
+  );
+  protected readonly users = computed(() => {
+    const own = this.own();
+    return own ? this.store.users.items().filter((u) => u.operatorId === own.id) : [];
+  });
+
   private readonly injector = inject(Injector);
 
   protected readonly rowLabel = (u: User) => `${u.firstName} ${u.lastName}`;
   protected readonly columns: readonly TableColumn<User>[] = [
     { id: 'name', header: 'Nom', text: (u) => `${u.lastName} ${u.firstName}`, sub: (u) => u.email },
-    { id: 'operator', header: 'Organisation', text: (u) => this.store.operatorLabel(u.operatorId) },
     { id: 'poste', header: 'Poste', text: (u) => u.poste, sub: (u) => POSTE_LABEL[u.poste] },
     {
       id: 'active',

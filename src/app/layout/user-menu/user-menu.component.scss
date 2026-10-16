@@ -85,3 +85,31 @@ dd {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+
+.logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-900);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  --ui-icon-size: 18px;
+
+  &:hover {
+    background: var(--red-100);
+    border-color: transparent;
+    color: var(--red-700);
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+}

@@ -9,7 +9,12 @@ import { TabNavComponent, type TabLink } from '@shared/ui/tab-nav/tab-nav.compon
 
 import { SettingsStore } from '../../settings/state/settings.store';
 
-export const TASKS_TABS: readonly TabLink[] = [{ path: 'utilisateurs', label: 'Utilisateur' }];
+export const TASKS_TABS: readonly TabLink[] = [
+  { path: 'utilisateurs', label: 'Utilisateur' },
+  { path: 'chefs-departement', label: 'Chef département' },
+  { path: 'chefs-secteur', label: 'Chef secteur' },
+  { path: 'collaborateurs', label: 'Collaborateur' },
+];
 
 /** Coque de l'écran Tâches : onglets + contenu de l'onglet actif. */
 @Component({
@@ -24,7 +29,10 @@ export const TASKS_TABS: readonly TabLink[] = [{ path: 'utilisateurs', label: 'U
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ui-page-header title="Tâches" subtitle="Comptes utilisateur de la plateforme." />
+    <ui-page-header
+      title="Tâches"
+      subtitle="Comptes de votre organisme et personnel des opérateurs d’encadrement."
+    />
 
     <ui-tab-nav [tabs]="tabs" label="Sections des tâches" />
 
@@ -49,9 +57,15 @@ export const TASKS_TABS: readonly TabLink[] = [{ path: 'utilisateurs', label: 'U
     :host {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 12px;
       --sticky-top: var(--app-bar-height, 0px);
       --tabs-height: 49px;
+    }
+
+    // Le <router-outlet> n'est qu'un repère : sans cela il compte comme un élément de la colonne
+    // et double l'espace entre les onglets et le contenu.
+    router-outlet {
+      display: none;
     }
   `,
 })

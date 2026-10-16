@@ -1,4 +1,6 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
+
+import { AuthService } from './auth.service';
 
 export interface SessionUser {
   readonly firstName: string;
@@ -11,25 +13,22 @@ export interface SessionUser {
   readonly sector?: { readonly code: string; readonly name: string };
 }
 
-/**
- * Utilisateur connecté. Les informations sont fixes tant que l'authentification
- * (Spring Security) n'est pas branchée ; ce service sera alors alimenté par le back.
- */
+const ANONYMOUS: SessionUser = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  role: '',
+  operator: { acronym: '', name: '' },
+};
+
+/** Utilisateur connecté, tel que renvoyé par le back à la connexion. */
 @Injectable({ providedIn: 'root' })
 export class CurrentUser {
-  private readonly _user = signal<SessionUser>({
-    firstName: 'Franck',
-    lastName: 'Angba',
-    email: 'franck.angba@yahoo.fr',
-    role: 'Administrateur',
-    operator: {
-      acronym: 'APROMAC',
-      name: 'Association professionnelle des producteurs de caoutchouc naturel',
-    },
-  });
+  private readonly auth = inject(AuthService);
 
-  readonly user = this._user.asReadonly();
-  readonly fullName = computed(() => `${this.user().firstName} ${this.user().lastName}`);
+  readonly user = computed(() => this.auth.session()?.user ?? ANONYMOUS);
+  readonly fullName = computed(() => `${this.user().firstName} ${this.user().lastName}`.trim());
+
   /** Libellé de rattachement : « Secteur S01 · Aboisso », ou vide sans secteur. */
   readonly sectorLabel = computed(() => {
     const sector = this.user().sector;

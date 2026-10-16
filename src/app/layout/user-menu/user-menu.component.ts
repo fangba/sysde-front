@@ -5,7 +5,9 @@ import {
 } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
+import { AuthService } from '@core/auth/auth.service';
 import { CurrentUser } from '@core/auth/current-user';
+import { IconComponent } from '@shared/ui/icon/icon.component';
 
 const POSITIONS: ConnectedPosition[] = [
   { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
@@ -14,7 +16,7 @@ const POSITIONS: ConnectedPosition[] = [
 /** Bouton rond (initiales) ouvrant une fiche avec les informations de l'utilisateur connecté. */
 @Component({
   selector: 'sysde-user-menu',
-  imports: [CdkConnectedOverlay, CdkOverlayOrigin],
+  imports: [CdkConnectedOverlay, CdkOverlayOrigin, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'user-menu' },
   template: `
@@ -64,6 +66,9 @@ const POSITIONS: ConnectedPosition[] = [
             </div>
           }
         </dl>
+        <button type="button" class="logout" (click)="logout()">
+          <ui-icon name="logout" /> Se déconnecter
+        </button>
       </section>
     </ng-template>
   `,
@@ -71,8 +76,14 @@ const POSITIONS: ConnectedPosition[] = [
 })
 export class UserMenuComponent {
   protected readonly currentUser = inject(CurrentUser);
+  private readonly auth = inject(AuthService);
   protected readonly positions = POSITIONS;
   protected readonly open = signal(false);
+
+  protected logout(): void {
+    this.open.set(false);
+    this.auth.logout();
+  }
 
   protected onKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') {

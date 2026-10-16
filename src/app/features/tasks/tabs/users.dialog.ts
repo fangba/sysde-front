@@ -1,4 +1,3 @@
-import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   NonNullableFormBuilder,
@@ -8,6 +7,7 @@ import {
   type ValidationErrors,
 } from '@angular/forms';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { DialogShellComponent } from '@shared/ui/dialog-shell/dialog-shell.component';
 import { FieldComponent } from '@shared/ui/field/field.component';
@@ -26,7 +26,11 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
   template: `
     <ui-dialog-shell
       [title]="editing ? 'Modifier le compte' : 'Nouveau compte utilisateur'"
-      subtitle="Un utilisateur occupe un seul poste, au sein d’une organisation."
+      [subtitle]="
+        'Un utilisateur occupe un seul poste au sein de ' +
+        (own()?.acronym ?? 'votre organisme') +
+        '.'
+      "
     >
       <form id="user-form" class="ui-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <ui-field label="Nom" [control]="form.controls.lastName">
@@ -41,18 +45,15 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
         <ui-field label="Téléphone" [control]="form.controls.phone">
           <input class="ui-input" type="tel" formControlName="phone" autocomplete="off" />
         </ui-field>
-        <ui-field label="Organisation" [control]="form.controls.operatorId">
+        <ui-field label="Organisme" [control]="form.controls.operatorId">
           <select class="ui-input" formControlName="operatorId">
-            <option value="">Choisir…</option>
-            @for (o of operators(); track o.id) {
-              <option [value]="o.id">{{ o.acronym }}</option>
-            }
+            <option [value]="own()?.id ?? ''">{{ own()?.acronym }}</option>
           </select>
         </ui-field>
         <ui-field
           label="Poste"
           [control]="form.controls.poste"
-          hint="Les autres postes sont créés par le chef de département, puis par le chef de secteur."
+          hint="Les opérateurs techniques se gèrent dans les onglets Chef département, Chef secteur et Collaborateur."
         >
           <select class="ui-input" formControlName="poste">
             <option value="">Choisir…</option>
@@ -82,8 +83,11 @@ export class UserDialog extends EntityDialog<User, UserInput> {
   protected readonly successMessage = this.editing ? 'Compte modifié.' : 'Compte créé.';
   protected readonly label = POSTE_LABEL;
 
-  protected readonly operators = computed(() =>
-    this.store.operators.items().filter((o) => o.active || o.id === this.item?.operatorId),
+  private readonly currentUser = inject(CurrentUser);
+
+  /** L'organisme du compte est toujours celui de l'utilisateur connecté, jamais un autre. */
+  protected readonly own = computed(() =>
+    this.store.operatorByAcronym(this.currentUser.user().operator.acronym),
   );
 
   protected readonly form = this.fb.group({
@@ -94,30 +98,15 @@ export class UserDialog extends EntityDialog<User, UserInput> {
       [Validators.required, Validators.email, (c: AbstractControl) => this.emailTaken(c)],
     ],
     phone: [this.item?.phone ?? '', Validators.pattern(PHONE)],
-    operatorId: [this.item?.operatorId ?? '', Validators.required],
+    operatorId: [{ value: this.item?.operatorId ?? this.own()?.id ?? '', disabled: true }],
     poste: [(this.item?.poste ?? '') as Poste | '', Validators.required],
     active: [this.item?.active ?? true],
   });
 
-  private readonly operatorId = toSignal(this.form.controls.operatorId.valueChanges, {
-    initialValue: this.form.controls.operatorId.value,
-  });
-
   protected readonly postes = computed(() => {
-    const operator = this.store.operatorOf(this.operatorId());
+    const operator = this.own();
     return operator ? allowedPostes(operator.type, this.item?.poste) : [];
   });
-
-  constructor() {
-    super();
-    // Changer d'organisation peut rendre le poste choisi impossible.
-    this.form.controls.operatorId.valueChanges.subscribe(() => {
-      const poste = this.form.controls.poste.value;
-      if (poste && !this.postes().includes(poste)) {
-        this.form.controls.poste.setValue('');
-      }
-    });
-  }
 
   private emailTaken(control: AbstractControl): ValidationErrors | null {
     const value = String(control.value ?? '').trim();

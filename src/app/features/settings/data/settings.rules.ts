@@ -8,6 +8,7 @@ import type {
   Operator,
   OperatorType,
   Poste,
+  Sector,
   User,
 } from './settings.models';
 
@@ -120,4 +121,20 @@ export function findOperatorAcronymConflict(
 ): Operator | undefined {
   const wanted = acronym.trim().toUpperCase();
   return operators.find((o) => o.id !== ignoreId && o.acronym.toUpperCase() === wanted);
+}
+
+/** Secteurs attribués à un opérateur, par l'un quelconque de ses contrats. */
+export function sectorsOfOperator(
+  operatorId: string,
+  contracts: readonly Contract[],
+  attributions: readonly Attribution[],
+  sectors: readonly Sector[],
+): readonly Sector[] {
+  const contractIds = new Set(
+    contracts.filter((c) => c.operatorId === operatorId).map((c) => c.id),
+  );
+  const sectorIds = new Set(
+    attributions.filter((a) => contractIds.has(a.contractId)).map((a) => a.sectorId),
+  );
+  return sectors.filter((s) => sectorIds.has(s.id));
 }

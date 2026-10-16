@@ -61,6 +61,8 @@ export interface User {
   readonly phone: string;
   readonly operatorId: string;
   readonly poste: Poste;
+  /** Secteur d'affectation (chefs de secteur et collaborateurs) ; absent pour les autres postes. */
+  readonly sectorId?: string;
   readonly active: boolean;
 }
 export type UserInput = Omit<User, 'id'>;

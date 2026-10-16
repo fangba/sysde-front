@@ -67,3 +67,6 @@ Menu : Dashboard, Tâches, Carte, Paramètres.
 - `.github/workflows/ci.yml` doit être créé à la main (l'outil précédent ne pouvait pas écrire ce fichier). Il lance format, lint, tests et build avec pnpm.
 - Dépôt GitHub : `fangba/sysde-front`, branche `main`.
 - Avant de livrer une modification : `pnpm verify` doit passer sans avertissement.
+
+- Connexion : page `/connexion` (hors shell), `AuthService` + `authGuard`/`guestGuard` + intercepteur Bearer ; mode démo = e-mail valide + mot de passe ≥ 4 car. ; back réel : `POST /auth/login` → `{token,user}`.
+- Tâches : onglets Utilisateur (personnel de l'organisme connecté uniquement), Chef département, Chef secteur (secteur obligatoire, parmi ceux attribués à l'opérateur), Collaborateur (postes CF/CO/FO/MO/ES/SE, secteur facultatif) ; `User.sectorId` ajouté.

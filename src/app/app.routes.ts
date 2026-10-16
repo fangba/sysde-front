@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 
+import { authGuard, guestGuard } from './core/auth/auth.guard';
 import { NAV_ITEMS } from './layout/nav.config';
 
 const placeholderRoutes: Routes = NAV_ITEMS.filter(
@@ -18,7 +19,14 @@ const placeholderRoutes: Routes = NAV_ITEMS.filter(
 
 export const routes: Routes = [
   {
+    path: 'connexion',
+    title: 'Connexion',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/login.page').then((m) => m.LoginPage),
+  },
+  {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
