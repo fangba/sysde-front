@@ -7,6 +7,10 @@ export interface SessionUser {
   readonly lastName: string;
   readonly email: string;
   readonly role: string;
+  /** Administrateur (APROMAC, FIRCA) : accède à toutes les sections de l'application. */
+  readonly administrator: boolean;
+  /** Code du poste (CD, CS, SU…), absent pour un administrateur sans poste. */
+  readonly poste?: string;
   /** Opérateur (organisation) auquel appartient l'utilisateur. */
   readonly operator: { readonly acronym: string; readonly name: string };
   /** Secteur de rattachement, s'il en a un (absent pour les administrateurs). */
@@ -18,6 +22,7 @@ const ANONYMOUS: SessionUser = {
   lastName: '',
   email: '',
   role: '',
+  administrator: false,
   operator: { acronym: '', name: '' },
 };
 
@@ -27,6 +32,13 @@ export class CurrentUser {
   private readonly auth = inject(AuthService);
 
   readonly user = computed(() => this.auth.session()?.user ?? ANONYMOUS);
+  readonly isAdministrator = computed(() => this.user().administrator);
+  /** Chef de département : gère les chefs de secteur de son opérateur. */
+  /** Chef de secteur : gère les collaborateurs de son secteur. */
+  readonly isSectorHead = computed(() => !this.user().administrator && this.user().poste === 'CS');
+  readonly isDepartmentHead = computed(
+    () => !this.user().administrator && this.user().poste === 'CD',
+  );
   readonly fullName = computed(() => `${this.user().firstName} ${this.user().lastName}`.trim());
 
   /** Libellé de rattachement : « Secteur S01 · Aboisso », ou vide sans secteur. */

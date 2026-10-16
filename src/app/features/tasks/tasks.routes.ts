@@ -1,15 +1,32 @@
 import { inject } from '@angular/core';
-import type { Route, Routes } from '@angular/router';
+import { Router, type CanActivateFn, type Route, type Routes } from '@angular/router';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { APP_CONFIG } from '@core/config/app-config';
 
 import { DemoSettingsApi, HttpSettingsApi, SettingsApi } from '../settings/data/settings.api';
 import { SettingsStore } from '../settings/state/settings.store';
+import { tasksTabsFor } from './tasks.access';
 import type { StaffKind } from './tabs/staff.config';
+
+/** Onglets autorisés pour le profil connecté ; renvoie vers le premier si la route est interdite. */
+const tabGuard: CanActivateFn = (route) => {
+  const user = inject(CurrentUser);
+  const tabs = tasksTabsFor({
+    administrator: user.isAdministrator(),
+    departmentHead: user.isDepartmentHead(),
+    sectorHead: user.isSectorHead(),
+  });
+  const path = route.routeConfig?.path;
+  return tabs.some((tab) => tab.path === path)
+    ? true
+    : inject(Router).createUrlTree(['/taches', tabs[0].path]);
+};
 
 const staffRoute = (path: string, title: string, kind: StaffKind): Route => ({
   path,
   title,
+  canActivate: [tabGuard],
   data: { kind },
   loadComponent: () => import('./tabs/staff.tab').then((m) => m.StaffTab),
 });
@@ -37,6 +54,7 @@ export const TASKS_ROUTES: Routes = [
       {
         path: 'utilisateurs',
         title: 'Utilisateur',
+        canActivate: [tabGuard],
         loadComponent: () => import('./tabs/users.tab').then((m) => m.UsersTab),
       },
       staffRoute('chefs-departement', 'Chef département', 'chef-departement'),

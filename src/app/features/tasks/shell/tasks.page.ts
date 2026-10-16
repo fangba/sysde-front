@@ -1,20 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
-import { TabNavComponent, type TabLink } from '@shared/ui/tab-nav/tab-nav.component';
+import { TabNavComponent } from '@shared/ui/tab-nav/tab-nav.component';
 
 import { SettingsStore } from '../../settings/state/settings.store';
-
-export const TASKS_TABS: readonly TabLink[] = [
-  { path: 'utilisateurs', label: 'Utilisateur' },
-  { path: 'chefs-departement', label: 'Chef département' },
-  { path: 'chefs-secteur', label: 'Chef secteur' },
-  { path: 'collaborateurs', label: 'Collaborateur' },
-];
+import { tasksTabsFor } from '../tasks.access';
 
 /** Coque de l'écran Tâches : onglets + contenu de l'onglet actif. */
 @Component({
@@ -34,7 +29,7 @@ export const TASKS_TABS: readonly TabLink[] = [
       subtitle="Comptes de votre organisme et personnel des opérateurs d’encadrement."
     />
 
-    <ui-tab-nav [tabs]="tabs" label="Sections des tâches" />
+    <ui-tab-nav [tabs]="tabs()" label="Sections des tâches" />
 
     @if (store.status() === 'error') {
       <ui-card>
@@ -71,7 +66,14 @@ export const TASKS_TABS: readonly TabLink[] = [
 })
 export class TasksPage {
   protected readonly store = inject(SettingsStore);
-  protected readonly tabs = TASKS_TABS;
+  private readonly currentUser = inject(CurrentUser);
+  protected readonly tabs = computed(() =>
+    tasksTabsFor({
+      administrator: this.currentUser.isAdministrator(),
+      departmentHead: this.currentUser.isDepartmentHead(),
+      sectorHead: this.currentUser.isSectorHead(),
+    }),
+  );
 
   constructor() {
     this.store.load();

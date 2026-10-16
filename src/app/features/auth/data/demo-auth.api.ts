@@ -7,7 +7,7 @@ import type { SessionUser } from '@core/auth/current-user';
 import { ApiError } from '@core/http/api-error';
 
 import { POSTE_LABEL } from '../../settings/data/settings.constants';
-import { DEMO_ACCOUNTS } from './demo-accounts';
+import { ADMINISTRATOR_ROLE, DEMO_ACCOUNTS } from './demo-accounts';
 import { DEMO_OPERATORS, DEMO_SECTORS, DEMO_USERS } from '../../settings/data/settings.demo';
 
 const MIN_PASSWORD = 4;
@@ -43,13 +43,16 @@ export class DemoAuthApi extends AuthApi {
             lastName: known.lastName,
             email: known.email,
             role: account?.role ?? POSTE_LABEL[known.poste],
+            administrator: account?.role === ADMINISTRATOR_ROLE,
+            poste: known.poste,
             operator: { acronym: operator.acronym, name: operator.name },
             ...(sector ? { sector: { code: sector.code, name: sector.name } } : {}),
           }
         : {
             ...nameFromEmail(email),
             email,
-            role: 'Administrateur',
+            role: ADMINISTRATOR_ROLE,
+            administrator: true,
             operator: DEMO_OPERATORS[0]
               ? { acronym: DEMO_OPERATORS[0].acronym, name: DEMO_OPERATORS[0].name }
               : { acronym: 'SysDE', name: 'SysDE' },

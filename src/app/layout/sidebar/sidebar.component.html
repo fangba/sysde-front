@@ -13,7 +13,7 @@
 
 <p class="eyebrow" id="nav-title">Menu</p>
 <nav class="nav" aria-labelledby="nav-title">
-  @for (item of items; track item.path) {
+  @for (item of items(); track item.path) {
     <a
       class="nav-item"
       [routerLink]="['/', item.path]"

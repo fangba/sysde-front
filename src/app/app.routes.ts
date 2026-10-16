@@ -1,6 +1,6 @@
 import type { Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { adminGuard, authGuard, guestGuard } from './core/auth/auth.guard';
 import { NAV_ITEMS } from './layout/nav.config';
 
 const placeholderRoutes: Routes = NAV_ITEMS.filter(
@@ -46,6 +46,7 @@ export const routes: Routes = [
       },
       {
         path: 'parametres',
+        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
       },

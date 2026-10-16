@@ -4,6 +4,8 @@ export interface NavItem {
   readonly label: string;
   readonly path: string;
   readonly icon: IconName;
+  /** Section réservée aux administrateurs. */
+  readonly adminOnly?: boolean;
 }
 
 /** Sections de l'application, dans l'ordre d'affichage du menu. */
@@ -11,7 +13,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Dashboard', path: 'tableau-de-bord', icon: 'home' },
   { label: 'Tâches', path: 'taches', icon: 'clipboard' },
   { label: 'Carte', path: 'carte', icon: 'map' },
-  { label: 'Paramètres', path: 'parametres', icon: 'settings' },
+  { label: 'Paramètres', path: 'parametres', icon: 'settings', adminOnly: true },
 ];
 
 /** Libellé d'une section à partir de son chemin (titre des pages « bientôt disponibles »). */

@@ -18,6 +18,7 @@ import type { Poste, User, UserInput } from '../../settings/data/settings.models
 import { findEmailConflict, sectorsOfOperator } from '../../settings/data/settings.rules';
 import { EntityDialog, type EntityDialogData } from '../../settings/shell/entity-dialog';
 import { STAFF_CONFIG, type StaffKind } from './staff.config';
+import { createStaffScope } from './staff.scope';
 
 const PHONE = /^[0-9 +().-]{8,20}$/;
 
@@ -110,10 +111,17 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
   protected readonly state = this.store.users;
   protected readonly successMessage = this.editing ? this.config.updated : this.config.created;
 
+  private readonly scope = createStaffScope();
+
   protected readonly operators = computed(() =>
     this.store.operators
       .items()
-      .filter((o) => o.type === 'TECHNIQUE' && (o.active || o.id === this.item?.operatorId)),
+      .filter(
+        (o) =>
+          o.type === 'TECHNIQUE' &&
+          (o.active || o.id === this.item?.operatorId) &&
+          (!this.scope.restricted() || o.id === this.scope.operator()?.id),
+      ),
   );
 
   protected readonly form = this.fb.group({
@@ -124,15 +132,15 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       [Validators.required, Validators.email, (c: AbstractControl) => this.emailTaken(c)],
     ],
     phone: [this.item?.phone ?? '', Validators.pattern(PHONE)],
-    operatorId: [this.item?.operatorId ?? '', Validators.required],
+    operatorId: [this.item?.operatorId ?? this.scope.operator()?.id ?? '', Validators.required],
     poste: [
       (this.item?.poste ?? (this.config.postes.length === 1 ? this.config.postes[0] : '')) as
         Poste | '',
       Validators.required,
     ],
     sectorId: [
-      this.item?.sectorId ?? '',
-      this.config.sector === 'required' ? Validators.required : [],
+      this.item?.sectorId ?? this.scope.sector()?.id ?? '',
+      this.config.sector === 'required' || this.scope.sector() ? Validators.required : [],
     ],
     active: [this.item?.active ?? true],
   });
@@ -149,6 +157,11 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       this.store.attributions.items(),
       this.store.sectors(),
     );
+    // Un chef de secteur n'affecte du personnel qu'à son propre secteur.
+    const own = this.scope.sector();
+    if (own) {
+      return [own];
+    }
     const current = this.item?.sectorId && this.item.operatorId === this.operatorId();
     const kept = current ? this.store.sectorOf(this.item!.sectorId!) : undefined;
     return kept && !list.some((s) => s.id === kept.id) ? [...list, kept] : list;

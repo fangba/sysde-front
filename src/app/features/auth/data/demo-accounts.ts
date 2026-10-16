@@ -12,6 +12,9 @@ export interface DemoAccount {
   readonly role?: string;
 }
 
+/** Intitulé du rôle donnant accès à toutes les sections de l'application. */
+export const ADMINISTRATOR_ROLE = 'Administrateur';
+
 export const DEMO_PASSWORD = 'Sysde2026!';
 
 export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
@@ -20,14 +23,14 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     detail: 'FIRCA',
     email: 'admin.firca@sysde.ci',
     password: DEMO_PASSWORD,
-    role: 'Administrateur',
+    role: ADMINISTRATOR_ROLE,
   },
   {
     label: 'Administrateur APROMAC',
     detail: 'APROMAC',
     email: 'admin.apromac@sysde.ci',
     password: DEMO_PASSWORD,
-    role: 'Administrateur',
+    role: ADMINISTRATOR_ROLE,
   },
   {
     label: 'Chef de département',

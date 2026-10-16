@@ -54,6 +54,7 @@ describe('AuthService (démo)', () => {
       const session = await firstValueFrom(
         TestBed.inject(AuthApi).login({ email: account.email, password: account.password }),
       );
+      expect(session.user.administrator).toBe(account.role === 'Administrateur');
       const [operator, role, sector] = expected[account.email];
       expect([
         session.user.operator.acronym,

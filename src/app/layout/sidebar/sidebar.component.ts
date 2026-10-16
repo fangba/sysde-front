@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { CurrentUser } from '@core/auth/current-user';
@@ -18,6 +18,9 @@ export class SidebarComponent {
   /** Émis après un choix de section, pour refermer le tiroir sur mobile. */
   readonly navigated = output<void>();
 
-  protected readonly items = NAV_ITEMS;
   protected readonly currentUser = inject(CurrentUser);
+  /** Un administrateur voit toutes les sections ; les autres, celles qui ne lui sont pas réservées. */
+  protected readonly items = computed(() =>
+    NAV_ITEMS.filter((item) => !item.adminOnly || this.currentUser.isAdministrator()),
+  );
 }

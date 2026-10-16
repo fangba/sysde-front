@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 
 import { AuthService } from './auth.service';
+import { CurrentUser } from './current-user';
 
 /** Réserve une route aux utilisateurs connectés ; sinon renvoie vers la connexion. */
 export const authGuard: CanActivateFn = (_route, state) => {
@@ -17,6 +18,12 @@ export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   return auth.isAuthenticated() ? router.createUrlTree(['/']) : true;
+};
+
+/** Réserve une route aux administrateurs ; les autres sont renvoyés à l'accueil. */
+export const adminGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CurrentUser).isAdministrator() ? true : router.createUrlTree(['/']);
 };
 
 /** N'accepte que des chemins internes pour la redirection après connexion. */

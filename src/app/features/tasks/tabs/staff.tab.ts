@@ -18,6 +18,7 @@ import type { User } from '../../settings/data/settings.models';
 import { SettingsStore } from '../../settings/state/settings.store';
 import { StaffDialog } from './staff.dialog';
 import { STAFF_CONFIG, type StaffKind } from './staff.config';
+import { createStaffScope } from './staff.scope';
 
 /**
  * Liste du personnel d'un opérateur technique. Un même composant sert les trois onglets
@@ -54,11 +55,22 @@ export class StaffTab {
   private readonly dialog = inject(Dialog);
   private readonly injector = inject(Injector);
 
+  private readonly scope = createStaffScope();
   protected readonly config = computed(() => STAFF_CONFIG[this.kind()]);
 
   protected readonly rows = computed(() => {
     const { postes } = this.config();
-    return this.store.users.items().filter((u) => postes.includes(u.poste));
+    const { restricted, operator, sector, isSectorHead } = this.scope;
+    return this.store.users.items().filter((u) => {
+      if (!postes.includes(u.poste)) {
+        return false;
+      }
+      if (!restricted()) {
+        return true;
+      }
+      // Tant que le périmètre n'est pas connu, rien n'est affiché.
+      return u.operatorId === operator()?.id && (!isSectorHead() || u.sectorId === sector()?.id);
+    });
   });
 
   protected readonly rowLabel = (u: User) => `${u.firstName} ${u.lastName}`;
