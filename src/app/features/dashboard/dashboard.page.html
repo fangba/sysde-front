@@ -1,13 +1,19 @@
-<ui-page-header
-  title="Dashboard"
-  subtitle="Suivi de la production et de l'encadrement technique des plantations d'hévéa."
->
-  <ui-period-select
-    label="Période du graphique"
-    [options]="periods"
-    [value]="store.period()"
-    (valueChange)="onPeriodChange($event)"
-  />
+<ui-page-header [title]="store.profile().title" [subtitle]="store.profile().subtitle">
+  @if (store.filtersByOperator()) {
+    <ui-period-select
+      label="Opérateur"
+      [options]="store.operatorOptions"
+      [value]="store.operator()"
+      (valueChange)="store.setOperator($event)"
+    />
+  } @else {
+    <ui-period-select
+      label="Période du graphique"
+      [options]="periods"
+      [value]="store.period()"
+      (valueChange)="onPeriodChange($event)"
+    />
+  }
   <a ui-button variant="primary" routerLink="/taches">
     <ui-icon name="plus" />
     Voir les tâches
@@ -60,8 +66,8 @@
 
     <div class="lower">
       <ui-card
-        heading="Production mensuelle"
-        subheading="Caoutchouc sec, en tonnes, face à l'objectif du mois"
+        [heading]="store.profile().chartHeading"
+        [subheading]="store.profile().chartSubheading"
       >
         <ui-area-chart
           ariaLabel="Production mensuelle de caoutchouc sec comparée à l'objectif"
@@ -73,7 +79,7 @@
 
       <div class="side">
         <ui-card
-          heading="Visites du mois"
+          [heading]="store.profile().visitsHeading"
           [subheading]="formatPercentRounded(store.visitCompletion()) + ' du programme réalisé'"
         >
           <ui-donut
@@ -83,7 +89,7 @@
           />
         </ui-card>
 
-        <ui-card heading="Échéances" subheading="Contrats, rapports et programmes à venir">
+        <ui-card heading="Échéances" [subheading]="store.profile().deadlinesSubheading">
           @for (item of store.deadlines(); track item.id) {
             <ui-deadline-item
               [title]="item.title"

@@ -40,7 +40,9 @@
           @for (column of columns(); track column.id) {
             <th scope="col">{{ column.header }}</th>
           }
-          <th scope="col" class="end"><span class="sr-only">Actions</span></th>
+          @if (editable()) {
+            <th scope="col" class="end"><span class="sr-only">Actions</span></th>
+          }
         </tr>
       </thead>
       <tbody>
@@ -59,16 +61,18 @@
                 }
               </td>
             }
-            <td class="end">
-              <button
-                type="button"
-                class="edit"
-                [attr.aria-label]="'Modifier ' + rowLabel()(row)"
-                (click)="rowEdit.emit(row)"
-              >
-                <ui-icon name="edit" />
-              </button>
-            </td>
+            @if (editable()) {
+              <td class="end">
+                <button
+                  type="button"
+                  class="edit"
+                  [attr.aria-label]="'Modifier ' + rowLabel()(row)"
+                  (click)="rowEdit.emit(row)"
+                >
+                  <ui-icon name="edit" />
+                </button>
+              </td>
+            }
           </tr>
         }
       </tbody>

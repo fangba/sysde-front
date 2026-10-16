@@ -39,6 +39,10 @@ export class CurrentUser {
   readonly isDepartmentHead = computed(
     () => !this.user().administrator && this.user().poste === 'CD',
   );
+  /** Reporting : administrateur, chef de département et chef de secteur. */
+  readonly canReport = computed(
+    () => this.isAdministrator() || this.isDepartmentHead() || this.isSectorHead(),
+  );
   readonly fullName = computed(() => `${this.user().firstName} ${this.user().lastName}`.trim());
 
   /** Libellé de rattachement : « Secteur S01 · Aboisso », ou vide sans secteur. */

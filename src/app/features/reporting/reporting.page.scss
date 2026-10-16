@@ -1,0 +1,54 @@
+@use 'styles/mixins' as m;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+
+  @include m.max-width(m.$bp-xl) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include m.max-width(m.$bp-sm) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+}
+
+.stat__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-500);
+}
+
+.stat__value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+
+  @include m.max-width(m.$bp-lg) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

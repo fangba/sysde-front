@@ -49,5 +49,20 @@ export const DEMO_DASHBOARD: DashboardData = {
       date: '2026-12-31',
       kind: 'contrat',
     },
+    {
+      id: 'd5',
+      title: 'Programme de visites du secteur S01',
+      operator: 'SAPH',
+      date: '2026-10-22',
+      kind: 'visite',
+      sector: 'S01',
+    },
+    {
+      id: 'd6',
+      title: 'Rapport mensuel du département',
+      operator: 'SAPH',
+      date: '2026-10-28',
+      kind: 'rapport',
+    },
   ],
 };

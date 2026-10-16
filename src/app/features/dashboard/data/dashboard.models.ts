@@ -32,6 +32,8 @@ export interface Deadline {
   /** Date ISO (aaaa-mm-jj). */
   readonly date: string;
   readonly kind: DeadlineKind;
+  /** Code du secteur concerné, le cas échéant. */
+  readonly sector?: string;
 }
 
 export interface VisitBreakdown {

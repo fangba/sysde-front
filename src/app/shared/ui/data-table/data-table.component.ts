@@ -49,6 +49,8 @@ export class DataTableComponent<T extends { readonly id: string }> {
   /** Nom d'une ligne, pour le bouton « Modifier … ». */
   readonly rowLabel = input.required<(row: T) => string>();
   readonly loading = input(false);
+  /** Affiche le bouton « Modifier » de chaque ligne. */
+  readonly editable = input(true);
   readonly searchPlaceholder = input('Rechercher…');
   readonly emptyTitle = input('Aucun élément');
   readonly emptyDescription = input("Rien n'a encore été enregistré.");

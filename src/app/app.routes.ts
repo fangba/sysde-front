@@ -1,6 +1,6 @@
 import type { Routes } from '@angular/router';
 
-import { adminGuard, authGuard, guestGuard } from './core/auth/auth.guard';
+import { adminGuard, authGuard, guestGuard, reportingGuard } from './core/auth/auth.guard';
 import { NAV_ITEMS } from './layout/nav.config';
 
 const placeholderRoutes: Routes = NAV_ITEMS.filter(
@@ -8,7 +8,8 @@ const placeholderRoutes: Routes = NAV_ITEMS.filter(
     item.path !== 'tableau-de-bord' &&
     item.path !== 'parametres' &&
     item.path !== 'taches' &&
-    item.path !== 'carte',
+    item.path !== 'carte' &&
+    item.path !== 'reporting',
 ).map((item) => ({
   path: item.path,
   title: item.label,
@@ -43,6 +44,13 @@ export const routes: Routes = [
       {
         path: 'taches',
         loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES),
+      },
+      {
+        path: 'reporting',
+        title: 'Reporting',
+        canActivate: [reportingGuard],
+        loadComponent: () =>
+          import('./features/reporting/reporting.page').then((m) => m.ReportingPage),
       },
       {
         path: 'parametres',

@@ -1,6 +1,7 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { Clock } from '@core/time/clock';
 import { toApiError } from '@core/http/api-error';
 import type { Tone } from '@shared/models/tone';
@@ -11,6 +12,13 @@ import { formatInteger, formatPercentRounded } from '@shared/util/format';
 import { monthShortLabel } from '@shared/util/months';
 
 import { DashboardApi } from '../data/dashboard.api';
+import {
+  ALL_OPERATORS,
+  DASHBOARD_PROFILES,
+  FILTER_OPERATORS,
+  profileFor,
+  type DashboardScope,
+} from '../data/dashboard.profile';
 import { daysUntil, lastMonths, latest, share, variation } from '../data/dashboard.calculations';
 import {
   DEFAULT_PERIOD,
@@ -53,16 +61,49 @@ const DEADLINE_ICON: Readonly<Record<DeadlineKind, IconName>> = {
 export class DashboardStore {
   private readonly api = inject(DashboardApi);
   private readonly clock = inject(Clock);
+  private readonly currentUser = inject(CurrentUser);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly _status = signal<LoadStatus>('loading');
   private readonly _data = signal<DashboardData | null>(null);
   private readonly _error = signal('');
+  private readonly _operator = signal(ALL_OPERATORS);
   private readonly _period = signal<PeriodId>(DEFAULT_PERIOD);
 
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly period = this._period.asReadonly();
+  readonly operator = this._operator.asReadonly();
+  readonly operatorOptions = [
+    { value: ALL_OPERATORS, label: 'Tous les opérateurs' },
+    ...FILTER_OPERATORS.map((o) => ({ value: o, label: o })),
+  ];
+  /** L'administrateur filtre par opérateur ; les autres profils par période. */
+  readonly filtersByOperator = computed(() => this.profile().id === 'organisme');
+
+  /** Profil du tableau de bord, selon le rôle de l'utilisateur connecté. */
+  readonly profile = computed(
+    () =>
+      DASHBOARD_PROFILES[
+        profileFor({
+          administrator: this.currentUser.isAdministrator(),
+          departmentHead: this.currentUser.isDepartmentHead(),
+          sectorHead: this.currentUser.isSectorHead(),
+        })
+      ],
+  );
+
+  private readonly scope = computed<DashboardScope>(() => {
+    const user = this.currentUser.user();
+    return {
+      profile: this.profile().id,
+      operator: user.operator.acronym,
+      ...(this.filtersByOperator() && this._operator() !== ALL_OPERATORS
+        ? { filterOperator: this._operator() }
+        : {}),
+      ...(user.sector ? { sector: user.sector.code } : {}),
+    };
+  });
 
   readonly kpis = computed<readonly KpiView[]>(() => {
     const data = this._data();
@@ -74,7 +115,7 @@ export class DashboardStore {
     return [
       {
         id: 'production',
-        label: 'Production du mois',
+        label: this.profile().kpi.production,
         value: `${formatInteger(latest(produced))} t`,
         delta: variation(produced),
         icon: 'leaf',
@@ -84,7 +125,7 @@ export class DashboardStore {
       },
       {
         id: 'planters',
-        label: 'Planteurs encadrés',
+        label: this.profile().kpi.planters,
         value: formatInteger(latest(data.planters)),
         delta: variation(data.planters),
         icon: 'users',
@@ -94,7 +135,7 @@ export class DashboardStore {
       },
       {
         id: 'hectares',
-        label: 'Superficie encadrée',
+        label: this.profile().kpi.hectares,
         value: `${formatInteger(latest(data.hectares))} ha`,
         delta: variation(data.hectares),
         icon: 'map',
@@ -104,7 +145,7 @@ export class DashboardStore {
       },
       {
         id: 'visits',
-        label: 'Visites réalisées',
+        label: this.profile().kpi.visits,
         value: formatPercentRounded(latest(data.visitRate)),
         delta: variation(data.visitRate),
         icon: 'clipboard',
@@ -158,7 +199,7 @@ export class DashboardStore {
   load(): void {
     this._status.set('loading');
     this.api
-      .load()
+      .load(this.scope())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -170,6 +211,11 @@ export class DashboardStore {
           this._status.set('error');
         },
       });
+  }
+
+  setOperator(operator: string): void {
+    this._operator.set(operator);
+    this.load();
   }
 
   setPeriod(period: PeriodId): void {

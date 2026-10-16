@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import type { Observable } from 'rxjs';
 import { of, throwError } from 'rxjs';
 
+import { signal } from '@angular/core';
+import { CurrentUser } from '@core/auth/current-user';
 import { Clock } from '@core/time/clock';
 import { ApiError } from '@core/http/api-error';
 
@@ -10,11 +12,32 @@ import { DEMO_DASHBOARD } from '../data/dashboard.demo';
 import type { DashboardData } from '../data/dashboard.models';
 import { DashboardStore } from './dashboard.store';
 
-function setup(result: Observable<DashboardData>): DashboardStore {
+function setup(
+  result: Observable<DashboardData>,
+  role: 'admin' | 'cd' | 'cs' | 'su' = 'admin',
+): DashboardStore {
+  const user = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: '',
+    administrator: role === 'admin',
+    operator: { acronym: 'SAPH', name: 'SAPH' },
+    sector: role === 'cs' ? { code: 'S01', name: 'Aboisso' } : undefined,
+  };
   TestBed.configureTestingModule({
     providers: [
       DashboardStore,
       { provide: DashboardApi, useValue: { load: () => result } },
+      {
+        provide: CurrentUser,
+        useValue: {
+          user: signal(user),
+          isAdministrator: signal(role === 'admin'),
+          isDepartmentHead: signal(role === 'cd'),
+          isSectorHead: signal(role === 'cs'),
+        },
+      },
       { provide: Clock, useValue: { now: () => new Date(2026, 9, 15) } },
     ],
   });
@@ -56,5 +79,12 @@ describe('DashboardStore', () => {
     store.load();
     expect(store.status()).toBe('error');
     expect(store.error()).toContain('injoignable');
+  });
+
+  it('adapte les libellés et le périmètre au profil', () => {
+    const store = setup(of(DEMO_DASHBOARD), 'cs');
+    store.load();
+    expect(store.profile().id).toBe('secteur');
+    expect(store.kpis()[0]?.label).toBe('Production du secteur');
   });
 });

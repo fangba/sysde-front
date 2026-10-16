@@ -26,6 +26,12 @@ export const adminGuard: CanActivateFn = () => {
   return inject(CurrentUser).isAdministrator() ? true : router.createUrlTree(['/']);
 };
 
+/** Réserve le reporting aux administrateurs et aux chefs de département et de secteur. */
+export const reportingGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CurrentUser).canReport() ? true : router.createUrlTree(['/']);
+};
+
 /** N'accepte que des chemins internes pour la redirection après connexion. */
 export function safeReturnUrl(value: unknown): string {
   return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')

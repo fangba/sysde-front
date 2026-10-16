@@ -6,12 +6,15 @@ export interface NavItem {
   readonly icon: IconName;
   /** Section réservée aux administrateurs. */
   readonly adminOnly?: boolean;
+  /** Section réservée aux administrateurs et aux chefs de département et de secteur. */
+  readonly managersOnly?: boolean;
 }
 
 /** Sections de l'application, dans l'ordre d'affichage du menu. */
 export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Dashboard', path: 'tableau-de-bord', icon: 'home' },
   { label: 'Tâches', path: 'taches', icon: 'clipboard' },
+  { label: 'Reporting', path: 'reporting', icon: 'chart', managersOnly: true },
   { label: 'Carte', path: 'carte', icon: 'map' },
   { label: 'Paramètres', path: 'parametres', icon: 'settings', adminOnly: true },
 ];

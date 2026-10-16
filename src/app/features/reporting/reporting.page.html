@@ -1,0 +1,36 @@
+<ui-page-header [title]="text().title" [subtitle]="text().subtitle">
+  <button ui-button variant="secondary" type="button" (click)="exportCsv()">
+    <ui-icon name="clipboard" />
+    Exporter en CSV
+  </button>
+</ui-page-header>
+
+<section class="stats" [attr.aria-label]="'Synthèse de ' + period">
+  @for (stat of stats(); track stat.label) {
+    <div class="stat">
+      <span class="stat__label">{{ stat.label }}</span>
+      <strong class="stat__value">{{ stat.value }}</strong>
+    </div>
+  }
+</section>
+
+<div class="layout">
+  <ui-card [heading]="text().heading" [subheading]="'Rapports de ' + period">
+    <ui-data-table
+      [columns]="columns()"
+      [rows]="rows()"
+      [caption]="text().heading"
+      [rowLabel]="rowLabel"
+      [editable]="false"
+      searchPlaceholder="Rechercher…"
+    />
+  </ui-card>
+
+  <ui-card heading="État des rapports" [subheading]="submitted()">
+    <ui-donut
+      ariaLabel="Répartition des rapports : transmis, en cours et en retard"
+      caption="rapports"
+      [slices]="slices()"
+    />
+  </ui-card>
+</div>
