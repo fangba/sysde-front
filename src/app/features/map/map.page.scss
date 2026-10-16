@@ -138,6 +138,99 @@
 
 // Habillage des contrôles Leaflet aux couleurs de l'application.
 :host ::ng-deep {
+  // Bouton de filtre : contrôle de la carte, au même gabarit que le sélecteur de fond de plan.
+  .leaflet-top.leaflet-left .leaflet-control {
+    margin: 16px 0 0 16px;
+  }
+
+  .filter-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .filter-control__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper);
+    color: var(--ink-900);
+    box-shadow: var(--shadow-card);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    cursor: pointer;
+
+    svg {
+      flex: none;
+    }
+
+    &:hover {
+      background: var(--green-50);
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  .filter-control__badge {
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--green-600);
+    color: var(--on-action);
+    font-size: 11px;
+    font-weight: 700;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .filter-control__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: min(360px, calc(100vw - 80px));
+    padding: 6px 6px 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    box-shadow: var(--shadow-card);
+    color: var(--ink-700);
+    font-size: 12px;
+    font-weight: 600;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .filter-control__clear {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--green-50);
+    color: var(--ink-700);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
   .leaflet-bar {
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
@@ -158,12 +251,45 @@
     }
   }
 
+  // Échelle : pastille translucide, texte au-dessus d'un crochet vert qui matérialise la distance.
+  .leaflet-control-scale {
+    margin: 0 0 16px 16px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(8px);
+  }
+
   .leaflet-control-scale-line {
-    background: color-mix(in srgb, var(--paper) 85%, transparent);
+    position: relative;
+    min-width: 40px;
+    margin: 0;
+    padding: 0 0 9px;
+    border: 0;
+    background: none;
     color: var(--ink-700);
-    border-color: var(--ink-500);
     font-family: var(--font);
     font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 6px;
+      border: 2px solid var(--green-600);
+      border-top: 0;
+      border-radius: 0 0 3px 3px;
+    }
+  }
+
+  .leaflet-bottom.leaflet-right .leaflet-control {
+    margin-right: 16px;
+    margin-bottom: 16px;
   }
 
   .leaflet-control-attribution {

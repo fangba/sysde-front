@@ -39,7 +39,7 @@ export const routes: Routes = [
       {
         path: 'carte',
         title: 'Carte',
-        loadComponent: () => import('./features/map/map.page').then((m) => m.MapPage),
+        loadChildren: () => import('./features/map/map.routes').then((m) => m.MAP_ROUTES),
       },
       {
         path: 'taches',

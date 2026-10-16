@@ -1,18 +1,30 @@
+import { Dialog } from '@angular/cdk/dialog';
 import type { ElementRef } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  Injector,
   afterNextRender,
+  computed,
+  effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 
+import type { MapPlantation } from './data/map.models';
+import { MapFilterDrawer } from './map-filter.drawer';
+import { MapStore } from './state/map.store';
 import { BASEMAPS, DEFAULT_BASEMAP_ID, INITIAL_VIEW, type Basemap } from './map.basemaps';
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
 
 const STORAGE_KEY = 'sysde-basemap';
 
@@ -74,15 +86,39 @@ function readStoredBasemap(): string {
 export class MapPage {
   private readonly canvas = viewChild.required<ElementRef<HTMLDivElement>>('canvas');
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(Dialog);
+  private readonly injector = inject(Injector);
+  protected readonly store = inject(MapStore);
+  private readonly currentUser = inject(CurrentUser);
+  /** Filtre de plantations : administrateur, chef de département et chef de secteur. */
+  protected readonly canFilter = computed(
+    () =>
+      this.currentUser.isAdministrator() ||
+      this.currentUser.isDepartmentHead() ||
+      this.currentUser.isSectorHead(),
+  );
 
   protected readonly basemaps = BASEMAPS;
   protected readonly current = signal(readStoredBasemap());
   protected readonly open = signal(false);
 
   private map?: L.Map;
+  private readonly ready = signal(false);
+  private layer?: L.FeatureGroup;
   private tiles: L.TileLayer[] = [];
 
   constructor() {
+    this.store.loadCatalog();
+
+    // Les plantations filtrées sont redessinés dès que la liste change.
+    effect(() => {
+      const plantations = this.store.plantations();
+      if (!this.ready()) {
+        return;
+      }
+      this.drawPlantations(plantations);
+    });
+
     // Leaflet manipule le DOM : on l'initialise côté navigateur, une fois la vue rendue.
     afterNextRender(() => {
       const map = L.map(this.canvas().nativeElement, {
@@ -96,8 +132,12 @@ export class MapPage {
         .addTo(map);
       L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
       map.attributionControl.setPrefix(false);
+      if (this.canFilter()) {
+        this.addFilterControl(map);
+      }
       this.map = map;
       this.applyBasemap(this.current());
+      this.ready.set(true);
 
       // La zone change de taille avec le tiroir, la fenêtre, etc.
       const observer = new ResizeObserver(() => map.invalidateSize());
@@ -107,6 +147,94 @@ export class MapPage {
         map.remove();
       });
     });
+  }
+
+  protected openFilter(): void {
+    this.dialog.open(MapFilterDrawer, {
+      injector: this.injector,
+      panelClass: 'ui-drawer-panel',
+      width: 'min(440px, 100vw)',
+      height: '100%',
+      maxHeight: '100vh',
+      backdropClass: 'ui-dialog-backdrop',
+    });
+  }
+
+  /** Bouton de filtre intégré à la carte, dans la pile de contrôles (en haut à gauche). */
+  private addFilterControl(map: L.Map): void {
+    const Control = L.Control.extend({
+      onAdd: () => {
+        const root = L.DomUtil.create('div', 'filter-control');
+        L.DomEvent.disableClickPropagation(root);
+        L.DomEvent.disableScrollPropagation(root);
+
+        const button = L.DomUtil.create('button', 'filter-control__button', root);
+        button.type = 'button';
+        button.setAttribute('aria-haspopup', 'dialog');
+        button.innerHTML =
+          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z"/></svg>';
+        const label = L.DomUtil.create('span', '', button);
+        label.textContent = 'Filtrer';
+        const badge = L.DomUtil.create('span', 'filter-control__badge', button);
+        badge.hidden = true;
+        L.DomEvent.on(button, 'click', () => this.openFilter());
+
+        const chip = L.DomUtil.create('div', 'filter-control__chip', root);
+        chip.setAttribute('role', 'status');
+        chip.hidden = true;
+        const text = L.DomUtil.create('span', '', chip);
+        const clear = L.DomUtil.create('button', 'filter-control__clear', chip);
+        clear.type = 'button';
+        clear.setAttribute('aria-label', 'Retirer le filtre');
+        clear.textContent = '×';
+        L.DomEvent.on(clear, 'click', () => this.store.reset());
+
+        // Les libellés suivent l'état du filtre.
+        effect(
+          () => {
+            const count = this.store.activeCount();
+            badge.hidden = count === 0;
+            badge.textContent = String(count);
+            chip.hidden = !this.store.filter();
+            text.textContent = this.store.loading()
+              ? `${this.store.summary()} · chargement…`
+              : `${this.store.summary()} · ${this.store.plantations().length} plantations`;
+          },
+          { injector: this.injector },
+        );
+        return root;
+      },
+    });
+    new Control({ position: 'topleft' }).addTo(map);
+  }
+
+  private drawPlantations(plantations: readonly MapPlantation[]): void {
+    const map = this.map;
+    if (!map) {
+      return;
+    }
+    this.layer?.remove();
+    if (plantations.length === 0) {
+      this.layer = undefined;
+      return;
+    }
+    const group = L.featureGroup(
+      plantations.map((p) =>
+        L.polygon(
+          p.polygon.map(([lat, lng]) => [lat, lng] as L.LatLngTuple),
+          {
+            color: '#0f6b46',
+            weight: 2,
+            fillColor: '#2fbf84',
+            fillOpacity: 0.45,
+          },
+        ).bindPopup(
+          `<strong>${escapeHtml(p.name)}</strong><br>${escapeHtml(p.owner)}<br>Lot ${p.lot} · Section ${p.section} · ${Math.round(p.hectares)} ha`,
+        ),
+      ),
+    ).addTo(map);
+    this.layer = group;
+    map.fitBounds(group.getBounds(), { padding: [60, 60], maxZoom: 13 });
   }
 
   protected select(basemap: Basemap): void {
