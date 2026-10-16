@@ -1,0 +1,113 @@
+@use 'styles/mixins' as m;
+
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  padding-top: 16px;
+}
+
+.left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+.size {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .ui-input {
+    width: auto;
+    min-height: 36px;
+    padding: 0 28px 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-900);
+  }
+}
+
+.range {
+  margin: 0;
+
+  strong {
+    color: var(--ink-900);
+    font-weight: 600;
+  }
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.btn {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-700);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  --ui-icon-size: 16px;
+  transition:
+    background var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+
+  &:hover:not(:disabled):not(.is-current) {
+    background: var(--green-50);
+    color: var(--green-ink);
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &.is-current {
+    background: linear-gradient(135deg, var(--action-from), var(--action-to));
+    color: var(--on-action);
+    box-shadow: var(--shadow-cta);
+    cursor: default;
+  }
+}
+
+.gap {
+  min-width: 22px;
+  text-align: center;
+  color: var(--ink-500);
+  user-select: none;
+}
+
+@include m.max-width(m.$bp-sm) {
+  :host {
+    justify-content: center;
+  }
+
+  // Sur mobile on garde les flèches et la page courante.
+  .btn.num:not(.is-current),
+  .gap {
+    display: none;
+  }
+}

@@ -3,7 +3,7 @@ export type OperatorType = 'ORGANISME' | 'TECHNIQUE';
 
 export interface Operator {
   readonly id: string;
-  readonly code: string;
+  readonly acronym: string;
   readonly name: string;
   readonly type: OperatorType;
   readonly email: string;

@@ -1,28 +1,27 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
+import { TabNavComponent, type TabLink } from '@shared/ui/tab-nav/tab-nav.component';
 
 import { SettingsStore } from '../state/settings.store';
 
-export const SETTINGS_TABS = [
+export const SETTINGS_TABS: readonly TabLink[] = [
   { path: 'operateurs', label: 'Opérateurs' },
   { path: 'contrats', label: 'Contrats' },
   { path: 'attribution', label: 'Attribution' },
   { path: 'exercices', label: 'Exercice' },
-  { path: 'utilisateurs', label: 'Utilisateur' },
-] as const;
+];
 
 /** Coque de l'écran Paramètres : onglets + contenu de l'onglet actif. */
 @Component({
   selector: 'sysde-settings-page',
   imports: [
-    RouterLink,
-    RouterLinkActive,
     RouterOutlet,
+    TabNavComponent,
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
@@ -32,16 +31,10 @@ export const SETTINGS_TABS = [
   template: `
     <ui-page-header
       title="Paramètres"
-      subtitle="Opérateurs, contrats, attributions, exercices et comptes utilisateur."
+      subtitle="Opérateurs, contrats, attributions et exercices."
     />
 
-    <nav class="tabs" aria-label="Sections des paramètres">
-      @for (tab of tabs; track tab.path) {
-        <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
-          tab.label
-        }}</a>
-      }
-    </nav>
+    <ui-tab-nav [tabs]="tabs" label="Sections des paramètres" />
 
     @if (store.status() === 'error') {
       <ui-card>

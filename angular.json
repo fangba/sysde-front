@@ -35,12 +35,14 @@
                 "input": "public"
               }
             ],
+            "allowedCommonJsDependencies": ["leaflet"],
             "styles": [
               "@fontsource/montserrat/latin-400.css",
               "@fontsource/montserrat/latin-500.css",
               "@fontsource/montserrat/latin-600.css",
               "@fontsource/montserrat/latin-700.css",
               "@angular/cdk/overlay-prebuilt.css",
+              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.scss"
             ]
           },

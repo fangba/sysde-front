@@ -45,6 +45,9 @@ export const ICON_PATHS = {
   search: ['M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4'],
   chevronLeft: ['m15 6-6 6 6 6'],
   chevronRight: ['m9 6 6 6-6 6'],
+  layers: ['m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16.5l9 5 9-5'],
+  chevronsLeft: ['m11 6-6 6 6 6M18 6l-6 6 6 6'],
+  chevronsRight: ['m13 6 6 6-6 6M6 6l6 6-6 6'],
   clock: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2'],
 } as const satisfies Record<string, readonly string[]>;
 

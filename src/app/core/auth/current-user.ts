@@ -6,7 +6,7 @@ export interface SessionUser {
   readonly email: string;
   readonly role: string;
   /** Opérateur (organisation) auquel appartient l'utilisateur. */
-  readonly operator: { readonly code: string; readonly name: string };
+  readonly operator: { readonly acronym: string; readonly name: string };
   /** Secteur de rattachement, s'il en a un (absent pour les administrateurs). */
   readonly sector?: { readonly code: string; readonly name: string };
 }
@@ -23,7 +23,7 @@ export class CurrentUser {
     email: 'franck.angba@yahoo.fr',
     role: 'Administrateur',
     operator: {
-      code: 'APROMAC',
+      acronym: 'APROMAC',
       name: 'Association professionnelle des producteurs de caoutchouc naturel',
     },
   });

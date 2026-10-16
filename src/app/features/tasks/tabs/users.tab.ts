@@ -6,9 +6,9 @@ import { CardComponent } from '@shared/ui/card/card.component';
 import { DataTableComponent, type TableColumn } from '@shared/ui/data-table/data-table.component';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 
-import { ACTIVE_TONE, POSTE_LABEL } from '../data/settings.constants';
-import type { User } from '../data/settings.models';
-import { SettingsStore } from '../state/settings.store';
+import { ACTIVE_TONE, POSTE_LABEL } from '../../settings/data/settings.constants';
+import type { User } from '../../settings/data/settings.models';
+import { SettingsStore } from '../../settings/state/settings.store';
 import { UserDialog } from './users.dialog';
 
 @Component({

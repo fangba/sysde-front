@@ -42,11 +42,6 @@ export const SETTINGS_ROUTES: Routes = [
         title: 'Exercice',
         loadComponent: () => import('./tabs/exercises.tab').then((m) => m.ExercisesTab),
       },
-      {
-        path: 'utilisateurs',
-        title: 'Utilisateur',
-        loadComponent: () => import('./tabs/users.tab').then((m) => m.UsersTab),
-      },
     ],
   },
 ];

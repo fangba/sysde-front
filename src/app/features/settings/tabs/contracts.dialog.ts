@@ -35,7 +35,7 @@ import { EntityDialog } from '../shell/entity-dialog';
           <select class="ui-input" formControlName="operatorId">
             <option value="">Choisir…</option>
             @for (o of operators(); track o.id) {
-              <option [value]="o.id">{{ o.code }}</option>
+              <option [value]="o.id">{{ o.acronym }}</option>
             }
           </select>
         </ui-field>

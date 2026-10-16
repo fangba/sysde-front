@@ -15,7 +15,7 @@ import {
   findEmailConflict,
   findExerciseDuplicate,
   findLotConflict,
-  findOperatorCodeConflict,
+  findOperatorAcronymConflict,
   sectorIdsOfContract,
 } from './settings.rules';
 
@@ -86,9 +86,9 @@ describe('settings.rules', () => {
     expect(allowedPostes('TECHNIQUE', 'CS')).toEqual(['CD', 'CS']);
   });
 
-  it('détecte les doublons de code et d’e-mail sans tenir compte de la casse', () => {
-    expect(findOperatorCodeConflict(' saph ', DEMO_OPERATORS)?.id).toBe('op-3');
-    expect(findOperatorCodeConflict('SAPH', DEMO_OPERATORS, 'op-3')).toBeUndefined();
+  it('détecte les doublons d’acronyme et d’e-mail sans tenir compte de la casse', () => {
+    expect(findOperatorAcronymConflict(' saph ', DEMO_OPERATORS)?.id).toBe('op-3');
+    expect(findOperatorAcronymConflict('SAPH', DEMO_OPERATORS, 'op-3')).toBeUndefined();
     const email = DEMO_USERS[0].email.toUpperCase();
     expect(findEmailConflict(email, DEMO_USERS)?.id).toBe(DEMO_USERS[0].id);
     expect(findEmailConflict(email, DEMO_USERS, DEMO_USERS[0].id)).toBeUndefined();

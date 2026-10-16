@@ -26,7 +26,7 @@ describe('SettingsStore', () => {
   it('ajoute puis modifie un élément dans la liste', async () => {
     const store = setup();
     const input = {
-      code: 'NEW',
+      acronym: 'NEW',
       name: 'Nouveau',
       type: 'TECHNIQUE',
       email: '',
@@ -45,7 +45,7 @@ describe('SettingsStore', () => {
     await expect(
       firstValueFrom(
         store.operators.save('absent', {
-          code: 'X',
+          acronym: 'X',
           name: 'X',
           type: 'TECHNIQUE',
           email: '',

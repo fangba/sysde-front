@@ -4,6 +4,7 @@ import type { Tone } from '@shared/models/tone';
 
 import { EmptyStateComponent } from '../empty-state/empty-state.component';
 import { IconComponent } from '../icon/icon.component';
+import { PaginationComponent } from '../pagination/pagination.component';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
 import { StatusPillComponent } from '../status-pill/status-pill.component';
 
@@ -18,8 +19,6 @@ export interface TableColumn<T> {
   readonly pill?: (row: T) => { readonly label: string; readonly tone: Tone };
 }
 
-const PAGE_SIZE = 10;
-
 function normalize(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
@@ -30,7 +29,13 @@ function normalize(value: string): string {
  */
 @Component({
   selector: 'ui-data-table',
-  imports: [EmptyStateComponent, IconComponent, SkeletonComponent, StatusPillComponent],
+  imports: [
+    EmptyStateComponent,
+    IconComponent,
+    PaginationComponent,
+    SkeletonComponent,
+    StatusPillComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ui-data-table' },
   templateUrl: './data-table.component.html',
@@ -51,7 +56,8 @@ export class DataTableComponent<T extends { readonly id: string }> {
   readonly rowEdit = output<T>();
 
   protected readonly query = signal('');
-  private readonly requestedPage = signal(0);
+  protected readonly requestedPage = signal(0);
+  protected readonly pageSize = signal(10);
   protected readonly skeletons = [0, 1, 2, 3, 4];
 
   protected readonly filtered = computed(() => {
@@ -68,28 +74,18 @@ export class DataTableComponent<T extends { readonly id: string }> {
   });
 
   protected readonly pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)),
+    Math.max(1, Math.ceil(this.filtered().length / this.pageSize())),
   );
 
   protected readonly page = computed(() => Math.min(this.requestedPage(), this.pageCount() - 1));
 
   protected readonly visible = computed(() => {
-    const start = this.page() * PAGE_SIZE;
-    return this.filtered().slice(start, start + PAGE_SIZE);
-  });
-
-  protected readonly range = computed(() => {
-    const total = this.filtered().length;
-    const start = this.page() * PAGE_SIZE;
-    return `${total === 0 ? 0 : start + 1}–${Math.min(start + PAGE_SIZE, total)} sur ${total}`;
+    const start = this.page() * this.pageSize();
+    return this.filtered().slice(start, start + this.pageSize());
   });
 
   protected onSearch(event: Event): void {
     this.query.set((event.target as HTMLInputElement).value);
     this.requestedPage.set(0);
-  }
-
-  protected goTo(page: number): void {
-    this.requestedPage.set(Math.min(Math.max(0, page), this.pageCount() - 1));
   }
 }

@@ -13,7 +13,7 @@ import { FieldComponent } from '@shared/ui/field/field.component';
 
 import { OPERATOR_TYPE_LABEL } from '../data/settings.constants';
 import type { Operator, OperatorInput, OperatorType } from '../data/settings.models';
-import { findOperatorCodeConflict } from '../data/settings.rules';
+import { findOperatorAcronymConflict } from '../data/settings.rules';
 import { EntityDialog } from '../shell/entity-dialog';
 
 const PHONE = /^[0-9 +().-]{8,20}$/;
@@ -28,8 +28,8 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
       subtitle="Organisme administrateur ou opérateur d’encadrement technique."
     >
       <form id="operator-form" class="ui-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <ui-field label="Code" [control]="form.controls.code" hint="Ex. SAPH, SOGB">
-          <input class="ui-input" formControlName="code" autocomplete="off" />
+        <ui-field label="Acronyme" [control]="form.controls.acronym" hint="Ex. SAPH, SOGB">
+          <input class="ui-input" formControlName="acronym" autocomplete="off" />
         </ui-field>
         <ui-field label="Type" [control]="form.controls.type">
           <select class="ui-input" formControlName="type">
@@ -72,9 +72,9 @@ export class OperatorDialog extends EntityDialog<Operator, OperatorInput> {
   }));
 
   protected readonly form = this.fb.group({
-    code: [
-      this.item?.code ?? '',
-      [Validators.required, Validators.maxLength(12), (c: AbstractControl) => this.codeTaken(c)],
+    acronym: [
+      this.item?.acronym ?? '',
+      [Validators.required, Validators.maxLength(12), (c: AbstractControl) => this.acronymTaken(c)],
     ],
     name: [this.item?.name ?? '', [Validators.required, Validators.maxLength(150)]],
     type: [this.item?.type ?? ('TECHNIQUE' as OperatorType), Validators.required],
@@ -83,17 +83,17 @@ export class OperatorDialog extends EntityDialog<Operator, OperatorInput> {
     active: [this.item?.active ?? true],
   });
 
-  private codeTaken(control: AbstractControl): ValidationErrors | null {
+  private acronymTaken(control: AbstractControl): ValidationErrors | null {
     const value = String(control.value ?? '').trim();
-    return value && findOperatorCodeConflict(value, this.store.operators.items(), this.item?.id)
-      ? { taken: 'Ce code est déjà utilisé par un autre opérateur.' }
+    return value && findOperatorAcronymConflict(value, this.store.operators.items(), this.item?.id)
+      ? { taken: 'Cet acronyme est déjà utilisé par un autre opérateur.' }
       : null;
   }
 
   protected toInput(): OperatorInput {
     const v = this.form.getRawValue();
     return {
-      code: v.code.trim().toUpperCase(),
+      acronym: v.acronym.trim().toUpperCase(),
       name: v.name.trim(),
       type: v.type,
       email: v.email.trim(),

@@ -4,9 +4,9 @@
 </div>
 
 <div class="org">
-  <span class="avatar" aria-hidden="true">{{ currentUser.user().operator.code.charAt(0) }}</span>
+  <span class="avatar" aria-hidden="true">{{ currentUser.user().operator.acronym.charAt(0) }}</span>
   <span class="org-meta">
-    <strong>{{ currentUser.user().operator.code }}</strong>
+    <strong>{{ currentUser.user().operator.acronym }}</strong>
     <span class="org-sub">{{ currentUser.sectorLabel() || currentUser.user().operator.name }}</span>
   </span>
 </div>

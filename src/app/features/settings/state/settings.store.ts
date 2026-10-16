@@ -77,7 +77,7 @@ export class SettingsStore {
   }
 
   operatorLabel(id: string): string {
-    return this.operatorById().get(id)?.code ?? '—';
+    return this.operatorById().get(id)?.acronym ?? '—';
   }
 
   sectorLabel(id: string): string {

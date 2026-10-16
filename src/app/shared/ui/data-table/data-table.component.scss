@@ -104,8 +104,7 @@ tbody tr:hover {
   color: var(--ink-500);
 }
 
-.edit,
-.page-btn {
+.edit {
   display: inline-grid;
   place-items: center;
   width: 36px;
@@ -114,32 +113,13 @@ tbody tr:hover {
   color: var(--ink-700);
   --ui-icon-size: 18px;
 
-  &:hover:not(:disabled) {
+  &:hover {
     background: var(--green-100);
   }
 
   &:focus-visible {
     @include m.focus-ring;
   }
-
-  &:disabled {
-    color: var(--ink-300);
-    cursor: not-allowed;
-  }
-}
-
-.pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--ink-500);
-}
-
-.pager__buttons {
-  display: flex;
-  gap: 4px;
 }
 
 .sr-only {

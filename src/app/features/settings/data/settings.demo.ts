@@ -1,11 +1,11 @@
 import type { Attribution, Contract, Exercise, Operator, Sector, User } from './settings.models';
 
-const operator = (id: string, code: string, name: string, type: Operator['type']): Operator => ({
+const operator = (id: string, acronym: string, name: string, type: Operator['type']): Operator => ({
   id,
-  code,
+  acronym,
   name,
   type,
-  email: `contact@${code.toLowerCase()}.ci`,
+  email: `contact@${acronym.toLowerCase()}.ci`,
   phone: '',
   active: true,
 });
@@ -23,9 +23,9 @@ export const DEMO_OPERATORS: readonly Operator[] = [
     'Fonds interprofessionnel pour la recherche et le conseil agricoles',
     'ORGANISME',
   ),
-  operator('op-3', 'SAPH', 'SAPH', 'TECHNIQUE'),
-  operator('op-4', 'SOGB', 'SOGB', 'TECHNIQUE'),
-  operator('op-5', 'TRCI', 'TRCI', 'TECHNIQUE'),
+  operator('op-3', 'SAPH', 'Société africaine de plantations d’hévéas', 'TECHNIQUE'),
+  operator('op-4', 'SOGB', 'Société des caoutchoucs de Grand-Béréby', 'TECHNIQUE'),
+  operator('op-5', 'TRCI', 'Tropical Rubber Côte d’Ivoire', 'TECHNIQUE'),
   operator('op-6', 'EXAT', 'EXAT', 'TECHNIQUE'),
   operator('op-7', 'CCP', 'CCP', 'TECHNIQUE'),
   operator('op-8', 'IDH', 'IDH', 'TECHNIQUE'),

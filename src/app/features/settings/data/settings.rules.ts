@@ -113,11 +113,11 @@ export function findEmailConflict(
   return users.find((u) => u.id !== ignoreId && u.email.trim().toLowerCase() === wanted);
 }
 
-export function findOperatorCodeConflict(
-  code: string,
+export function findOperatorAcronymConflict(
+  acronym: string,
   operators: readonly Operator[],
   ignoreId?: string,
 ): Operator | undefined {
-  const wanted = code.trim().toUpperCase();
-  return operators.find((o) => o.id !== ignoreId && o.code.toUpperCase() === wanted);
+  const wanted = acronym.trim().toUpperCase();
+  return operators.find((o) => o.id !== ignoreId && o.acronym.toUpperCase() === wanted);
 }

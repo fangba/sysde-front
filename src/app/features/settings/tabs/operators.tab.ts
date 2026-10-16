@@ -40,9 +40,10 @@ export class OperatorsTab {
   private readonly dialog = inject(Dialog);
   private readonly injector = inject(Injector);
 
-  protected readonly rowLabel = (o: Operator) => o.code;
+  protected readonly rowLabel = (o: Operator) => o.acronym;
   protected readonly columns: readonly TableColumn<Operator>[] = [
-    { id: 'code', header: 'Code', text: (o) => o.code, sub: (o) => o.name },
+    { id: 'acronym', header: 'Acronyme', text: (o) => o.acronym },
+    { id: 'name', header: 'Dénomination', text: (o) => o.name },
     { id: 'type', header: 'Type', text: (o) => OPERATOR_TYPE_LABEL[o.type] },
     { id: 'email', header: 'Contact', text: (o) => o.email || '—', sub: (o) => o.phone },
     {

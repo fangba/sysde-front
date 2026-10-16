@@ -3,7 +3,11 @@ import type { Routes } from '@angular/router';
 import { NAV_ITEMS } from './layout/nav.config';
 
 const placeholderRoutes: Routes = NAV_ITEMS.filter(
-  (item) => item.path !== 'tableau-de-bord' && item.path !== 'parametres',
+  (item) =>
+    item.path !== 'tableau-de-bord' &&
+    item.path !== 'parametres' &&
+    item.path !== 'taches' &&
+    item.path !== 'carte',
 ).map((item) => ({
   path: item.path,
   title: item.label,
@@ -22,6 +26,15 @@ export const routes: Routes = [
         path: 'tableau-de-bord',
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
+      },
+      {
+        path: 'carte',
+        title: 'Carte',
+        loadComponent: () => import('./features/map/map.page').then((m) => m.MapPage),
+      },
+      {
+        path: 'taches',
+        loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES),
       },
       {
         path: 'parametres',

@@ -1,0 +1,70 @@
+<div class="left">
+  <label class="size">
+    <span>Lignes par page</span>
+    <select class="ui-input" (change)="onSize($event)">
+      @for (option of pageSizeOptions(); track option) {
+        <option [value]="option" [selected]="option === pageSize()">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <p class="range" aria-live="polite">
+    <strong>{{ summary().from }}–{{ summary().to }}</strong> sur {{ summary().total }}
+  </p>
+</div>
+
+<nav class="pages" aria-label="Pagination">
+  <button
+    type="button"
+    class="btn"
+    aria-label="Première page"
+    [disabled]="current() === 0"
+    (click)="goTo(0)"
+  >
+    <ui-icon name="chevronsLeft" />
+  </button>
+  <button
+    type="button"
+    class="btn"
+    aria-label="Page précédente"
+    [disabled]="current() === 0"
+    (click)="goTo(current() - 1)"
+  >
+    <ui-icon name="chevronLeft" />
+  </button>
+
+  @for (item of items(); track item.kind === 'page' ? item.index : item.key) {
+    @if (item.kind === 'page') {
+      <button
+        type="button"
+        class="btn num"
+        [class.is-current]="item.index === current()"
+        [attr.aria-label]="'Page ' + (item.index + 1)"
+        [attr.aria-current]="item.index === current() ? 'page' : null"
+        (click)="goTo(item.index)"
+      >
+        {{ item.index + 1 }}
+      </button>
+    } @else {
+      <span class="gap" aria-hidden="true">…</span>
+    }
+  }
+
+  <button
+    type="button"
+    class="btn"
+    aria-label="Page suivante"
+    [disabled]="current() >= pageCount() - 1"
+    (click)="goTo(current() + 1)"
+  >
+    <ui-icon name="chevronRight" />
+  </button>
+  <button
+    type="button"
+    class="btn"
+    aria-label="Dernière page"
+    [disabled]="current() >= pageCount() - 1"
+    (click)="goTo(pageCount() - 1)"
+  >
+    <ui-icon name="chevronsRight" />
+  </button>
+</nav>

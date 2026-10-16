@@ -75,27 +75,5 @@
     </table>
   </div>
 
-  <div class="pager">
-    <span class="range" aria-live="polite">{{ range() }}</span>
-    <div class="pager__buttons">
-      <button
-        type="button"
-        class="page-btn"
-        aria-label="Page précédente"
-        [disabled]="page() === 0"
-        (click)="goTo(page() - 1)"
-      >
-        <ui-icon name="chevronLeft" />
-      </button>
-      <button
-        type="button"
-        class="page-btn"
-        aria-label="Page suivante"
-        [disabled]="page() >= pageCount() - 1"
-        (click)="goTo(page() + 1)"
-      >
-        <ui-icon name="chevronRight" />
-      </button>
-    </div>
-  </div>
+  <ui-pagination [total]="filtered().length" [(page)]="requestedPage" [(pageSize)]="pageSize" />
 }

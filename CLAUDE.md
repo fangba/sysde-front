@@ -50,8 +50,9 @@ Un nouveau module = un dossier dans `features/`, une route dans `app.routes.ts`,
 
 Menu : Dashboard, Tâches, Carte, Paramètres.
 - Dashboard : terminé (KPI, production mensuelle, visites, échéances), sur données de démonstration (`useDemoData: true` dans `src/environments`).
-- Paramètres : terminé sur données de démonstration (`features/settings/`) — cinq onglets Opérateurs, Contrats, Attribution, Exercice, Utilisateur (liste, création, modification). Règles métier dans `data/settings.rules.ts` (testées). API : `SettingsApi` (démo ou HTTP : `/operateurs`, `/contrats`, `/attributions`, `/exercices`, `/utilisateurs`, `/secteurs`). Composants communs : `ui-data-table`, `ui-field`, `ui-dialog-shell`.
-- Tâches, Carte : pages « Ce module arrive bientôt », à développer.
+- Paramètres : terminé sur données de démonstration (`features/settings/`) — quatre onglets Opérateurs, Contrats, Attribution, Exercice (liste, création, modification, panneau latéral à droite). Règles métier dans `data/settings.rules.ts` (testées). API : `SettingsApi` (démo ou HTTP : `/operateurs`, `/contrats`, `/attributions`, `/exercices`, `/utilisateurs`, `/secteurs`). Composants communs : `ui-data-table`, `ui-field`, `ui-dialog-shell`.
+- Tâches : page à onglets (`features/tasks/`), onglet Utilisateur (comptes ; réutilise le store et l'API de `features/settings`). D'autres onglets viendront.
+- Carte : terminée (`features/map/`) — carte Leaflet plein écran, fonds de plan Plan (OpenStreetMap), Satellite, Hybride (Esri), Relief (OpenTopoMap). Prochaine étape : couches de données (secteurs, lots, parcelles).
 - Brancher le back : passer `useDemoData` à `false` et exposer `GET {apiBaseUrl}/dashboard` au format `DashboardData` (`features/dashboard/data/dashboard.models.ts`).
 
 ## Règles métier utiles (cahier des charges)

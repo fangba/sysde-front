@@ -12,10 +12,10 @@ import { ButtonComponent } from '@shared/ui/button/button.component';
 import { DialogShellComponent } from '@shared/ui/dialog-shell/dialog-shell.component';
 import { FieldComponent } from '@shared/ui/field/field.component';
 
-import { POSTE_LABEL } from '../data/settings.constants';
-import type { Poste, User, UserInput } from '../data/settings.models';
-import { allowedPostes, findEmailConflict } from '../data/settings.rules';
-import { EntityDialog } from '../shell/entity-dialog';
+import { POSTE_LABEL } from '../../settings/data/settings.constants';
+import type { Poste, User, UserInput } from '../../settings/data/settings.models';
+import { allowedPostes, findEmailConflict } from '../../settings/data/settings.rules';
+import { EntityDialog } from '../../settings/shell/entity-dialog';
 
 const PHONE = /^[0-9 +().-]{8,20}$/;
 
@@ -45,7 +45,7 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
           <select class="ui-input" formControlName="operatorId">
             <option value="">Choisir…</option>
             @for (o of operators(); track o.id) {
-              <option [value]="o.id">{{ o.code }}</option>
+              <option [value]="o.id">{{ o.acronym }}</option>
             }
           </select>
         </ui-field>
