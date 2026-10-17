@@ -20,7 +20,13 @@ import { IconComponent } from '@shared/ui/icon/icon.component';
 import type { MapPlantation } from './data/map.models';
 import { MapFilterDrawer } from './map-filter.drawer';
 import { MapStore } from './state/map.store';
-import { BASEMAPS, DEFAULT_BASEMAP_ID, INITIAL_VIEW, type Basemap } from './map.basemaps';
+import {
+  BASEMAPS,
+  DEFAULT_BASEMAP_ID,
+  INITIAL_VIEW,
+  previewImage,
+  type Basemap,
+} from './map.basemaps';
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -52,10 +58,14 @@ function readStoredBasemap(): string {
         class="switcher__toggle"
         aria-controls="basemap-list"
         [attr.aria-expanded]="open()"
+        [attr.aria-label]="'Fond de plan : ' + activeBasemap().label"
+        [style.background-image]="preview(activeBasemap())"
         (click)="open.set(!open())"
       >
-        <ui-icon name="layers" />
-        <span>Fond de plan</span>
+        <span class="switcher__label">
+          <ui-icon name="layers" />
+          <span>Fond de plan</span>
+        </span>
       </button>
 
       @if (open()) {
@@ -69,7 +79,11 @@ function readStoredBasemap(): string {
                 [attr.aria-pressed]="basemap.id === current()"
                 (click)="select(basemap)"
               >
-                <span class="option__dot" aria-hidden="true"></span>
+                <span
+                  class="option__thumb"
+                  aria-hidden="true"
+                  [style.background-image]="preview(basemap)"
+                ></span>
                 <span class="option__text">
                   <strong>{{ basemap.label }}</strong>
                   <span>{{ basemap.description }}</span>
@@ -99,6 +113,10 @@ export class MapPage {
   );
 
   protected readonly basemaps = BASEMAPS;
+  protected readonly preview = previewImage;
+  protected readonly activeBasemap = computed(
+    () => BASEMAPS.find((b) => b.id === this.current()) ?? BASEMAPS[0],
+  );
   protected readonly current = signal(readStoredBasemap());
   protected readonly open = signal(false);
 
@@ -128,9 +146,9 @@ export class MapPage {
         worldCopyJump: true,
       });
       L.control
-        .zoom({ position: 'bottomright', zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' })
+        .zoom({ position: 'topleft', zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' })
         .addTo(map);
-      L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+      L.control.scale({ position: 'bottomright', imperial: false }).addTo(map);
       map.attributionControl.setPrefix(false);
       if (this.canFilter()) {
         this.addFilterControl(map);
@@ -205,7 +223,7 @@ export class MapPage {
         return root;
       },
     });
-    new Control({ position: 'topleft' }).addTo(map);
+    new Control({ position: 'topright' }).addTo(map);
   }
 
   private drawPlantations(plantations: readonly MapPlantation[]): void {

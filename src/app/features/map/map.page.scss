@@ -1,12 +1,12 @@
 @use 'styles/mixins' as m;
 
-// La carte suit les mêmes marges que les autres pages (--page-pad), sous la barre
-// d'outils, avec la largeur maximale du contenu, dans un cadre arrondi.
+// La carte suit les marges latérales des autres pages (--page-pad) ; l'espace sous la barre
+// d'outils (12px) est repris à l'identique en bas de l'écran, avec la largeur maximale du contenu, dans un cadre arrondi.
 :host {
   position: fixed;
   top: calc(var(--app-bar-height, 63px) + 12px);
   right: var(--page-pad);
-  bottom: var(--page-pad);
+  bottom: 12px;
   left: calc(var(--sidebar-width) + var(--page-pad));
   z-index: 1;
   isolation: isolate;
@@ -20,7 +20,7 @@
 
   @include m.max-width(m.$bp-md) {
     right: 16px;
-    bottom: 16px;
+    bottom: 12px;
     left: 16px;
   }
 }
@@ -34,39 +34,63 @@
 
 .switcher {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  bottom: 16px;
+  left: 16px;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  // Le sélecteur s'ouvre vers le haut : le bouton reste ancré en bas à gauche.
+  flex-direction: column-reverse;
+  align-items: flex-start;
   gap: 8px;
 }
 
 .switcher__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 16px;
-  border: 1px solid var(--line);
+  // Imagette du fond de plan affiché (tuiles réelles), le libellé posé sur un dégradé sombre.
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 112px;
+  height: 80px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--paper);
   border-radius: var(--radius-md);
-  background: var(--paper);
-  color: var(--ink-900);
+  background-color: var(--green-100);
+  background-position: center;
+  background-size: cover;
   box-shadow: var(--shadow-card);
+  color: #fff;
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
-  --ui-icon-size: 18px;
+  --ui-icon-size: 16px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 72%), rgb(0 0 0 / 0%) 70%);
+  }
 
   &:hover {
-    background: var(--green-50);
+    border-color: var(--green-600);
   }
 
   &:focus-visible {
     @include m.focus-ring;
   }
+}
+
+.switcher__label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+  white-space: nowrap;
 }
 
 .switcher__list {
@@ -105,20 +129,22 @@
   &.is-active {
     background: var(--green-100);
 
-    .option__dot {
-      border-color: var(--green-600);
-      background: var(--green-600);
-      box-shadow: inset 0 0 0 3px var(--paper);
+    .option__thumb {
+      box-shadow: 0 0 0 2px var(--green-600);
     }
   }
 }
 
-.option__dot {
+.option__thumb {
   flex: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--ink-300);
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--paper);
+  border-radius: var(--radius-md);
+  background-color: var(--green-100);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .option__text {
@@ -138,15 +164,20 @@
 
 // Habillage des contrôles Leaflet aux couleurs de l'application.
 :host ::ng-deep {
-  // Bouton de filtre : contrôle de la carte, au même gabarit que le sélecteur de fond de plan.
+  // Coins de la carte : zoom en haut à gauche, filtre en haut à droite, fond de plan en bas à
+  // gauche (voir .switcher) et échelle en bas à droite.
   .leaflet-top.leaflet-left .leaflet-control {
     margin: 16px 0 0 16px;
+  }
+
+  .leaflet-top.leaflet-right .leaflet-control {
+    margin: 16px 16px 0 0;
   }
 
   .filter-control {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 8px;
   }
 
@@ -253,7 +284,7 @@
 
   // Échelle : pastille translucide, texte au-dessus d'un crochet vert qui matérialise la distance.
   .leaflet-control-scale {
-    margin: 0 0 16px 16px;
+    margin: 0 16px 8px 0;
     padding: 8px 12px;
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
@@ -285,11 +316,6 @@
       border-top: 0;
       border-radius: 0 0 3px 3px;
     }
-  }
-
-  .leaflet-bottom.leaflet-right .leaflet-control {
-    margin-right: 16px;
-    margin-bottom: 16px;
   }
 
   .leaflet-control-attribution {

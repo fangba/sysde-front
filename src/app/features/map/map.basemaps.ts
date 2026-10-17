@@ -11,7 +11,13 @@ export interface Basemap {
   readonly description: string;
   /** Couches empilées dans l'ordre : fond, puis éventuellement noms de lieux. */
   readonly layers: readonly TileSource[];
+  /** Tuile servant d'imagette (littoral ivoirien, zoom 9) ; couches empilées, la plus haute d'abord. */
+  readonly preview: readonly string[];
 }
+
+// Tuile z/x/y du sud de la Côte d'Ivoire : lagune, forêt et plantations lisibles dans chaque style.
+const PREVIEW = { z: 9, x: 250, y: 248 };
+const ESRI_PREVIEW = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${PREVIEW.z}/${PREVIEW.y}/${PREVIEW.x}`;
 
 const ESRI_IMAGERY: TileSource = {
   url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -33,12 +39,14 @@ export const BASEMAPS: readonly Basemap[] = [
         maxZoom: 19,
       },
     ],
+    preview: [`https://tile.openstreetmap.org/${PREVIEW.z}/${PREVIEW.x}/${PREVIEW.y}.png`],
   },
   {
     id: 'satellite',
     label: 'Satellite',
     description: 'Imagerie Esri',
     layers: [ESRI_IMAGERY],
+    preview: [ESRI_PREVIEW],
   },
   {
     id: 'hybride',
@@ -50,6 +58,10 @@ export const BASEMAPS: readonly Basemap[] = [
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
         maxZoom: 19,
       },
+    ],
+    preview: [
+      `https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/${PREVIEW.z}/${PREVIEW.y}/${PREVIEW.x}`,
+      ESRI_PREVIEW,
     ],
   },
   {
@@ -65,8 +77,14 @@ export const BASEMAPS: readonly Basemap[] = [
         subdomains: 'abc',
       },
     ],
+    preview: [`https://a.tile.opentopomap.org/${PREVIEW.z}/${PREVIEW.x}/${PREVIEW.y}.png`],
   },
 ];
+
+/** Valeur CSS `background-image` de l'imagette d'un fond de plan. */
+export function previewImage(basemap: Basemap): string {
+  return basemap.preview.map((url) => `url("${url}")`).join(', ');
+}
 
 export const DEFAULT_BASEMAP_ID = BASEMAPS[0].id;
 
