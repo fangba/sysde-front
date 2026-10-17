@@ -9,6 +9,7 @@ import {
   DEMO_ATTRIBUTIONS,
   DEMO_CONTRACTS,
   DEMO_EXERCISES,
+  DEMO_LOTS,
   DEMO_OPERATORS,
   DEMO_SECTORS,
   DEMO_USERS,
@@ -19,10 +20,13 @@ import type {
   Contract,
   ContractInput,
   Exercise,
+  Lot,
+  LotInput,
   ExerciseInput,
   Operator,
   OperatorInput,
   Sector,
+  SectorInput,
   User,
   UserInput,
 } from './settings.models';
@@ -41,7 +45,8 @@ export abstract class SettingsApi {
   abstract readonly attributions: Crud<Attribution, AttributionInput>;
   abstract readonly exercises: Crud<Exercise, ExerciseInput>;
   abstract readonly users: Crud<User, UserInput>;
-  abstract sectors(): Observable<readonly Sector[]>;
+  abstract readonly sectors: Crud<Sector, SectorInput>;
+  abstract readonly lots: Crud<Lot, LotInput>;
 }
 
 class HttpCrud<T extends { readonly id: string }, I> implements Crud<T, I> {
@@ -73,10 +78,8 @@ export class HttpSettingsApi extends SettingsApi {
   readonly attributions = new HttpCrud<Attribution, AttributionInput>(this.http, '/attributions');
   readonly exercises = new HttpCrud<Exercise, ExerciseInput>(this.http, '/exercices');
   readonly users = new HttpCrud<User, UserInput>(this.http, '/utilisateurs');
-
-  sectors(): Observable<readonly Sector[]> {
-    return this.http.get<readonly Sector[]>('/secteurs');
-  }
+  readonly sectors = new HttpCrud<Sector, SectorInput>(this.http, '/secteurs');
+  readonly lots = new HttpCrud<Lot, LotInput>(this.http, '/lots');
 }
 
 const LATENCY_MS = 250;
@@ -123,8 +126,6 @@ export class DemoSettingsApi extends SettingsApi {
   readonly attributions = new MemoryCrud<Attribution, AttributionInput>(DEMO_ATTRIBUTIONS, 'at');
   readonly exercises = new MemoryCrud<Exercise, ExerciseInput>(DEMO_EXERCISES, 'ex');
   readonly users = new MemoryCrud<User, UserInput>(DEMO_USERS, 'us');
-
-  sectors(): Observable<readonly Sector[]> {
-    return of(DEMO_SECTORS).pipe(delay(LATENCY_MS));
-  }
+  readonly sectors = new MemoryCrud<Sector, SectorInput>(DEMO_SECTORS, 'sec');
+  readonly lots = new MemoryCrud<Lot, LotInput>(DEMO_LOTS, 'lot');
 }

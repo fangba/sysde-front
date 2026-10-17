@@ -5,6 +5,7 @@ import type {
   Attribution,
   Contract,
   Exercise,
+  Lot,
   Operator,
   OperatorType,
   Poste,
@@ -46,7 +47,7 @@ export function findContractConflict(
  * chevauche celle du contrat visé (y compris ce contrat lui-même).
  */
 export function findLotConflict(
-  candidate: Pick<Attribution, 'contractId' | 'sectorId' | 'lot'>,
+  candidate: Pick<Attribution, 'contractId' | 'sectorId'> & { readonly lot: number },
   attributions: readonly Attribution[],
   contracts: readonly Contract[],
   ignoreId?: string,
@@ -56,7 +57,7 @@ export function findLotConflict(
     return undefined;
   }
   return attributions.find((a) => {
-    if (a.id === ignoreId || a.sectorId !== candidate.sectorId || a.lot !== candidate.lot) {
+    if (a.id === ignoreId || a.sectorId !== candidate.sectorId || !a.lots.includes(candidate.lot)) {
       return false;
     }
     const other = contracts.find((c) => c.id === a.contractId);
@@ -66,17 +67,34 @@ export function findLotConflict(
   });
 }
 
+/** Une seule attribution par couple contrat / secteur : on la modifie pour y ajouter des lots. */
+export function findAttributionDuplicate(
+  candidate: Pick<Attribution, 'contractId' | 'sectorId'>,
+  attributions: readonly Attribution[],
+  ignoreId?: string,
+): Attribution | undefined {
+  return attributions.find(
+    (a) =>
+      a.id !== ignoreId &&
+      a.contractId === candidate.contractId &&
+      a.sectorId === candidate.sectorId,
+  );
+}
+
+/** « Lot 1 » ou « Lots 1, 2 ». */
+export function lotsLabel(lots: readonly number[]): string {
+  const sorted = [...lots].sort((a, b) => a - b);
+  return `${sorted.length > 1 ? 'Lots' : 'Lot'} ${sorted.join(', ')}`;
+}
+
 export function findExerciseDuplicate(
-  candidate: Pick<Exercise, 'contractId' | 'sectorId' | 'year'>,
+  candidate: Pick<Exercise, 'attributionId' | 'year'>,
   exercises: readonly Exercise[],
   ignoreId?: string,
 ): Exercise | undefined {
   return exercises.find(
     (e) =>
-      e.id !== ignoreId &&
-      e.contractId === candidate.contractId &&
-      e.sectorId === candidate.sectorId &&
-      e.year === candidate.year,
+      e.id !== ignoreId && e.attributionId === candidate.attributionId && e.year === candidate.year,
   );
 }
 
@@ -137,4 +155,24 @@ export function sectorsOfOperator(
     attributions.filter((a) => contractIds.has(a.contractId)).map((a) => a.sectorId),
   );
   return sectors.filter((s) => sectorIds.has(s.id));
+}
+
+export function findSectorCodeConflict(
+  code: string,
+  sectors: readonly Sector[],
+  ignoreId?: string,
+): Sector | undefined {
+  const wanted = code.trim().toUpperCase();
+  return sectors.find((s) => s.id !== ignoreId && s.code.toUpperCase() === wanted);
+}
+
+/** Un numéro de lot est unique au sein d'un secteur. */
+export function findLotNumberConflict(
+  candidate: Pick<Lot, 'sectorId' | 'number'>,
+  lots: readonly Lot[],
+  ignoreId?: string,
+): Lot | undefined {
+  return lots.find(
+    (l) => l.id !== ignoreId && l.sectorId === candidate.sectorId && l.number === candidate.number,
+  );
 }

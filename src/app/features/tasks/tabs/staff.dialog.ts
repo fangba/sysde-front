@@ -76,7 +76,7 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
               operatorId()
                 ? sectors().length
                   ? 'Secteurs attribués à cet opérateur.'
-                  : 'Aucun secteur n’est attribué à cet opérateur : voir Paramètres › Attribution.'
+                  : 'Aucun secteur n’est attribué à cet opérateur : voir Paramètres › Attributions.'
                 : 'Choisissez d’abord l’opérateur.'
             "
           >

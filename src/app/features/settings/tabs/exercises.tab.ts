@@ -10,6 +10,7 @@ import { todayIso } from '@shared/util/dates';
 import { formatDate } from '@shared/util/format';
 
 import type { Exercise } from '../data/settings.models';
+import { lotsLabel } from '../data/settings.rules';
 import { SettingsStore } from '../state/settings.store';
 import { ExerciseDialog } from './exercises.dialog';
 
@@ -18,7 +19,7 @@ import { ExerciseDialog } from './exercises.dialog';
   imports: [ButtonComponent, CardComponent, DataTableComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ui-card heading="Exercice" subheading="Exercices annuels par contrat et par secteur.">
+    <ui-card heading="Exercices" subheading="Exercices annuels par contrat et par attribution.">
       <ui-data-table
         [columns]="columns"
         [rows]="rows()"
@@ -45,10 +46,12 @@ export class ExercisesTab {
 
   protected readonly rows = () => [...this.store.exercises.items()].sort((a, b) => b.year - a.year);
 
-  protected readonly rowLabel = (e: Exercise) => `${e.year} ${this.store.sectorLabel(e.sectorId)}`;
+  protected readonly rowLabel = (e: Exercise) =>
+    `${e.year} ${this.store.sectorLabel(e.sectorId)} ${this.lotLabel(e)}`;
   protected readonly columns: readonly TableColumn<Exercise>[] = [
     { id: 'year', header: 'Exercice', text: (e) => String(e.year) },
     { id: 'sector', header: 'Secteur', text: (e) => this.store.sectorLabel(e.sectorId) },
+    { id: 'lots', header: 'Lots', text: (e) => this.lotLabel(e) },
     { id: 'contract', header: 'Contrat', text: (e) => this.store.contractLabel(e.contractId) },
     { id: 'closing', header: 'Clôture', text: (e) => formatDate(e.closingDate) },
     {
@@ -61,6 +64,11 @@ export class ExercisesTab {
       }),
     },
   ];
+
+  private lotLabel(e: Exercise): string {
+    const lots = this.store.attributions.items().find((a) => a.id === e.attributionId)?.lots;
+    return lots ? lotsLabel(lots) : '—';
+  }
 
   private isClosed(exercise: Exercise): boolean {
     return todayIso(this.clock.now()) > exercise.closingDate;

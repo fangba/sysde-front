@@ -12,8 +12,9 @@ import { SettingsStore } from '../state/settings.store';
 export const SETTINGS_TABS: readonly TabLink[] = [
   { path: 'operateurs', label: 'Opérateurs' },
   { path: 'contrats', label: 'Contrats' },
-  { path: 'attribution', label: 'Attribution' },
-  { path: 'exercices', label: 'Exercice' },
+  { path: 'attribution', label: 'Attributions' },
+  { path: 'exercices', label: 'Exercices' },
+  { path: 'references', label: 'Références' },
 ];
 
 /** Coque de l'écran Paramètres : onglets + contenu de l'onglet actif. */
@@ -31,7 +32,7 @@ export const SETTINGS_TABS: readonly TabLink[] = [
   template: `
     <ui-page-header
       title="Paramètres"
-      subtitle="Opérateurs, contrats, attributions et exercices."
+      subtitle="Opérateurs, contrats, attributions, exercices et références."
     />
 
     <ui-tab-nav [tabs]="tabs" label="Sections des paramètres" />

@@ -6,7 +6,6 @@ import { forkJoin, tap } from 'rxjs';
 import { toApiError } from '@core/http/api-error';
 
 import { SettingsApi, type Crud } from '../data/settings.api';
-import type { Sector } from '../data/settings.models';
 
 export type LoadStatus = 'loading' | 'ready' | 'error';
 
@@ -48,8 +47,9 @@ export class SettingsStore {
   readonly exercises = new EntityState(this.api.exercises);
   readonly users = new EntityState(this.api.users);
 
-  private readonly _sectors = signal<readonly Sector[]>([]);
-  readonly sectors = this._sectors.asReadonly();
+  readonly sectorList = new EntityState(this.api.sectors);
+  readonly lots = new EntityState(this.api.lots);
+  readonly sectors = computed(() => this.sectorList.items());
 
   private readonly _status = signal<LoadStatus>('loading');
   private readonly _error = signal('');
@@ -62,7 +62,9 @@ export class SettingsStore {
   private readonly contractById = computed(
     () => new Map(this.contracts.items().map((c) => [c.id, c])),
   );
-  private readonly sectorById = computed(() => new Map(this._sectors().map((s) => [s.id, s])));
+  private readonly sectorById = computed(
+    () => new Map(this.sectorList.items().map((s) => [s.id, s])),
+  );
 
   operatorOf(id: string) {
     return this.operatorById().get(id);
@@ -80,6 +82,15 @@ export class SettingsStore {
 
   sectorOf(id: string) {
     return this.sectorById().get(id);
+  }
+
+  /** Numéros des lots d'un secteur, par ordre croissant. */
+  lotNumbersOf(sectorId: string): readonly number[] {
+    return this.lots
+      .items()
+      .filter((l) => l.sectorId === sectorId)
+      .map((l) => l.number)
+      .sort((a, b) => a - b);
   }
 
   operatorLabel(id: string): string {
@@ -104,7 +115,8 @@ export class SettingsStore {
       attributions: this.api.attributions.list(),
       exercises: this.api.exercises.list(),
       users: this.api.users.list(),
-      sectors: this.api.sectors(),
+      sectors: this.api.sectors.list(),
+      lots: this.api.lots.list(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -114,7 +126,8 @@ export class SettingsStore {
           this.attributions.setAll(data.attributions);
           this.exercises.setAll(data.exercises);
           this.users.setAll(data.users);
-          this._sectors.set(data.sectors);
+          this.sectorList.setAll(data.sectors);
+          this.lots.setAll(data.lots);
           this._status.set('ready');
         },
         error: (error: unknown) => {

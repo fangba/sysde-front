@@ -1,4 +1,12 @@
-import type { Attribution, Contract, Exercise, Operator, Sector, User } from './settings.models';
+import type {
+  Attribution,
+  Contract,
+  Exercise,
+  Lot,
+  Operator,
+  Sector,
+  User,
+} from './settings.models';
 
 const operator = (id: string, acronym: string, name: string, type: Operator['type']): Operator => ({
   id,
@@ -26,10 +34,10 @@ export const DEMO_OPERATORS: readonly Operator[] = [
   operator('op-3', 'SAPH', 'Société africaine de plantations d’hévéas', 'TECHNIQUE'),
   operator('op-4', 'SOGB', 'Société des caoutchoucs de Grand-Béréby', 'TECHNIQUE'),
   operator('op-5', 'TRCI', 'Tropical Rubber Côte d’Ivoire', 'TECHNIQUE'),
-  operator('op-6', 'EXAT', 'EXAT', 'TECHNIQUE'),
-  operator('op-7', 'CCP', 'CCP', 'TECHNIQUE'),
-  operator('op-8', 'IDH', 'IDH', 'TECHNIQUE'),
-  operator('op-9', 'CHC', 'CHC', 'TECHNIQUE'),
+  operator('op-6', 'EXAT', 'Exploitation agricole Téhui', 'TECHNIQUE'),
+  operator('op-7', 'CCP', 'Compagnie des caoutchoucs du Pakidié', 'TECHNIQUE'),
+  operator('op-8', 'IDH', 'L’Ivoirienne d’hévéa', 'TECHNIQUE'),
+  operator('op-9', 'CHC', 'Compagnie hévéicole de Cavally', 'TECHNIQUE'),
 ];
 
 export const DEMO_SECTORS: readonly Sector[] = [
@@ -40,6 +48,15 @@ export const DEMO_SECTORS: readonly Sector[] = [
   { id: 'sec-5', code: 'S05', name: 'Grand-Béréby' },
   { id: 'sec-6', code: 'S06', name: 'Dabou' },
 ];
+
+export const DEMO_LOTS: readonly Lot[] = DEMO_SECTORS.flatMap((sector, s) =>
+  [1, 2, 3].map((number) => ({
+    id: `lot-${s * 3 + number}`,
+    sectorId: sector.id,
+    number,
+    description: '',
+  })),
+);
 
 export const DEMO_CONTRACTS: readonly Contract[] = [
   {
@@ -93,31 +110,66 @@ export const DEMO_CONTRACTS: readonly Contract[] = [
   },
 ];
 
-const lots = (
-  contractId: string,
-  sectorId: string,
-  numbers: readonly number[],
-  n: number,
-): Attribution[] => numbers.map((lot, i) => ({ id: `at-${n + i}`, contractId, sectorId, lot }));
-
 export const DEMO_ATTRIBUTIONS: readonly Attribution[] = [
-  ...lots('ct-1', 'sec-1', [1, 2], 1),
-  ...lots('ct-2', 'sec-1', [3], 3),
-  ...lots('ct-3', 'sec-2', [1, 2, 3], 4),
-  ...lots('ct-4', 'sec-3', [1, 2, 3], 7),
-  ...lots('ct-5', 'sec-3', [1, 2, 3], 10),
-  ...lots('ct-6', 'sec-4', [1, 2], 13),
-  ...lots('ct-7', 'sec-4', [3], 15),
-  ...lots('ct-2', 'sec-5', [1, 2, 3], 16),
+  { id: 'at-1', contractId: 'ct-1', sectorId: 'sec-1', lots: [1, 2] },
+  { id: 'at-2', contractId: 'ct-2', sectorId: 'sec-1', lots: [3] },
+  { id: 'at-3', contractId: 'ct-3', sectorId: 'sec-2', lots: [1, 2, 3] },
+  { id: 'at-4', contractId: 'ct-4', sectorId: 'sec-3', lots: [1, 2, 3] },
+  { id: 'at-5', contractId: 'ct-5', sectorId: 'sec-3', lots: [1, 2, 3] },
+  { id: 'at-6', contractId: 'ct-6', sectorId: 'sec-4', lots: [1, 2] },
+  { id: 'at-7', contractId: 'ct-7', sectorId: 'sec-4', lots: [3] },
+  { id: 'at-8', contractId: 'ct-2', sectorId: 'sec-5', lots: [1, 2, 3] },
 ];
 
 export const DEMO_EXERCISES: readonly Exercise[] = [
-  { id: 'ex-1', contractId: 'ct-1', sectorId: 'sec-1', year: 2024, closingDate: '2024-12-31' },
-  { id: 'ex-2', contractId: 'ct-1', sectorId: 'sec-1', year: 2025, closingDate: '2025-12-31' },
-  { id: 'ex-3', contractId: 'ct-1', sectorId: 'sec-1', year: 2026, closingDate: '2026-12-31' },
-  { id: 'ex-4', contractId: 'ct-2', sectorId: 'sec-5', year: 2025, closingDate: '2025-12-31' },
-  { id: 'ex-5', contractId: 'ct-3', sectorId: 'sec-2', year: 2026, closingDate: '2026-12-31' },
-  { id: 'ex-6', contractId: 'ct-5', sectorId: 'sec-3', year: 2026, closingDate: '2026-12-31' },
+  {
+    id: 'ex-1',
+    attributionId: 'at-1',
+    contractId: 'ct-1',
+    sectorId: 'sec-1',
+    year: 2024,
+    closingDate: '2024-12-31',
+  },
+  {
+    id: 'ex-2',
+    attributionId: 'at-1',
+    contractId: 'ct-1',
+    sectorId: 'sec-1',
+    year: 2025,
+    closingDate: '2025-12-31',
+  },
+  {
+    id: 'ex-3',
+    attributionId: 'at-1',
+    contractId: 'ct-1',
+    sectorId: 'sec-1',
+    year: 2026,
+    closingDate: '2026-12-31',
+  },
+  {
+    id: 'ex-4',
+    attributionId: 'at-16',
+    contractId: 'ct-2',
+    sectorId: 'sec-5',
+    year: 2025,
+    closingDate: '2025-12-31',
+  },
+  {
+    id: 'ex-5',
+    attributionId: 'at-4',
+    contractId: 'ct-3',
+    sectorId: 'sec-2',
+    year: 2026,
+    closingDate: '2026-12-31',
+  },
+  {
+    id: 'ex-6',
+    attributionId: 'at-10',
+    contractId: 'ct-5',
+    sectorId: 'sec-3',
+    year: 2026,
+    closingDate: '2026-12-31',
+  },
 ];
 
 const user = (

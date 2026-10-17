@@ -16,7 +16,7 @@ export interface EntityDialogData<T> {
 export abstract class EntityDialog<T extends { readonly id: string }, I> {
   protected readonly store = inject(SettingsStore);
   protected readonly toast = inject(ToastService);
-  private readonly ref = inject<DialogRef<T>>(DialogRef);
+  protected readonly ref = inject<DialogRef<T>>(DialogRef);
   protected readonly item = inject<EntityDialogData<T>>(DIALOG_DATA).item;
 
   protected readonly editing = this.item !== null;

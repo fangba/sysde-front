@@ -34,13 +34,18 @@ export const SETTINGS_ROUTES: Routes = [
       },
       {
         path: 'attribution',
-        title: 'Attribution',
+        title: 'Attributions',
         loadComponent: () => import('./tabs/attributions.tab').then((m) => m.AttributionsTab),
       },
       {
         path: 'exercices',
-        title: 'Exercice',
+        title: 'Exercices',
         loadComponent: () => import('./tabs/exercises.tab').then((m) => m.ExercisesTab),
+      },
+      {
+        path: 'references',
+        title: 'Références',
+        loadComponent: () => import('./tabs/references.tab').then((m) => m.ReferencesTab),
       },
     ],
   },

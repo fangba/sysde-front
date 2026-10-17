@@ -4,6 +4,7 @@ import {
   DEMO_ATTRIBUTIONS,
   DEMO_CONTRACTS,
   DEMO_EXERCISES,
+  DEMO_LOTS,
   DEMO_OPERATORS,
   DEMO_SECTORS,
   DEMO_USERS,
@@ -16,6 +17,8 @@ import {
   findEmailConflict,
   findExerciseDuplicate,
   findLotConflict,
+  findLotNumberConflict,
+  findSectorCodeConflict,
   findOperatorAcronymConflict,
   sectorIdsOfContract,
   sectorsOfOperator,
@@ -49,26 +52,21 @@ describe('settings.rules', () => {
     const taken = { contractId: 'ct-2', sectorId: 'sec-1', lot: 1 };
     expect(findLotConflict(taken, DEMO_ATTRIBUTIONS, DEMO_CONTRACTS)?.contractId).toBe('ct-1');
     const free = { contractId: 'ct-2', sectorId: 'sec-1', lot: 3 };
-    expect(findLotConflict(free, DEMO_ATTRIBUTIONS, DEMO_CONTRACTS, 'at-3')).toBeUndefined();
+    expect(findLotConflict(free, DEMO_ATTRIBUTIONS, DEMO_CONTRACTS, 'at-2')).toBeUndefined();
   });
 
   it('autorise un même lot sur des contrats successifs', () => {
     // ct-4 (2023-2025) et ct-5 (2026-2028) portent tous deux sur le secteur sec-3.
     const next = { contractId: 'ct-5', sectorId: 'sec-3', lot: 1 };
-    expect(findLotConflict(next, DEMO_ATTRIBUTIONS, DEMO_CONTRACTS, 'at-10')).toBeUndefined();
+    expect(findLotConflict(next, DEMO_ATTRIBUTIONS, DEMO_CONTRACTS, 'at-5')).toBeUndefined();
   });
 
   it('détecte un exercice en double', () => {
+    expect(findExerciseDuplicate({ attributionId: 'at-1', year: 2025 }, DEMO_EXERCISES)?.id).toBe(
+      'ex-2',
+    );
     expect(
-      findExerciseDuplicate({ contractId: 'ct-1', sectorId: 'sec-1', year: 2025 }, DEMO_EXERCISES)
-        ?.id,
-    ).toBe('ex-2');
-    expect(
-      findExerciseDuplicate(
-        { contractId: 'ct-1', sectorId: 'sec-1', year: 2025 },
-        DEMO_EXERCISES,
-        'ex-2',
-      ),
+      findExerciseDuplicate({ attributionId: 'at-1', year: 2025 }, DEMO_EXERCISES, 'ex-2'),
     ).toBeUndefined();
   });
 
@@ -114,5 +112,12 @@ describe('settings.rules', () => {
         expect(['DI', 'SU']).toContain(user.poste);
       }
     }
+  });
+
+  it('refuse un code de secteur ou un numéro de lot déjà utilisé', () => {
+    expect(findSectorCodeConflict(' s01 ', DEMO_SECTORS)?.id).toBe('sec-1');
+    expect(findSectorCodeConflict('S01', DEMO_SECTORS, 'sec-1')).toBeUndefined();
+    expect(findLotNumberConflict({ sectorId: 'sec-1', number: 2 }, DEMO_LOTS)?.number).toBe(2);
+    expect(findLotNumberConflict({ sectorId: 'sec-1', number: 4 }, DEMO_LOTS)).toBeUndefined();
   });
 });

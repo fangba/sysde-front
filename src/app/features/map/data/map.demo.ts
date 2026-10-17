@@ -43,7 +43,7 @@ export function buildCatalog(): readonly MapOperatorOption[] {
         ...s,
         lots: attributions
           .filter((a) => a.sectorId === s.id)
-          .map((a) => ({ lot: a.lot, sections: SECTIONS }))
+          .flatMap((a) => a.lots.map((lot) => ({ lot, sections: SECTIONS })))
           .sort((a, b) => a.lot - b.lot),
       }),
     );

@@ -12,14 +12,24 @@ export interface Operator {
 }
 export type OperatorInput = Omit<Operator, 'id'>;
 
-/** Un secteur regroupe `LOTS_PER_SECTOR` lots ; il est créé en dehors de cet écran. */
+/** Donnée de référence : zone géographique d'encadrement, divisée en lots. */
 export interface Sector {
   readonly id: string;
   readonly code: string;
   readonly name: string;
 }
 
-export const LOTS_PER_SECTOR = 3;
+export type SectorInput = Omit<Sector, 'id'>;
+
+/** Donnée de référence : subdivision numérotée d'un secteur. */
+export interface Lot {
+  readonly id: string;
+  readonly sectorId: string;
+  readonly number: number;
+  readonly description: string;
+}
+export type LotInput = Omit<Lot, 'id'>;
+
 export const CONTRACT_YEARS = 3;
 
 /** Contrat triennal d'un opérateur technique. Dates ISO (aaaa-mm-jj), bornes incluses. */
@@ -32,18 +42,22 @@ export interface Contract {
 }
 export type ContractInput = Omit<Contract, 'id'>;
 
-/** Attribution d'un lot d'un secteur dans le cadre d'un contrat. */
+/**
+ * Attribution : ensemble des lots d'un secteur confiés à un opérateur, pour la période
+ * de son contrat. Il n'en existe qu'une par couple contrat / secteur.
+ */
 export interface Attribution {
   readonly id: string;
   readonly contractId: string;
   readonly sectorId: string;
-  readonly lot: number;
+  readonly lots: readonly number[];
 }
 export type AttributionInput = Omit<Attribution, 'id'>;
 
-/** Exercice annuel d'un contrat, rattaché à un secteur. */
+/** Exercice annuel d'un contrat, rattaché à une attribution (un lot d'un secteur). */
 export interface Exercise {
   readonly id: string;
+  readonly attributionId: string;
   readonly contractId: string;
   readonly sectorId: string;
   readonly year: number;
