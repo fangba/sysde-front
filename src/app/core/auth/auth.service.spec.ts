@@ -31,6 +31,19 @@ describe('AuthService (démo)', () => {
     expect(TestBed.inject(CurrentUser).fullName()).toBe('Jean Kouame');
   });
 
+  it('donne au superviseur la vue nationale, sans le menu Tâches', async () => {
+    const supervisor = DEMO_ACCOUNTS.find((a) => a.email === 'superviseur@sysde.ci');
+    expect(supervisor).toBeDefined();
+    await firstValueFrom(
+      auth.login({ email: supervisor?.email ?? '', password: supervisor?.password ?? '' }, false),
+    );
+    const user = TestBed.inject(CurrentUser);
+    expect(user.isSupervisor()).toBe(true);
+    expect(user.isAdministrator()).toBe(false);
+    expect(user.hasGlobalView()).toBe(true);
+    expect(user.canReport()).toBe(true);
+  });
+
   it('exige le mot de passe des comptes de démonstration', async () => {
     const [admin] = DEMO_ACCOUNTS;
     await expect(

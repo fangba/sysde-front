@@ -107,7 +107,7 @@ export class MapPage {
   /** Filtre de plantations : administrateur, chef de département et chef de secteur. */
   protected readonly canFilter = computed(
     () =>
-      this.currentUser.isAdministrator() ||
+      this.currentUser.hasGlobalView() ||
       this.currentUser.isDepartmentHead() ||
       this.currentUser.isSectorHead(),
   );

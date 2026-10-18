@@ -26,10 +26,16 @@ export const adminGuard: CanActivateFn = () => {
   return inject(CurrentUser).isAdministrator() ? true : router.createUrlTree(['/']);
 };
 
-/** Réserve le reporting aux administrateurs et aux chefs de département et de secteur. */
+/** Réserve le reporting aux administrateurs, aux superviseurs et aux chefs de département et de secteur. */
 export const reportingGuard: CanActivateFn = () => {
   const router = inject(Router);
   return inject(CurrentUser).canReport() ? true : router.createUrlTree(['/']);
+};
+
+/** Le menu Tâches n'est pas ouvert au superviseur : renvoi vers l'accueil. */
+export const tasksGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CurrentUser).isSupervisor() ? router.createUrlTree(['/']) : true;
 };
 
 /** N'accepte que des chemins internes pour la redirection après connexion. */

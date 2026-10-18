@@ -34,6 +34,7 @@ function setup(
         useValue: {
           user: signal(user),
           isAdministrator: signal(role === 'admin'),
+          hasGlobalView: signal(role === 'admin'),
           isDepartmentHead: signal(role === 'cd'),
           isSectorHead: signal(role === 'cs'),
         },

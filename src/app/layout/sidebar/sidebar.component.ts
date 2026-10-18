@@ -23,14 +23,16 @@ export class SidebarComponent {
   readonly toggled = output<void>();
 
   protected readonly currentUser = inject(CurrentUser);
-  /** Un administrateur voit toutes les sections ; les autres, celles qui ne lui sont pas réservées. */
+  /** Un administrateur voit toutes les sections ; le superviseur, Dashboard, Reporting et Carte ; les autres, celles qui ne leur sont pas réservées. */
   protected readonly items = computed(() =>
     NAV_ITEMS.filter((item) =>
       item.adminOnly
         ? this.currentUser.isAdministrator()
-        : item.managersOnly
-          ? this.currentUser.canReport()
-          : true,
+        : item.hiddenForSupervisor && this.currentUser.isSupervisor()
+          ? false
+          : item.managersOnly
+            ? this.currentUser.canReport()
+            : true,
     ),
   );
 }

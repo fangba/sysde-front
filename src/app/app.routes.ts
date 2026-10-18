@@ -1,6 +1,12 @@
 import type { Routes } from '@angular/router';
 
-import { adminGuard, authGuard, guestGuard, reportingGuard } from './core/auth/auth.guard';
+import {
+  adminGuard,
+  authGuard,
+  guestGuard,
+  reportingGuard,
+  tasksGuard,
+} from './core/auth/auth.guard';
 import { NAV_ITEMS } from './layout/nav.config';
 
 const placeholderRoutes: Routes = NAV_ITEMS.filter(
@@ -43,6 +49,7 @@ export const routes: Routes = [
       },
       {
         path: 'taches',
+        canActivate: [tasksGuard],
         loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES),
       },
       {

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { CurrentUser } from '@core/auth/current-user';
+
 import { AreaChartComponent } from '@shared/ui/area-chart/area-chart.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
@@ -39,6 +41,7 @@ import { DashboardStore } from './state/dashboard.store';
 })
 export class DashboardPage {
   protected readonly store = inject(DashboardStore);
+  protected readonly currentUser = inject(CurrentUser);
   protected readonly periods = PERIOD_OPTIONS;
   protected readonly skeletons = [0, 1, 2, 3];
   protected readonly formatPercentRounded = formatPercentRounded;

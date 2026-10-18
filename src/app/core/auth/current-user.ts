@@ -39,9 +39,13 @@ export class CurrentUser {
   readonly isDepartmentHead = computed(
     () => !this.user().administrator && this.user().poste === 'CD',
   );
-  /** Reporting : administrateur, chef de département et chef de secteur. */
+  /** Superviseur (SU) : même vue nationale que l'administrateur, limitée au Dashboard, au Reporting et à la Carte. */
+  readonly isSupervisor = computed(() => !this.user().administrator && this.user().poste === 'SU');
+  /** Voit les données de tous les opérateurs : administrateur ou superviseur. */
+  readonly hasGlobalView = computed(() => this.isAdministrator() || this.isSupervisor());
+  /** Reporting : vue nationale (administrateur, superviseur), chef de département et chef de secteur. */
   readonly canReport = computed(
-    () => this.isAdministrator() || this.isDepartmentHead() || this.isSectorHead(),
+    () => this.hasGlobalView() || this.isDepartmentHead() || this.isSectorHead(),
   );
   readonly fullName = computed(() => `${this.user().firstName} ${this.user().lastName}`.trim());
 

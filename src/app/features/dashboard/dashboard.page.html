@@ -21,10 +21,12 @@
       (valueChange)="onPeriodChange($event)"
     />
   }
-  <a ui-button variant="primary" routerLink="/taches">
-    <ui-icon name="plus" />
-    Voir les tâches
-  </a>
+  @if (!currentUser.isSupervisor()) {
+    <a ui-button variant="primary" routerLink="/taches">
+      <ui-icon name="plus" />
+      Voir les tâches
+    </a>
+  }
 </ui-page-header>
 
 @switch (store.status()) {

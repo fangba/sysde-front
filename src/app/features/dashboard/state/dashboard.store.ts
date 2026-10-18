@@ -96,7 +96,7 @@ export class DashboardStore {
     () =>
       DASHBOARD_PROFILES[
         profileFor({
-          administrator: this.currentUser.isAdministrator(),
+          administrator: this.currentUser.hasGlobalView(),
           departmentHead: this.currentUser.isDepartmentHead(),
           sectorHead: this.currentUser.isSectorHead(),
         })

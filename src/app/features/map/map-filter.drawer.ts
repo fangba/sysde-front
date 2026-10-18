@@ -104,10 +104,10 @@ export class MapFilterDrawer {
   private readonly currentUser = inject(CurrentUser);
   private readonly fb = inject(NonNullableFormBuilder);
 
-  /** L'administrateur voit tous les opérateurs ; un chef de département ou de secteur, le sien uniquement. */
+  /** L'administrateur et le superviseur voient tous les opérateurs ; un chef de département ou de secteur, le sien uniquement. */
   protected readonly operators = computed(() => {
     const catalog = this.store.catalog();
-    return this.currentUser.isAdministrator()
+    return this.currentUser.hasGlobalView()
       ? catalog
       : catalog.filter(
           (o) => o.acronym.toLowerCase() === this.currentUser.user().operator.acronym.toLowerCase(),

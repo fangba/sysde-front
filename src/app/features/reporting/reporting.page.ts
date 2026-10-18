@@ -83,7 +83,7 @@ export class ReportingPage {
   private readonly currentUser = inject(CurrentUser);
 
   private readonly level = computed<ReportLevel>(() =>
-    this.currentUser.isAdministrator()
+    this.currentUser.hasGlobalView()
       ? 'organisme'
       : this.currentUser.isDepartmentHead()
         ? 'operateur'
