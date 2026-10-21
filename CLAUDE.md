@@ -59,7 +59,7 @@ Menu : Dashboard, Tâches, Reporting, Carte, Paramètres, Compte.
 ## Règles métier utiles (cahier des charges)
 
 - Opérateurs : SAPH, SOGB, TRCI, EXAT, CCP, IDH, CHC.
-- Postes : CD, CS, CF, CO, FO, MO, ES, SE, SU, DI.
+- Postes : CD, CS, CF, CO, FS, MO, ES, SE, SU, DI.
 - Un secteur compte 3 lots ; le lot est l'unité d'affectation contractuelle.
 - Un contrat par opérateur, d'une durée de 3 ans, avec 3 exercices annuels.
 
@@ -70,4 +70,4 @@ Menu : Dashboard, Tâches, Reporting, Carte, Paramètres, Compte.
 - Avant de livrer une modification : `pnpm verify` doit passer sans avertissement.
 
 - Connexion : page `/connexion` (hors shell), `AuthService` + `authGuard`/`guestGuard` + intercepteur Bearer ; mode démo = e-mail valide + mot de passe ≥ 4 car. ; back réel : `POST /auth/login` → `{token,user}`.
-- Tâches : onglets Utilisateur (personnel de l'organisme connecté uniquement), Chef département, Chef secteur (secteur obligatoire, parmi ceux attribués à l'opérateur), Collaborateur (postes CF/CO/FO/MO/ES/SE, secteur facultatif) ; `User.sectorId` ajouté.
+- Tâches : onglets Utilisateur (personnel de l'organisme connecté uniquement), Chef département, Chef secteur (secteur obligatoire, parmi ceux attribués à l'opérateur), Collaborateur (postes CF/CO/FS/MO/ES/SE, secteur facultatif) ; `User.sectorId` ajouté.

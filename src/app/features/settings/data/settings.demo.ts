@@ -209,7 +209,7 @@ export const DEMO_USERS: readonly User[] = [
   user(11, 'Kouadio', 'Marie', 'op-4', 'CS', 'sec-5'),
   user(12, 'Dosso', 'Lanciné', 'op-5', 'CS', 'sec-2'),
   user(13, 'Gnahoré', 'Eric', 'op-7', 'CS', 'sec-3'),
-  user(14, 'Aka', 'Jean', 'op-3', 'FO', 'sec-1'),
+  user(14, 'Aka', 'Jean', 'op-3', 'FS', 'sec-1'),
   user(15, 'Yéo', 'Salimata', 'op-3', 'SE'),
   user(16, 'Tano', 'Koffi', 'op-5', 'MO', 'sec-2'),
   user(17, 'Zadi', 'Rose', 'op-4', 'CO', 'sec-5'),

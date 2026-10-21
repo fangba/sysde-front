@@ -12,7 +12,7 @@ export const POSTE_LABEL: Readonly<Record<Poste, string>> = {
   CS: 'Chef de secteur',
   CF: 'Contrôleur formation',
   CO: 'Contrôleur ordinaire',
-  FO: 'Formateur',
+  FS: 'Formateur',
   MO: 'Moniteur',
   ES: 'Équipe spéciale',
   SE: 'Secrétaire',
@@ -36,4 +36,4 @@ export const ACTIVE_TONE: Readonly<Record<'true' | 'false', Tone>> = {
 };
 
 /** Postes des collaborateurs d'un opérateur technique, placés sous un chef de secteur. */
-export const COLLABORATOR_POSTES: readonly Poste[] = ['CF', 'CO', 'FO', 'MO', 'ES', 'SE'];
+export const COLLABORATOR_POSTES: readonly Poste[] = ['CF', 'CO', 'FS', 'MO', 'ES', 'SE'];

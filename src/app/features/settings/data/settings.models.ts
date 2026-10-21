@@ -65,7 +65,7 @@ export interface Exercise {
 }
 export type ExerciseInput = Omit<Exercise, 'id'>;
 
-export type Poste = 'CD' | 'CS' | 'CF' | 'CO' | 'FO' | 'MO' | 'ES' | 'SE' | 'SU' | 'DI';
+export type Poste = 'CD' | 'CS' | 'CF' | 'CO' | 'FS' | 'MO' | 'ES' | 'SE' | 'SU' | 'DI';
 
 export interface User {
   readonly id: string;
