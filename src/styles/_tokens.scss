@@ -75,6 +75,16 @@
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --duration: 180ms;
 
+  // Aperçus de thème (page Compte) : couleurs fixes, identiques dans les deux thèmes
+  --swatch-light-bg: #f4f7f5;
+  --swatch-light-card: #ffffff;
+  --swatch-light-line: #e6ece8;
+  --swatch-light-ink: #0e1a14;
+  --swatch-dark-bg: #0a120e;
+  --swatch-dark-card: #111d17;
+  --swatch-dark-line: #1f3128;
+  --swatch-dark-ink: #eaf3ee;
+
   // Mise en page
   --sidebar-width: 248px;
   // Le contenu suit la largeur de l'écran ; le plafond ne joue que sur les très grands écrans.

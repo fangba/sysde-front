@@ -66,6 +66,12 @@ export class AuthService {
     );
   }
 
+  /** Change le mot de passe du compte connecté ; la session reste ouverte. */
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    const email = this._session()?.user.email ?? '';
+    return this.api.changePassword({ currentPassword, newPassword, email });
+  }
+
   logout(): void {
     this.clearStorage();
     this._session.set(null);

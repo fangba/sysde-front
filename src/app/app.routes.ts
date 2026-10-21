@@ -15,7 +15,8 @@ const placeholderRoutes: Routes = NAV_ITEMS.filter(
     item.path !== 'parametres' &&
     item.path !== 'taches' &&
     item.path !== 'carte' &&
-    item.path !== 'reporting',
+    item.path !== 'reporting' &&
+    item.path !== 'compte',
 ).map((item) => ({
   path: item.path,
   title: item.label,
@@ -64,6 +65,11 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
+      },
+      {
+        path: 'compte',
+        title: 'Compte',
+        loadComponent: () => import('./features/account/account.page').then((m) => m.AccountPage),
       },
       ...placeholderRoutes,
       {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { delay, of, throwError, type Observable } from 'rxjs';
 
 import { AuthApi } from '@core/auth/auth.api';
-import type { Credentials, Session } from '@core/auth/auth.models';
+import type { Credentials, PasswordChange, Session } from '@core/auth/auth.models';
 import type { SessionUser } from '@core/auth/current-user';
 import { ApiError } from '@core/http/api-error';
 
@@ -11,6 +11,9 @@ import { ADMINISTRATOR_ROLE, DEMO_ACCOUNTS } from './demo-accounts';
 import { DEMO_OPERATORS, DEMO_SECTORS, DEMO_USERS } from '../../settings/data/settings.demo';
 
 const MIN_PASSWORD = 4;
+
+/** Mots de passe modifiés pendant la visite (clé : adresse e-mail en minuscules). */
+const changedPasswords = new Map<string, string>();
 
 function nameFromEmail(email: string): { firstName: string; lastName: string } {
   const [first = '', last = ''] = email.split('@')[0].split(/[._-]/);
@@ -28,7 +31,8 @@ export class DemoAuthApi extends AuthApi {
   login({ email, password }: Credentials): Observable<Session> {
     const account = DEMO_ACCOUNTS.find((a) => a.email === email.trim().toLowerCase());
     // Un compte de démonstration exige son mot de passe ; les autres adresses restent libres.
-    if (account ? account.password !== password : password.length < MIN_PASSWORD) {
+    const expected = changedPasswords.get(email.trim().toLowerCase()) ?? account?.password;
+    if (expected !== undefined ? expected !== password : password.length < MIN_PASSWORD) {
       return throwError(() => new ApiError(401, 'Adresse e-mail ou mot de passe incorrect.')).pipe(
         delay(500),
       );
@@ -58,5 +62,20 @@ export class DemoAuthApi extends AuthApi {
               : { acronym: 'SysDE', name: 'SysDE' },
           };
     return of({ token: `demo-${Date.now()}`, user }).pipe(delay(700));
+  }
+
+  changePassword({ email, currentPassword, newPassword }: PasswordChange): Observable<void> {
+    const key = email.trim().toLowerCase();
+    const expected =
+      changedPasswords.get(key) ?? DEMO_ACCOUNTS.find((a) => a.email === key)?.password;
+    const wrong =
+      expected !== undefined ? expected !== currentPassword : currentPassword.length < MIN_PASSWORD;
+    if (wrong) {
+      return throwError(() => new ApiError(403, 'Le mot de passe actuel est incorrect.')).pipe(
+        delay(500),
+      );
+    }
+    changedPasswords.set(key, newPassword);
+    return of(undefined).pipe(delay(600));
   }
 }

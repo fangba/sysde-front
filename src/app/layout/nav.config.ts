@@ -19,6 +19,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Reporting', path: 'reporting', icon: 'chart', managersOnly: true },
   { label: 'Carte', path: 'carte', icon: 'map' },
   { label: 'Paramètres', path: 'parametres', icon: 'settings', adminOnly: true },
+  { label: 'Compte', path: 'compte', icon: 'user' },
 ];
 
 /** Libellé d'une section à partir de son chemin (titre des pages « bientôt disponibles »). */

@@ -1,0 +1,147 @@
+<ui-page-header
+  title="Mon compte"
+  subtitle="Vos informations, votre mot de passe et l’apparence de l’application."
+/>
+
+<section class="hero" aria-label="Identité">
+  <div class="hero__who">
+    <span class="avatar" aria-hidden="true">{{ currentUser.initials() }}</span>
+    <div>
+      <p class="name">{{ currentUser.fullName() }}</p>
+      <ui-status-pill tone="green">{{ currentUser.user().role }}</ui-status-pill>
+    </div>
+  </div>
+  <dl class="facts">
+    <div>
+      <dt>Adresse e-mail</dt>
+      <dd>{{ currentUser.user().email }}</dd>
+    </div>
+    <div>
+      <dt>Opérateur</dt>
+      <dd>
+        {{ currentUser.user().operator.name }}
+        @if (currentUser.user().operator.name !== currentUser.user().operator.acronym) {
+          ({{ currentUser.user().operator.acronym }})
+        }
+      </dd>
+    </div>
+    @if (currentUser.user().poste; as poste) {
+      <div>
+        <dt>Poste</dt>
+        <dd>{{ poste }}</dd>
+      </div>
+    }
+    @if (currentUser.sectorLabel(); as sector) {
+      <div>
+        <dt>Secteur</dt>
+        <dd>{{ sector }}</dd>
+      </div>
+    }
+  </dl>
+</section>
+
+<div class="columns">
+  <ui-card
+    class="password"
+    heading="Mot de passe"
+    subheading="Choisissez un mot de passe que vous n’utilisez nulle part ailleurs."
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (error()) {
+        <div class="alert" role="alert">{{ error() }}</div>
+      }
+
+      <div class="fields">
+        <ui-field
+          class="span-2"
+          label="Mot de passe actuel"
+          [control]="form.controls.currentPassword"
+        >
+          <input
+            class="ui-input"
+            [type]="reveal() ? 'text' : 'password'"
+            formControlName="currentPassword"
+            autocomplete="current-password"
+          />
+        </ui-field>
+
+        <ui-field label="Nouveau mot de passe" [control]="form.controls.newPassword">
+          <input
+            class="ui-input"
+            [type]="reveal() ? 'text' : 'password'"
+            formControlName="newPassword"
+            autocomplete="new-password"
+          />
+        </ui-field>
+
+        <ui-field label="Confirmer le mot de passe" [control]="form.controls.confirmation">
+          <input
+            class="ui-input"
+            [type]="reveal() ? 'text' : 'password'"
+            formControlName="confirmation"
+            autocomplete="new-password"
+          />
+        </ui-field>
+      </div>
+
+      <ul class="checks" aria-label="Conditions du nouveau mot de passe">
+        @for (check of checks(); track check.key) {
+          <li [class.is-ok]="check.ok">
+            <span class="dot" aria-hidden="true">
+              @if (check.ok) {
+                <ui-icon name="check" />
+              }
+            </span>
+            {{ check.label }}
+            <span class="sr-only">{{ check.ok ? '(respectée)' : '(à respecter)' }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="actions">
+        <label class="ui-check">
+          <input type="checkbox" [checked]="reveal()" (change)="reveal.set(!reveal())" />
+          Afficher les mots de passe
+        </label>
+        <button ui-button variant="primary" type="submit" [loading]="saving()">
+          Modifier le mot de passe
+        </button>
+      </div>
+    </form>
+  </ui-card>
+
+  <div class="side">
+    <ui-card heading="Apparence" subheading="Le choix est conservé sur cet appareil.">
+      <div class="themes" role="radiogroup" aria-label="Thème de l’application">
+        @for (choice of themes; track choice.mode) {
+          <button
+            type="button"
+            class="theme"
+            role="radio"
+            [attr.aria-checked]="theme.theme() === choice.mode"
+            (click)="theme.set(choice.mode)"
+          >
+            <span class="preview" [attr.data-preview]="choice.mode" aria-hidden="true">
+              <span class="preview__bar"></span>
+              <span class="preview__card"></span>
+              <span class="preview__card preview__card--short"></span>
+            </span>
+            <span class="theme__label">
+              <ui-icon [name]="choice.icon" />
+              <span>
+                <strong>{{ choice.label }}</strong>
+                <small>{{ choice.hint }}</small>
+              </span>
+            </span>
+          </button>
+        }
+      </div>
+    </ui-card>
+
+    <ui-card heading="Session" subheading="Fermez votre session sur cet appareil.">
+      <button ui-button type="button" class="logout" (click)="logout()">
+        <ui-icon name="logout" /> Se déconnecter
+      </button>
+    </ui-card>
+  </div>
+</div>

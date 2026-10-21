@@ -48,10 +48,11 @@ Un nouveau module = un dossier dans `features/`, une route dans `app.routes.ts`,
 
 ## État actuel
 
-Menu : Dashboard, Tâches, Carte, Paramètres.
+Menu : Dashboard, Tâches, Reporting, Carte, Paramètres, Compte.
 - Dashboard : terminé (KPI, production mensuelle, visites, échéances), sur données de démonstration (`useDemoData: true` dans `src/environments`).
 - Paramètres : terminé sur données de démonstration (`features/settings/`) — quatre onglets Opérateurs, Contrats, Attribution, Exercice (liste, création, modification, panneau latéral à droite). Règles métier dans `data/settings.rules.ts` (testées). API : `SettingsApi` (démo ou HTTP : `/operateurs`, `/contrats`, `/attributions`, `/exercices`, `/utilisateurs`, `/secteurs`). Composants communs : `ui-data-table`, `ui-field`, `ui-dialog-shell`.
 - Tâches : page à onglets (`features/tasks/`), onglet Utilisateur (comptes ; réutilise le store et l'API de `features/settings`). D'autres onglets viendront.
+- Compte : page « Mon compte » (`features/account/`), visible par tous : identité de l'utilisateur connecté, changement de mot de passe (`AuthService.changePassword`, back réel : `POST /auth/mot-de-passe` avec `{currentPassword,newPassword}` → 204 ; règles dans `account.rules.ts`, minimum 8 caractères), thème clair/sombre, déconnexion.
 - Carte : terminée (`features/map/`) — carte Leaflet plein écran, fonds de plan Plan (OpenStreetMap), Satellite, Hybride (Esri), Relief (OpenTopoMap). Prochaine étape : couches de données (secteurs, lots, parcelles).
 - Brancher le back : passer `useDemoData` à `false` et exposer `GET {apiBaseUrl}/dashboard` au format `DashboardData` (`features/dashboard/data/dashboard.models.ts`).
 

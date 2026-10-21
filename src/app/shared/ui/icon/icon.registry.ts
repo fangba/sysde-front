@@ -4,6 +4,7 @@
  */
 export const ICON_PATHS = {
   home: ['M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'],
+  user: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5'],
   building: ['M4 21V6l8-3 8 3v15M2 21h20M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4'],
   map: ['M9 4 3 6.5v13L9 17l6 3 6-2.5v-13L15 7zM9 4v13M15 7v13'],
   contract: [
