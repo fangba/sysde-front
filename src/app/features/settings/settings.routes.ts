@@ -4,6 +4,7 @@ import type { Routes } from '@angular/router';
 import { APP_CONFIG } from '@core/config/app-config';
 
 import { DemoSettingsApi, HttpSettingsApi, SettingsApi } from './data/settings.api';
+import { PermissionsStore } from './state/permissions.store';
 import { SettingsStore } from './state/settings.store';
 
 export const SETTINGS_ROUTES: Routes = [
@@ -11,6 +12,7 @@ export const SETTINGS_ROUTES: Routes = [
     path: '',
     providers: [
       SettingsStore,
+      PermissionsStore,
       DemoSettingsApi,
       HttpSettingsApi,
       {
@@ -41,6 +43,11 @@ export const SETTINGS_ROUTES: Routes = [
         path: 'exercices',
         title: 'Exercices',
         loadComponent: () => import('./tabs/exercises.tab').then((m) => m.ExercisesTab),
+      },
+      {
+        path: 'permissions',
+        title: 'Permissions',
+        loadComponent: () => import('./tabs/permissions.tab').then((m) => m.PermissionsTab),
       },
       {
         path: 'references',

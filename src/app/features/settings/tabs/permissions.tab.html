@@ -1,0 +1,123 @@
+<ui-card
+  heading="Droits par poste"
+  subheading="Cochez ce que chaque poste peut voir ou faire dans l’application."
+>
+  <div cardActions class="bar">
+    @if (store.dirty()) {
+      <span class="pending" role="status">
+        {{ store.changeCount() }}
+        {{
+          store.changeCount() > 1
+            ? 'modifications non enregistrées'
+            : 'modification non enregistrée'
+        }}
+      </span>
+    }
+    <button
+      ui-button
+      variant="secondary"
+      type="button"
+      [disabled]="!store.dirty() || store.saving()"
+      (click)="store.discard()"
+    >
+      Annuler
+    </button>
+    <button
+      ui-button
+      variant="primary"
+      type="button"
+      [disabled]="!store.dirty()"
+      [loading]="store.saving()"
+      (click)="store.save()"
+    >
+      Enregistrer
+    </button>
+  </div>
+
+  <p class="note">
+    <ui-icon name="lock" />
+    Les administrateurs ont tous les droits, et les Paramètres leur restent réservés.
+  </p>
+
+  @switch (store.status()) {
+    @case ('loading') {
+      <div class="loading" aria-busy="true" aria-label="Chargement des droits">
+        @for (row of placeholderRows; track row) {
+          <ui-skeleton height="44px" />
+        }
+      </div>
+    }
+    @case ('error') {
+      <ui-empty-state
+        icon="alert"
+        tone="red"
+        title="Chargement impossible"
+        [description]="store.error()"
+      >
+        <button ui-button variant="primary" type="button" (click)="store.load()">Réessayer</button>
+      </ui-empty-state>
+    }
+    @default {
+      <div class="scroller" tabindex="0" role="region" aria-label="Tableau des droits par poste">
+        <table class="matrix">
+          <caption class="sr-only">
+            Droits accordés à chaque poste : une ligne par droit, une colonne par poste.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" class="corner">Droit</th>
+              @for (poste of postes; track poste) {
+                <th scope="col" class="poste">
+                  <span class="poste__code" [attr.title]="posteLabel[poste]">{{ poste }}</span>
+                  <span class="sr-only">{{ posteLabel[poste] }}</span>
+                  <span class="poste__count" aria-hidden="true">
+                    {{ store.counts()[poste] }}/{{ total }}
+                  </span>
+                </th>
+              }
+            </tr>
+          </thead>
+          @for (group of groups; track group.id) {
+            <tbody>
+              <tr class="group">
+                <th scope="colgroup" [attr.colspan]="postes.length + 1">
+                  <ui-icon [name]="group.icon" />
+                  {{ group.label }}
+                </th>
+              </tr>
+              @for (permission of group.permissions; track permission.code) {
+                <tr>
+                  <th scope="row" class="what">
+                    <span class="what__line">
+                      <span class="what__label">{{ permission.label }}</span>
+                      <span class="kind" [attr.data-kind]="permission.kind">
+                        {{ permission.kind === 'voir' ? 'Voir' : 'Faire' }}
+                      </span>
+                    </span>
+                    <span class="what__hint">{{ permission.description }}</span>
+                  </th>
+                  @for (poste of postes; track poste) {
+                    <td [class.is-changed]="store.isChanged(poste, permission.code)">
+                      <input
+                        type="checkbox"
+                        class="cell"
+                        [checked]="store.has(poste, permission.code)"
+                        [attr.aria-label]="posteLabel[poste] + ' : ' + permission.label"
+                        (change)="toggle(poste, permission.code)"
+                      />
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          }
+        </table>
+      </div>
+      <p class="legend">
+        <span class="legend__dot" aria-hidden="true"></span>
+        Case modifiée, pas encore enregistrée. Accorder une action accorde aussi l’accès à son écran
+        ; retirer l’accès à un écran retire ses actions.
+      </p>
+    }
+  }
+</ui-card>

@@ -5,6 +5,7 @@ import { delay, of, throwError } from 'rxjs';
 
 import { ApiError } from '@core/http/api-error';
 
+import { DEFAULT_GRANTS, type PermissionGrants } from './permissions.catalog';
 import {
   DEMO_ATTRIBUTIONS,
   DEMO_CONTRACTS,
@@ -38,6 +39,12 @@ export interface Crud<T extends { readonly id: string }, I> {
   update(id: string, input: I): Observable<T>;
 }
 
+/** Lecture et enregistrement des droits de chaque poste (un seul bloc, enregistré d'un coup). */
+export interface PermissionsResource {
+  load(): Observable<PermissionGrants>;
+  save(grants: PermissionGrants): Observable<PermissionGrants>;
+}
+
 /** Contrat d'accès aux données ; deux implémentations interchangeables (démo et HTTP). */
 export abstract class SettingsApi {
   abstract readonly operators: Crud<Operator, OperatorInput>;
@@ -47,6 +54,19 @@ export abstract class SettingsApi {
   abstract readonly users: Crud<User, UserInput>;
   abstract readonly sectors: Crud<Sector, SectorInput>;
   abstract readonly lots: Crud<Lot, LotInput>;
+  abstract readonly permissions: PermissionsResource;
+}
+
+class HttpPermissions implements PermissionsResource {
+  constructor(private readonly http: HttpClient) {}
+
+  load(): Observable<PermissionGrants> {
+    return this.http.get<PermissionGrants>('/permissions');
+  }
+
+  save(grants: PermissionGrants): Observable<PermissionGrants> {
+    return this.http.put<PermissionGrants>('/permissions', grants);
+  }
 }
 
 class HttpCrud<T extends { readonly id: string }, I> implements Crud<T, I> {
@@ -68,7 +88,7 @@ class HttpCrud<T extends { readonly id: string }, I> implements Crud<T, I> {
   }
 }
 
-/** Appelle la passerelle Spring Boot : `GET/POST {apiBaseUrl}/operateurs`, `PUT …/operateurs/{id}`, etc. */
+/** Appelle la passerelle Spring Boot : `GET/POST {apiBaseUrl}/operateurs`, `PUT …/operateurs/{id}`, `GET/PUT …/permissions`, etc. */
 @Injectable()
 export class HttpSettingsApi extends SettingsApi {
   private readonly http = inject(HttpClient);
@@ -80,6 +100,7 @@ export class HttpSettingsApi extends SettingsApi {
   readonly users = new HttpCrud<User, UserInput>(this.http, '/utilisateurs');
   readonly sectors = new HttpCrud<Sector, SectorInput>(this.http, '/secteurs');
   readonly lots = new HttpCrud<Lot, LotInput>(this.http, '/lots');
+  readonly permissions = new HttpPermissions(this.http);
 }
 
 const LATENCY_MS = 250;
@@ -118,6 +139,19 @@ class MemoryCrud<T extends { readonly id: string }, I> implements Crud<T, I> {
   }
 }
 
+class MemoryPermissions implements PermissionsResource {
+  private grants: PermissionGrants = DEFAULT_GRANTS;
+
+  load(): Observable<PermissionGrants> {
+    return of(this.grants).pipe(delay(LATENCY_MS));
+  }
+
+  save(grants: PermissionGrants): Observable<PermissionGrants> {
+    this.grants = grants;
+    return of(grants).pipe(delay(LATENCY_MS));
+  }
+}
+
 /** Données en mémoire : les modifications durent le temps de la session de navigation. */
 @Injectable()
 export class DemoSettingsApi extends SettingsApi {
@@ -128,4 +162,5 @@ export class DemoSettingsApi extends SettingsApi {
   readonly users = new MemoryCrud<User, UserInput>(DEMO_USERS, 'us');
   readonly sectors = new MemoryCrud<Sector, SectorInput>(DEMO_SECTORS, 'sec');
   readonly lots = new MemoryCrud<Lot, LotInput>(DEMO_LOTS, 'lot');
+  readonly permissions = new MemoryPermissions();
 }
