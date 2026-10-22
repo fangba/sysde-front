@@ -19,6 +19,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Dashboard', path: 'tableau-de-bord', icon: 'home' },
   { label: 'Tâches', path: 'taches', icon: 'clipboard', tasksOnly: true },
   { label: 'Planning', path: 'planning', icon: 'calendar', planningOnly: true },
+  { label: 'Plantations', path: 'plantations', icon: 'leaf' },
   { label: 'Reporting', path: 'reporting', icon: 'chart', managersOnly: true },
   { label: 'Carte', path: 'carte', icon: 'map' },
   { label: 'Paramètres', path: 'parametres', icon: 'settings', adminOnly: true },

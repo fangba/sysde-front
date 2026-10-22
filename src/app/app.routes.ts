@@ -17,6 +17,7 @@ const placeholderRoutes: Routes = NAV_ITEMS.filter(
     item.path !== 'taches' &&
     item.path !== 'carte' &&
     item.path !== 'planning' &&
+    item.path !== 'plantations' &&
     item.path !== 'reporting' &&
     item.path !== 'compte',
 ).map((item) => ({
@@ -61,6 +62,12 @@ export const routes: Routes = [
         canActivate: [planningGuard],
         loadChildren: () =>
           import('./features/planning/planning.routes').then((m) => m.PLANNING_ROUTES),
+      },
+      {
+        path: 'plantations',
+        title: 'Plantations',
+        loadChildren: () =>
+          import('./features/plantations/plantations.routes').then((m) => m.PLANTATIONS_ROUTES),
       },
       {
         path: 'reporting',

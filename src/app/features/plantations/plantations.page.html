@@ -1,0 +1,47 @@
+<ui-page-header title="Plantations" [subtitle]="subtitle()">
+  @if (store.operators().length > 1) {
+    <ui-period-select
+      label="Opérateur"
+      [options]="operatorOptions()"
+      [value]="operator()"
+      (valueChange)="chooseOperator($event)"
+    />
+  }
+  @if (sectorOptions().length > 2) {
+    <ui-period-select
+      label="Secteur"
+      [options]="sectorOptions()"
+      [value]="sector()"
+      (valueChange)="sector.set($event)"
+    />
+  }
+</ui-page-header>
+
+<section class="stats" aria-label="Synthèse des plantations">
+  @for (stat of stats(); track stat.label) {
+    <div class="stat">
+      <span class="stat__label">{{ stat.label }}</span>
+      <strong class="stat__value">{{ stat.value }}</strong>
+    </div>
+  }
+</section>
+
+<ui-card heading="Liste des plantations" [subheading]="count()">
+  <ui-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    caption="Liste des plantations"
+    [rowLabel]="rowLabel"
+    [loading]="store.loading()"
+    editLabel="Consulter"
+    editIcon="eye"
+    searchPlaceholder="Rechercher un planteur, un code, un village…"
+    emptyTitle="Aucune plantation"
+    [emptyDescription]="
+      store.failed()
+        ? 'La base des plantations est injoignable pour le moment.'
+        : 'Aucune plantation ne correspond à ce périmètre.'
+    "
+    (rowEdit)="open($event)"
+  />
+</ui-card>
