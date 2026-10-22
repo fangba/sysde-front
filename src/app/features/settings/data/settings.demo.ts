@@ -1,9 +1,12 @@
 import type {
+  Activity,
+  ActivityCategory,
   Attribution,
   Contract,
   Exercise,
   Lot,
   Operator,
+  PlanningPoste,
   Sector,
   User,
 } from './settings.models';
@@ -209,7 +212,7 @@ export const DEMO_USERS: readonly User[] = [
   user(11, 'Kouadio', 'Marie', 'op-4', 'CS', 'sec-5'),
   user(12, 'Dosso', 'Lanciné', 'op-5', 'CS', 'sec-2'),
   user(13, 'Gnahoré', 'Eric', 'op-7', 'CS', 'sec-3'),
-  user(14, 'Aka', 'Jean', 'op-3', 'FS', 'sec-1'),
+  { ...user(14, 'Aka', 'Jean', 'op-3', 'FS', 'sec-1'), email: 'formateur@sysde.ci' },
   user(15, 'Yéo', 'Salimata', 'op-3', 'SE'),
   user(16, 'Tano', 'Koffi', 'op-5', 'MO', 'sec-2'),
   user(17, 'Zadi', 'Rose', 'op-4', 'CO', 'sec-5'),
@@ -218,5 +221,57 @@ export const DEMO_USERS: readonly User[] = [
   { ...user(19, 'Kouamé', 'Yves', 'op-1', 'DI'), email: 'admin.apromac@sysde.ci' },
   { ...user(20, 'Konaté', 'Mamadou', 'op-3', 'CD'), email: 'chef.departement@sysde.ci' },
   { ...user(21, 'Brou', 'Clarisse', 'op-3', 'CS', 'sec-1'), email: 'chef.secteur@sysde.ci' },
+  { ...user(23, 'Kra', 'Estelle', 'op-3', 'CF', 'sec-1'), email: 'collaborateur@sysde.ci' },
+  {
+    ...user(24, 'Diomandé', 'Issouf', 'op-3', 'CO', 'sec-1'),
+    email: 'controleur.ordinaire@sysde.ci',
+  },
+  { ...user(25, 'Ouédraogo', 'Brice', 'op-3', 'MO', 'sec-1'), email: 'moniteur@sysde.ci' },
+  { ...user(26, 'Sanogo', 'Fanta', 'op-3', 'ES', 'sec-1'), email: 'equipe.speciale@sysde.ci' },
+  { ...user(27, 'Ahou', 'Carine', 'op-3', 'SE', 'sec-1'), email: 'secretaire@sysde.ci' },
   { ...user(22, 'Gbané', 'Jules', 'op-1', 'SU'), email: 'superviseur@sysde.ci' },
+];
+
+let activityCounter = 0;
+/** Activité du référentiel : libellé seul, ou libellé, objectif annuel et durée en jours. */
+type ActivitySeed =
+  string | readonly [label: string, target: number | null, days: number, active?: boolean];
+const activities = (
+  poste: PlanningPoste,
+  category: ActivityCategory,
+  seeds: readonly ActivitySeed[],
+): Activity[] =>
+  seeds.map((seed) => {
+    activityCounter += 1;
+    const [label, annualTarget, durationDays, active = true] =
+      typeof seed === 'string' ? [seed, null, 1] : seed;
+    return {
+      id: `ac-${activityCounter}`,
+      poste,
+      category,
+      label,
+      active,
+      annualTarget,
+      durationDays,
+    };
+  });
+
+/** Activités de planning de chaque poste (catégories sans activité : aucune ligne). */
+export const DEMO_ACTIVITIES: readonly Activity[] = [
+  ...activities('CS', 'VISITE', ['Visite de plantation']),
+  ...activities('CS', 'RENCONTRE', [
+    ['Conférence thématique', 4, 1],
+    ["Voyage d'étude", 4, 1],
+  ]),
+  ...activities('CF', 'FORMATION', [
+    ['Formation initiale', 2, 20],
+    ['Suivi post perfectionnement', 12, 1],
+    ['Recyclage des saigneurs', 1, 3],
+  ]),
+  ...activities('CO', 'VISITE', ['Visite de plantation', ['Visite de conformité', 72, 1]]),
+  ...activities('FS', 'FORMATION', [['Formation initiale', 12, 20]]),
+  ...activities('MO', 'FORMATION', [['Perfectionnement in situ', 12, 1]]),
+  ...activities('MO', 'VISITE', ['Visite de plantation', ['Découverte du verger', null, 1, false]]),
+  ...activities('MO', 'RENCONTRE', [['Groupe de vulgarisation', 24, 1]]),
+  ...activities('ES', 'VISITE', ["Visite d'intervention"]),
 ];

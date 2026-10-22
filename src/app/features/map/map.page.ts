@@ -104,7 +104,7 @@ export class MapPage {
   private readonly injector = inject(Injector);
   protected readonly store = inject(MapStore);
   private readonly currentUser = inject(CurrentUser);
-  /** Filtre de plantations : administrateur, chef de département et chef de secteur. */
+  /** Filtre de plantations : administrateur, chef de département et chef secteur. */
   protected readonly canFilter = computed(
     () =>
       this.currentUser.hasGlobalView() ||

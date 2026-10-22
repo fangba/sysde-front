@@ -4,6 +4,7 @@ import {
   adminGuard,
   authGuard,
   guestGuard,
+  planningGuard,
   reportingGuard,
   tasksGuard,
 } from './core/auth/auth.guard';
@@ -15,6 +16,7 @@ const placeholderRoutes: Routes = NAV_ITEMS.filter(
     item.path !== 'parametres' &&
     item.path !== 'taches' &&
     item.path !== 'carte' &&
+    item.path !== 'planning' &&
     item.path !== 'reporting' &&
     item.path !== 'compte',
 ).map((item) => ({
@@ -52,6 +54,13 @@ export const routes: Routes = [
         path: 'taches',
         canActivate: [tasksGuard],
         loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES),
+      },
+      {
+        path: 'planning',
+        title: 'Planning',
+        canActivate: [planningGuard],
+        loadChildren: () =>
+          import('./features/planning/planning.routes').then((m) => m.PLANNING_ROUTES),
       },
       {
         path: 'reporting',

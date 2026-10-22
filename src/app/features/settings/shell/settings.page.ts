@@ -14,6 +14,7 @@ export const SETTINGS_TABS: readonly TabLink[] = [
   { path: 'contrats', label: 'Contrats' },
   { path: 'attribution', label: 'Attributions' },
   { path: 'exercices', label: 'Exercices' },
+  { path: 'activites', label: 'Activités' },
   { path: 'permissions', label: 'Permissions' },
   { path: 'references', label: 'Références' },
 ];
@@ -33,7 +34,7 @@ export const SETTINGS_TABS: readonly TabLink[] = [
   template: `
     <ui-page-header
       title="Paramètres"
-      subtitle="Opérateurs, contrats, attributions, exercices, permissions et références."
+      subtitle="Opérateurs, contrats, attributions, exercices, activités, permissions et références."
     />
 
     <ui-tab-nav [tabs]="tabs" label="Sections des paramètres" />

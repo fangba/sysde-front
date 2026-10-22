@@ -157,7 +157,7 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       this.store.attributions.items(),
       this.store.sectors(),
     );
-    // Un chef de secteur n'affecte du personnel qu'à son propre secteur.
+    // Un chef secteur n'affecte du personnel qu'à son propre secteur.
     const own = this.scope.sector();
     if (own) {
       return [own];

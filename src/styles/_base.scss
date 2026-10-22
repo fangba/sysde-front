@@ -8,6 +8,16 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /*
+   * Pas de barre de défilement sur la page : elle prendrait de la largeur aux pages longues et
+   * décalerait leur contenu par rapport aux pages courtes. Le défilement reste actif (molette,
+   * clavier, toucher). Les zones qui défilent à l'intérieur de la page gardent leur barre.
+   */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

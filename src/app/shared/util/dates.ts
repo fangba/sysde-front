@@ -50,3 +50,16 @@ export function isValidIso(iso: string): boolean {
     date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   );
 }
+
+/** Ajoute `days` jours (négatif accepté) à une date ISO. */
+export function addDays(iso: string, days: number): string {
+  const date = new Date(`${iso}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Nombre de jours d'une période, bornes incluses. */
+export function daysBetween(startIso: string, endIso: string): number {
+  const ms = Date.parse(`${endIso}T00:00:00.000Z`) - Date.parse(`${startIso}T00:00:00.000Z`);
+  return Math.round(ms / 86_400_000) + 1;
+}

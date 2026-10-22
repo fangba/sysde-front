@@ -49,6 +49,7 @@ export class SettingsStore {
 
   readonly sectorList = new EntityState(this.api.sectors);
   readonly lots = new EntityState(this.api.lots);
+  readonly activities = new EntityState(this.api.activities);
   readonly sectors = computed(() => this.sectorList.items());
 
   private readonly _status = signal<LoadStatus>('loading');
@@ -61,6 +62,9 @@ export class SettingsStore {
   );
   private readonly contractById = computed(
     () => new Map(this.contracts.items().map((c) => [c.id, c])),
+  );
+  private readonly activityById = computed(
+    () => new Map(this.activities.items().map((a) => [a.id, a])),
   );
   private readonly sectorById = computed(
     () => new Map(this.sectorList.items().map((s) => [s.id, s])),
@@ -93,6 +97,15 @@ export class SettingsStore {
       .sort((a, b) => a - b);
   }
 
+  activityOf(id: string) {
+    return this.activityById().get(id);
+  }
+
+  /** Libellé d'une activité de planning, y compris si elle est désactivée. */
+  activityLabel(id: string): string {
+    return this.activityById().get(id)?.label ?? 'Activité supprimée';
+  }
+
   operatorLabel(id: string): string {
     return this.operatorById().get(id)?.acronym ?? '—';
   }
@@ -117,6 +130,7 @@ export class SettingsStore {
       users: this.api.users.list(),
       sectors: this.api.sectors.list(),
       lots: this.api.lots.list(),
+      activities: this.api.activities.list(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -128,6 +142,7 @@ export class SettingsStore {
           this.users.setAll(data.users);
           this.sectorList.setAll(data.sectors);
           this.lots.setAll(data.lots);
+          this.activities.setAll(data.activities);
           this._status.set('ready');
         },
         error: (error: unknown) => {

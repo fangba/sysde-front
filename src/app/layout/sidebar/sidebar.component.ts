@@ -28,11 +28,13 @@ export class SidebarComponent {
     NAV_ITEMS.filter((item) =>
       item.adminOnly
         ? this.currentUser.isAdministrator()
-        : item.hiddenForSupervisor && this.currentUser.isSupervisor()
-          ? false
-          : item.managersOnly
-            ? this.currentUser.canReport()
-            : true,
+        : item.planningOnly
+          ? this.currentUser.canPlan()
+          : item.tasksOnly && !this.currentUser.canTask()
+            ? false
+            : item.managersOnly
+              ? this.currentUser.canReport()
+              : true,
     ),
   );
 }

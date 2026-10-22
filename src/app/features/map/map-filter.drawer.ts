@@ -121,7 +121,7 @@ export class MapFilterDrawer {
     section: this.store.filter()?.section ?? '',
   });
 
-  /** Le niveau « section » est proposé au chef de secteur. */
+  /** Le niveau « section » est proposé au chef secteur. */
   protected readonly showSections = this.currentUser.isSectorHead();
 
   protected readonly operatorId = toSignal(this.form.controls.operatorId.valueChanges, {

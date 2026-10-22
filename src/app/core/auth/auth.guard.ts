@@ -32,10 +32,16 @@ export const reportingGuard: CanActivateFn = () => {
   return inject(CurrentUser).canReport() ? true : router.createUrlTree(['/']);
 };
 
-/** Le menu Tâches n'est pas ouvert au superviseur : renvoi vers l'accueil. */
+/** Le menu Tâches n'est pas ouvert au superviseur ni aux postes CF, CO, FS, MO, ES et SE : renvoi vers l'accueil. */
 export const tasksGuard: CanActivateFn = () => {
   const router = inject(Router);
-  return inject(CurrentUser).isSupervisor() ? router.createUrlTree(['/']) : true;
+  return inject(CurrentUser).canTask() ? true : router.createUrlTree(['/']);
+};
+
+/** Réserve le planning aux postes CS, CF, CO, FS, MO et ES. */
+export const planningGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CurrentUser).canPlan() ? true : router.createUrlTree(['/']);
 };
 
 /** N'accepte que des chemins internes pour la redirection après connexion. */

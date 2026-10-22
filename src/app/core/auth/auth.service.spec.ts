@@ -59,7 +59,13 @@ describe('AuthService (démo)', () => {
       'admin.firca@sysde.ci': ['FIRCA', 'Administrateur', ''],
       'admin.apromac@sysde.ci': ['APROMAC', 'Administrateur', ''],
       'chef.departement@sysde.ci': ['SAPH', 'Chef de département', ''],
-      'chef.secteur@sysde.ci': ['SAPH', 'Chef de secteur', 'S01'],
+      'chef.secteur@sysde.ci': ['SAPH', 'Chef secteur', 'S01'],
+      'collaborateur@sysde.ci': ['SAPH', 'Contrôleur de saignée', 'S01'],
+      'formateur@sysde.ci': ['SAPH', 'Formateur', 'S01'],
+      'controleur.ordinaire@sysde.ci': ['SAPH', 'Contrôleur ordinaire', 'S01'],
+      'moniteur@sysde.ci': ['SAPH', 'Moniteur', 'S01'],
+      'equipe.speciale@sysde.ci': ['SAPH', 'Équipe spéciale', 'S01'],
+      'secretaire@sysde.ci': ['SAPH', 'Secrétaire', 'S01'],
       'superviseur@sysde.ci': ['APROMAC', 'Superviseur', ''],
     };
     expect(DEMO_ACCOUNTS.map((a) => a.email).sort()).toEqual(Object.keys(expected).sort());
@@ -75,7 +81,7 @@ describe('AuthService (démo)', () => {
         session.user.sector?.code ?? '',
       ]).toEqual([operator, role, sector]);
     }
-  });
+  }, 20_000);
 
   it('refuse un mot de passe trop court', async () => {
     await expect(

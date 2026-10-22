@@ -75,8 +75,31 @@ export interface User {
   readonly phone: string;
   readonly operatorId: string;
   readonly poste: Poste;
-  /** Secteur d'affectation (chefs de secteur et collaborateurs) ; absent pour les autres postes. */
+  /** Secteur d'affectation (chefs secteur et collaborateurs) ; absent pour les autres postes. */
   readonly sectorId?: string;
   readonly active: boolean;
 }
 export type UserInput = Omit<User, 'id'>;
+
+/** Postes qui ont un planning d'activités. */
+export type PlanningPoste = Extract<Poste, 'CS' | 'CF' | 'CO' | 'FS' | 'MO' | 'ES'>;
+
+/** Catégories d'activité d'un planning. */
+export type ActivityCategory = 'FORMATION' | 'VISITE' | 'RENCONTRE';
+
+/**
+ * Activité qu'un poste peut inscrire à son planning. Une activité désactivée n'est plus
+ * proposée, mais reste lisible dans les plannings où elle figure déjà.
+ */
+export interface Activity {
+  readonly id: string;
+  readonly poste: PlanningPoste;
+  readonly category: ActivityCategory;
+  readonly label: string;
+  readonly active: boolean;
+  /** Nombre de séances à réaliser par an ; `null` : pas d'objectif fixé. */
+  readonly annualTarget: number | null;
+  /** Durée d'une séance, en jours (1 au minimum). */
+  readonly durationDays: number;
+}
+export type ActivityInput = Omit<Activity, 'id'>;

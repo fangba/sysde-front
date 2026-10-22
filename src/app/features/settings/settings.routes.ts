@@ -45,6 +45,11 @@ export const SETTINGS_ROUTES: Routes = [
         loadComponent: () => import('./tabs/exercises.tab').then((m) => m.ExercisesTab),
       },
       {
+        path: 'activites',
+        title: 'Activités',
+        loadComponent: () => import('./tabs/activities.tab').then((m) => m.ActivitiesTab),
+      },
+      {
         path: 'permissions',
         title: 'Permissions',
         loadComponent: () => import('./tabs/permissions.tab').then((m) => m.PermissionsTab),

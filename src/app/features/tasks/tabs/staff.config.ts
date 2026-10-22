@@ -29,15 +29,15 @@ export const STAFF_CONFIG: Readonly<Record<StaffKind, StaffConfig>> = {
     updated: 'Chef de département modifié.',
   },
   'chef-secteur': {
-    singular: 'chef de secteur',
+    singular: 'chef secteur',
     heading: 'Chef secteur',
     subheading:
       'Responsables de secteur, rattachés à un opérateur et à un secteur qui lui est attribué.',
-    newLabel: 'Nouveau chef de secteur',
+    newLabel: 'Nouveau chef secteur',
     postes: ['CS'],
     sector: 'required',
-    created: 'Chef de secteur créé.',
-    updated: 'Chef de secteur modifié.',
+    created: 'Chef secteur créé.',
+    updated: 'Chef secteur modifié.',
   },
   collaborateur: {
     singular: 'collaborateur',

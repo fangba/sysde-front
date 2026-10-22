@@ -4,6 +4,7 @@ import type { Tone } from '@shared/models/tone';
 
 import { EmptyStateComponent } from '../empty-state/empty-state.component';
 import { IconComponent } from '../icon/icon.component';
+import type { IconName } from '../icon/icon.registry';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
 import { StatusPillComponent } from '../status-pill/status-pill.component';
@@ -51,6 +52,9 @@ export class DataTableComponent<T extends { readonly id: string }> {
   readonly loading = input(false);
   /** Affiche le bouton « Modifier » de chaque ligne. */
   readonly editable = input(true);
+  /** Début de l'intitulé du bouton de chaque ligne (« Modifier », « Examiner »…). */
+  readonly editLabel = input('Modifier');
+  readonly editIcon = input<IconName>('edit');
   readonly searchPlaceholder = input('Rechercher…');
   readonly emptyTitle = input('Aucun élément');
   readonly emptyDescription = input("Rien n'a encore été enregistré.");

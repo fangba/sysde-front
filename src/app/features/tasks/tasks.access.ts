@@ -21,7 +21,7 @@ export interface TasksProfile {
  * Onglets visibles selon le profil :
  * - administrateur : Utilisateur et Chef département ;
  * - chef de département : Chef secteur uniquement ;
- * - chef de secteur : Collaborateur uniquement ;
+ * - chef secteur : Collaborateur uniquement ;
  * - autres comptes : tous les onglets.
  */
 export function tasksTabsFor(profile: TasksProfile): readonly TasksTabDef[] {

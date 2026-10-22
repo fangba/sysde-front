@@ -56,8 +56,8 @@ export const PERMISSIONS: readonly PermissionDef[] = [
     code: 'taches.chefs-secteur',
     section: 'taches',
     kind: 'faire',
-    label: 'Gérer les chefs de secteur',
-    description: 'Créer et modifier les comptes de chef de secteur.',
+    label: 'Gérer les chefs secteur',
+    description: 'Créer et modifier les comptes de chef secteur.',
     requires: 'taches.voir',
   },
   {

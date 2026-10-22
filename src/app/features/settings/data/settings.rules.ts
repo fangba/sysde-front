@@ -2,6 +2,7 @@ import { periodsOverlap, yearOf } from '@shared/util/dates';
 
 import { POSTES_BY_OPERATOR_TYPE } from './settings.constants';
 import type {
+  Activity,
   Attribution,
   Contract,
   Exercise,
@@ -174,5 +175,21 @@ export function findLotNumberConflict(
 ): Lot | undefined {
   return lots.find(
     (l) => l.id !== ignoreId && l.sectorId === candidate.sectorId && l.number === candidate.number,
+  );
+}
+
+function normalizeLabel(value: string): string {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/** Le libellé d'une activité est unique pour un poste, toutes catégories confondues. */
+export function findActivityConflict(
+  candidate: Pick<Activity, 'poste' | 'label'>,
+  activities: readonly Activity[],
+  ignoreId?: string,
+): Activity | undefined {
+  const wanted = normalizeLabel(candidate.label);
+  return activities.find(
+    (a) => a.id !== ignoreId && a.poste === candidate.poste && normalizeLabel(a.label) === wanted,
   );
 }

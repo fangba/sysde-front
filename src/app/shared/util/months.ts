@@ -28,6 +28,8 @@ const SHORT = [
   'Déc',
 ] as const;
 
+export const SHORT_MONTHS: readonly string[] = SHORT;
+
 function parse(month: string): { year: number; index: number } {
   const [year, monthNumber] = month.split('-').map(Number);
   return { year: year ?? 0, index: (monthNumber ?? 1) - 1 };

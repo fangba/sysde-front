@@ -39,9 +39,45 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     password: DEMO_PASSWORD,
   },
   {
-    label: 'Chef de secteur',
+    label: 'Chef secteur',
     detail: 'SAPH · S01',
     email: 'chef.secteur@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Contrôleur de saignée',
+    detail: 'SAPH · S01 · CF',
+    email: 'collaborateur@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Formateur de saignée',
+    detail: 'SAPH · S01 · FS',
+    email: 'formateur@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Contrôleur ordinaire',
+    detail: 'SAPH · S01 · CO',
+    email: 'controleur.ordinaire@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Moniteur',
+    detail: 'SAPH · S01 · MO',
+    email: 'moniteur@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Équipe spéciale',
+    detail: 'SAPH · S01 · ES',
+    email: 'equipe.speciale@sysde.ci',
+    password: DEMO_PASSWORD,
+  },
+  {
+    label: 'Secrétaire',
+    detail: 'SAPH · S01 · SE',
+    email: 'secretaire@sysde.ci',
     password: DEMO_PASSWORD,
   },
   {

@@ -155,6 +155,8 @@ export class AreaChartComponent {
   readonly ariaLabel = input.required<string>();
   /** Unité ajoutée aux valeurs de l'infobulle (ex. « t »). */
   readonly unit = input('');
+  /** Valeur minimale du haut de l'axe : évite des graduations décimales pour de petits effectifs. */
+  readonly minTop = input(0);
 
   protected readonly active = signal<number | null>(null);
 
@@ -173,7 +175,7 @@ export class AreaChartComponent {
 
   private readonly scale = computed(() => {
     const max = Math.max(0, ...this.series().flatMap((s) => s.values));
-    return niceScale(max, 4);
+    return niceScale(Math.max(max, this.minTop()), 4);
   });
 
   private readonly plot = computed(() => {

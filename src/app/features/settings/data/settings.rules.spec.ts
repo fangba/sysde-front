@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DEMO_ACTIVITIES,
   DEMO_ATTRIBUTIONS,
   DEMO_CONTRACTS,
   DEMO_EXERCISES,
@@ -13,6 +14,7 @@ import {
   allowedPostes,
   contractStatus,
   contractYears,
+  findActivityConflict,
   findContractConflict,
   findEmailConflict,
   findExerciseDuplicate,
@@ -119,5 +121,38 @@ describe('settings.rules', () => {
     expect(findSectorCodeConflict('S01', DEMO_SECTORS, 'sec-1')).toBeUndefined();
     expect(findLotNumberConflict({ sectorId: 'sec-1', number: 2 }, DEMO_LOTS)?.number).toBe(2);
     expect(findLotNumberConflict({ sectorId: 'sec-1', number: 4 }, DEMO_LOTS)).toBeUndefined();
+  });
+});
+
+describe('activités des plannings', () => {
+  const byPoste = (poste: string, category: string) =>
+    DEMO_ACTIVITIES.filter((a) => a.poste === poste && a.category === category).map((a) => a.label);
+
+  it('reprend le référentiel de chaque poste, catégorie par catégorie', () => {
+    expect(byPoste('CF', 'FORMATION')).toEqual([
+      'Formation initiale',
+      'Suivi post perfectionnement',
+      'Recyclage des saigneurs',
+    ]);
+    expect(byPoste('CF', 'VISITE')).toEqual([]);
+    expect(byPoste('CO', 'VISITE')).toEqual(['Visite de plantation', 'Visite de conformité']);
+    expect(byPoste('FS', 'FORMATION')).toEqual(['Formation initiale']);
+    expect(byPoste('MO', 'FORMATION')).toEqual(['Perfectionnement in situ']);
+    expect(byPoste('MO', 'VISITE')).toEqual(['Visite de plantation', 'Découverte du verger']);
+    expect(byPoste('ES', 'VISITE')).toEqual(["Visite d'intervention"]);
+    expect(byPoste('MO', 'RENCONTRE')).toEqual(['Groupe de vulgarisation']);
+    expect(byPoste('ES', 'RENCONTRE')).toEqual([]);
+    expect(byPoste('CS', 'VISITE')).toEqual(['Visite de plantation']);
+    expect(byPoste('CS', 'RENCONTRE')).toEqual(['Conférence thématique', "Voyage d'étude"]);
+    expect(DEMO_ACTIVITIES.some((a) => a.category === 'RENCONTRE' && a.poste === 'CO')).toBe(false);
+  });
+
+  it('refuse un libellé déjà pris pour le même poste, mais pas pour un autre poste', () => {
+    const co = { poste: 'CO' as const, label: '  VISITE de plantation ' };
+    expect(findActivityConflict(co, DEMO_ACTIVITIES)?.id).toBe('ac-7');
+    expect(findActivityConflict(co, DEMO_ACTIVITIES, 'ac-7')).toBeUndefined();
+    expect(
+      findActivityConflict({ poste: 'FS', label: 'Visite de plantation' }, DEMO_ACTIVITIES),
+    ).toBeUndefined();
   });
 });

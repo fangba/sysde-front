@@ -18,7 +18,9 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
     <ui-card>
       <div class="top">
         <ui-icon-tile [icon]="icon()" [tone]="tone()" />
-        <ui-delta-pill [value]="delta()" />
+        @if (delta() !== null) {
+          <ui-delta-pill [value]="delta()!" />
+        }
       </div>
       <p class="label">{{ label() }}</p>
       <div class="bottom">
@@ -74,7 +76,8 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
 export class KpiCardComponent {
   readonly label = input.required<string>();
   readonly value = input.required<string>();
-  readonly delta = input.required<number>();
+  /** Variation en %, absente quand l'indicateur n'a pas de période de comparaison. */
+  readonly delta = input<number | null>(null);
   readonly icon = input.required<IconName>();
   readonly tone = input<Tone>('green');
   readonly trend = input<readonly number[]>([]);

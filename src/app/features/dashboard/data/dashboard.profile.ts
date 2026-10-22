@@ -6,7 +6,7 @@ export interface DashboardScope {
   readonly profile: DashboardProfileId;
   /** Sigle de l'opérateur de l'utilisateur. */
   readonly operator: string;
-  /** Code du secteur, pour un chef de secteur. */
+  /** Code du secteur, pour un chef secteur. */
   readonly sector?: string;
   /** Administrateur : opérateur sélectionné dans la liste, absent pour « tous ». */
   readonly filterOperator?: string;

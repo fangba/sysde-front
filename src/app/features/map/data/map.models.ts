@@ -25,7 +25,7 @@ export interface MapFilter {
   readonly operatorId: string;
   readonly sectorId?: string;
   readonly lot?: number;
-  /** Section du lot choisi (chef de secteur). */
+  /** Section du lot choisi (chef secteur). */
   readonly section?: string;
 }
 

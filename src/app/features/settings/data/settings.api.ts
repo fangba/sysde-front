@@ -7,6 +7,7 @@ import { ApiError } from '@core/http/api-error';
 
 import { DEFAULT_GRANTS, type PermissionGrants } from './permissions.catalog';
 import {
+  DEMO_ACTIVITIES,
   DEMO_ATTRIBUTIONS,
   DEMO_CONTRACTS,
   DEMO_EXERCISES,
@@ -16,6 +17,8 @@ import {
   DEMO_USERS,
 } from './settings.demo';
 import type {
+  Activity,
+  ActivityInput,
   Attribution,
   AttributionInput,
   Contract,
@@ -54,6 +57,7 @@ export abstract class SettingsApi {
   abstract readonly users: Crud<User, UserInput>;
   abstract readonly sectors: Crud<Sector, SectorInput>;
   abstract readonly lots: Crud<Lot, LotInput>;
+  abstract readonly activities: Crud<Activity, ActivityInput>;
   abstract readonly permissions: PermissionsResource;
 }
 
@@ -100,6 +104,7 @@ export class HttpSettingsApi extends SettingsApi {
   readonly users = new HttpCrud<User, UserInput>(this.http, '/utilisateurs');
   readonly sectors = new HttpCrud<Sector, SectorInput>(this.http, '/secteurs');
   readonly lots = new HttpCrud<Lot, LotInput>(this.http, '/lots');
+  readonly activities = new HttpCrud<Activity, ActivityInput>(this.http, '/activites');
   readonly permissions = new HttpPermissions(this.http);
 }
 
@@ -162,5 +167,6 @@ export class DemoSettingsApi extends SettingsApi {
   readonly users = new MemoryCrud<User, UserInput>(DEMO_USERS, 'us');
   readonly sectors = new MemoryCrud<Sector, SectorInput>(DEMO_SECTORS, 'sec');
   readonly lots = new MemoryCrud<Lot, LotInput>(DEMO_LOTS, 'lot');
+  readonly activities = new MemoryCrud<Activity, ActivityInput>(DEMO_ACTIVITIES, 'ac');
   readonly permissions = new MemoryPermissions();
 }

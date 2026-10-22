@@ -21,7 +21,7 @@
       (valueChange)="onPeriodChange($event)"
     />
   }
-  @if (!currentUser.isSupervisor()) {
+  @if (currentUser.canTask()) {
     <a ui-button variant="primary" routerLink="/taches">
       <ui-icon name="plus" />
       Voir les tâches

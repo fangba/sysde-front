@@ -1,6 +1,6 @@
 import type { Tone } from '@shared/models/tone';
 
-import type { OperatorType, Poste } from './settings.models';
+import type { ActivityCategory, OperatorType, PlanningPoste, Poste } from './settings.models';
 
 export const OPERATOR_TYPE_LABEL: Readonly<Record<OperatorType, string>> = {
   ORGANISME: 'Organisme (administrateur)',
@@ -9,8 +9,8 @@ export const OPERATOR_TYPE_LABEL: Readonly<Record<OperatorType, string>> = {
 
 export const POSTE_LABEL: Readonly<Record<Poste, string>> = {
   CD: 'Chef de département',
-  CS: 'Chef de secteur',
-  CF: 'Contrôleur formation',
+  CS: 'Chef secteur',
+  CF: 'Contrôleur de saignée',
   CO: 'Contrôleur ordinaire',
   FS: 'Formateur',
   MO: 'Moniteur',
@@ -35,5 +35,23 @@ export const ACTIVE_TONE: Readonly<Record<'true' | 'false', Tone>> = {
   false: 'neutral',
 };
 
-/** Postes des collaborateurs d'un opérateur technique, placés sous un chef de secteur. */
+/** Postes des collaborateurs d'un opérateur technique, placés sous un chef secteur. */
 export const COLLABORATOR_POSTES: readonly Poste[] = ['CF', 'CO', 'FS', 'MO', 'ES', 'SE'];
+
+/** Postes du planning, dans l'ordre d'affichage. */
+export const PLANNING_POSTE_LIST: readonly PlanningPoste[] = ['CS', 'CF', 'CO', 'FS', 'MO', 'ES'];
+
+export const ACTIVITY_CATEGORIES: readonly {
+  readonly code: ActivityCategory;
+  readonly label: string;
+}[] = [
+  { code: 'FORMATION', label: 'Formation' },
+  { code: 'VISITE', label: 'Visite' },
+  { code: 'RENCONTRE', label: 'Rencontre' },
+];
+
+export const ACTIVITY_CATEGORY_LABEL: Readonly<Record<ActivityCategory, string>> =
+  Object.fromEntries(ACTIVITY_CATEGORIES.map((c) => [c.code, c.label])) as Record<
+    ActivityCategory,
+    string
+  >;
