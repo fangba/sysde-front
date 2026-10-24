@@ -14,7 +14,7 @@ describe('tasksTabsFor', () => {
     expect(paths(false, true)).toEqual(['chefs-secteur']);
   });
 
-  it('donne au chef secteur le seul onglet Collaborateur', () => {
+  it('donne au chef secteur le seul onglet Collaborateurs', () => {
     expect(paths(false, false, true)).toEqual(['collaborateurs']);
   });
 

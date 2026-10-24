@@ -11,7 +11,7 @@ import { planningTabsFor } from './planning.access';
 import { PlanningStore } from './state/planning.store';
 import { ReviewStore } from './state/review.store';
 
-/** Onglets autorisés pour le profil connecté ; renvoie vers Élaborer si la route est interdite. */
+/** Onglets autorisés pour le profil connecté ; renvoie vers Élaboration si la route est interdite. */
 const tabGuard: CanActivateFn = (route) => {
   const user = inject(CurrentUser);
   const tabs = planningTabsFor({
@@ -21,7 +21,7 @@ const tabGuard: CanActivateFn = (route) => {
   const path = route.routeConfig?.path;
   return tabs.some((tab) => tab.path === path)
     ? true
-    : inject(Router).createUrlTree(['/planning', tabs[0]?.path ?? 'elaborer']);
+    : inject(Router).createUrlTree(['/planning', tabs[0]?.path ?? 'elaboration']);
 };
 
 /**
@@ -52,16 +52,16 @@ export const PLANNING_ROUTES: Routes = [
     ],
     loadComponent: () => import('./shell/planning.page').then((m) => m.PlanningPage),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'elaborer' },
+      { path: '', pathMatch: 'full', redirectTo: 'elaboration' },
       {
-        path: 'elaborer',
-        title: 'Élaborer',
+        path: 'elaboration',
+        title: 'Élaboration',
         canActivate: [tabGuard],
         loadComponent: () => import('./tabs/elaborer.tab').then((m) => m.ElaborerTab),
       },
       {
-        path: 'valider',
-        title: 'Valider',
+        path: 'validation',
+        title: 'Validation',
         canActivate: [tabGuard],
         loadComponent: () => import('./tabs/valider.tab').then((m) => m.ValiderTab),
       },

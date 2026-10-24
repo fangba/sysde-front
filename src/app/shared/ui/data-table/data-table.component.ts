@@ -1,3 +1,5 @@
+import { NgTemplateOutlet } from '@angular/common';
+import type { TemplateRef } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 
 import type { Tone } from '@shared/models/tone';
@@ -17,6 +19,13 @@ export interface TableColumn<T> {
   /** Seconde ligne, plus discrète. */
   readonly sub?: (row: T) => string;
   /** Affiche la cellule sous forme de pastille (remplace `text` à l'écran). */
+  /** Garde le texte de la cellule sur une seule ligne (matricule, numéro…). */
+  readonly nowrap?: boolean;
+  /**
+   * Zone de filtre sous l'en-tête : `'text'` (contient) ou une liste de valeurs exactes
+   * (liste déroulante). Utilisée seulement si le tableau active `columnFilters`.
+   */
+  readonly filter?: 'text' | readonly string[];
   readonly pill?: (row: T) => { readonly label: string; readonly tone: Tone };
 }
 
@@ -33,6 +42,7 @@ function normalize(value: string): string {
   imports: [
     EmptyStateComponent,
     IconComponent,
+    NgTemplateOutlet,
     PaginationComponent,
     SkeletonComponent,
     StatusPillComponent,
@@ -50,6 +60,15 @@ export class DataTableComponent<T extends { readonly id: string }> {
   /** Nom d'une ligne, pour le bouton « Modifier … ». */
   readonly rowLabel = input.required<(row: T) => string>();
   readonly loading = input(false);
+  /**
+   * Contenu de la dernière colonne, par ligne (ex. un menu « Options ») ; remplace le bouton
+   * « Modifier ». Le modèle reçoit la ligne en `let-row`.
+   */
+  readonly rowActions = input<TemplateRef<{ $implicit: T }> | null>(null);
+  /** En-tête de la dernière colonne quand `rowActions` est fourni. */
+  readonly actionsHeader = input('Action');
+  /** Affiche, sous l'en-tête, une zone de filtre pour chaque colonne qui en déclare une. */
+  readonly columnFilters = input(false);
   /** Affiche le bouton « Modifier » de chaque ligne. */
   readonly editable = input(true);
   /** Début de l'intitulé du bouton de chaque ligne (« Modifier », « Examiner »…). */
@@ -66,16 +85,37 @@ export class DataTableComponent<T extends { readonly id: string }> {
   protected readonly pageSize = signal(10);
   protected readonly skeletons = [0, 1, 2, 3, 4];
 
+  /** Valeur saisie dans la zone de filtre de chaque colonne (par identifiant de colonne). */
+  protected readonly columnQuery = signal<Readonly<Record<string, string>>>({});
+
+  protected readonly hasColumnFilter = computed(() =>
+    Object.values(this.columnQuery()).some((value) => value.trim() !== ''),
+  );
+
   protected readonly filtered = computed(() => {
     const term = normalize(this.query().trim());
-    if (!term) {
+    const columns = this.columns();
+    const perColumn = this.columnFilters()
+      ? columns
+          .map((column) => ({ column, value: (this.columnQuery()[column.id] ?? '').trim() }))
+          .filter(({ column, value }) => column.filter && value !== '')
+      : [];
+    if (!term && perColumn.length === 0) {
       return this.rows();
     }
-    const columns = this.columns();
-    return this.rows().filter((row) =>
-      columns.some((column) =>
-        normalize(`${column.text(row)} ${column.sub?.(row) ?? ''}`).includes(term),
-      ),
+    return this.rows().filter(
+      (row) =>
+        (!term ||
+          columns.some((column) =>
+            normalize(`${column.text(row)} ${column.sub?.(row) ?? ''}`).includes(term),
+          )) &&
+        perColumn.every(({ column, value }) =>
+          Array.isArray(column.filter)
+            ? column.text(row) === value
+            : normalize(`${column.text(row)} ${column.sub?.(row) ?? ''}`).includes(
+                normalize(value),
+              ),
+        ),
     );
   });
 
@@ -89,6 +129,21 @@ export class DataTableComponent<T extends { readonly id: string }> {
     const start = this.page() * this.pageSize();
     return this.filtered().slice(start, start + this.pageSize());
   });
+
+  protected onColumnFilter(id: string, event: Event): void {
+    const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+    this.columnQuery.update((current) => ({ ...current, [id]: value }));
+    this.requestedPage.set(0);
+  }
+
+  protected clearColumnFilters(): void {
+    this.columnQuery.set({});
+    this.requestedPage.set(0);
+  }
+
+  protected listOf(column: TableColumn<T>): readonly string[] {
+    return Array.isArray(column.filter) ? column.filter : [];
+  }
 
   protected onSearch(event: Event): void {
     this.query.set((event.target as HTMLInputElement).value);

@@ -8,7 +8,7 @@ export const TASKS_TAB_DEFS: readonly TasksTabDef[] = [
   { path: 'utilisateurs', label: 'Utilisateur' },
   { path: 'chefs-departement', label: 'Chef département' },
   { path: 'chefs-secteur', label: 'Chef secteur' },
-  { path: 'collaborateurs', label: 'Collaborateur' },
+  { path: 'collaborateurs', label: 'Collaborateurs' },
 ];
 
 export interface TasksProfile {

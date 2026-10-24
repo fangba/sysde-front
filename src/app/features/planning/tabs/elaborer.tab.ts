@@ -13,25 +13,20 @@ import { ToastService } from '@core/notifications/toast.service';
 import { formatDate } from '@shared/util/format';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
-import { DataTableComponent, type TableColumn } from '@shared/ui/data-table/data-table.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 
 import { downloadPlanTemplate, readPlanFile } from '../data/planning.excel';
 import type { PlanLine } from '../data/planning.models';
-import {
-  formatHours,
-  formatPeriod,
-  parsePlanRows,
-  planStatusView,
-  spanDays,
-} from '../data/planning.rules';
+import { formatHours, parsePlanRows, planStatusView } from '../data/planning.rules';
 import { SettingsStore } from '../../settings/state/settings.store';
 import { PlanningStore } from '../state/planning.store';
 import { PlanImportDialog, type ImportChoice } from './import.dialog';
 import { PlanObjectives } from '../ui/plan-objectives.component';
+import { PlanCheckDialog } from './plan-check.dialog';
 import { PlanLineDialog } from './line.dialog';
+import { ActivityPlan } from '../ui/activity-plan.component';
 import { PlanCalendar } from '../ui/plan-calendar.component';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -47,9 +42,9 @@ const DRAWER = {
 @Component({
   selector: 'sysde-elaborer-tab',
   imports: [
+    ActivityPlan,
     ButtonComponent,
     CardComponent,
-    DataTableComponent,
     EmptyStateComponent,
     IconComponent,
     PlanCalendar,
@@ -184,7 +179,7 @@ const DRAWER = {
           }
         }
 
-        @if (store.objectives().length > 0) {
+        @if (store.objectives().length > 0 && display() !== 'activities') {
           <sysde-plan-objectives [objectives]="store.objectives()" />
         }
 
@@ -192,10 +187,10 @@ const DRAWER = {
           <div class="seg" role="group" aria-label="Affichage du planning">
             <button
               type="button"
-              [attr.aria-pressed]="display() === 'list'"
-              (click)="display.set('list')"
+              [attr.aria-pressed]="display() === 'activities'"
+              (click)="display.set('activities')"
             >
-              Liste
+              Activités
             </button>
             <button
               type="button"
@@ -205,56 +200,45 @@ const DRAWER = {
               Calendrier
             </button>
           </div>
-          @if (store.editable()) {
-            <div class="bar">
-              <button
-                ui-button
-                variant="secondary"
-                type="button"
-                [loading]="downloading()"
-                (click)="downloadTemplate()"
-              >
-                <ui-icon name="download" /> Modèle Excel
-              </button>
-              <button
-                ui-button
-                variant="secondary"
-                type="button"
-                [disabled]="store.activities().length === 0"
-                (click)="file.click()"
-              >
-                <ui-icon name="upload" /> Importer un fichier
-              </button>
-              <button
-                ui-button
-                variant="secondary"
-                type="button"
-                [disabled]="store.activities().length === 0"
-                (click)="openLine(null)"
-              >
-                <ui-icon name="plus" /> Ajouter
-              </button>
-            </div>
-          }
+          <div class="bar">
+            <button
+              ui-button
+              variant="secondary"
+              type="button"
+              [disabled]="store.activities().length === 0"
+              (click)="verifyPlan()"
+            >
+              <ui-icon name="check" /> Vérifier mon planning
+            </button>
+            <button
+              ui-button
+              variant="secondary"
+              type="button"
+              [loading]="downloading()"
+              (click)="downloadTemplate()"
+            >
+              <ui-icon name="download" /> Modèle Excel
+            </button>
+            <button
+              ui-button
+              variant="secondary"
+              type="button"
+              [disabled]="!store.editable() || store.activities().length === 0"
+              [attr.title]="store.editable() ? null : 'Le planning n’est plus modifiable.'"
+              (click)="file.click()"
+            >
+              <ui-icon name="upload" /> Importer un fichier
+            </button>
+          </div>
         </div>
 
-        @if (display() === 'list') {
-          <ui-data-table
-            [columns]="columns"
-            [rows]="store.draft()"
-            [loading]="store.status() === 'loading' || settings.status() === 'loading'"
-            [editable]="store.editable()"
-            [caption]="'Activités du planning ' + store.year()"
-            [rowLabel]="rowLabel"
-            searchPlaceholder="Rechercher une activité…"
-            emptyTitle="Aucune activité prévue"
-            emptyDescription="Ajoutez une activité ou importez votre planning depuis un fichier Excel."
-            (rowEdit)="openLine($event)"
-          />
+        @if (display() === 'activities') {
+          <sysde-activity-plan />
         } @else {
           <sysde-plan-calendar
             [year]="store.year()"
             [lines]="store.draft()"
+            [pinDetail]="true"
             [categoryOf]="categoryOf"
             [labelOf]="labelOf"
             [editable]="store.editable()"
@@ -367,7 +351,7 @@ export class ElaborerTab {
   protected readonly isSectorHead = inject(CurrentUser).isSectorHead;
 
   protected readonly formatDate = formatDate;
-  protected readonly display = signal<'list' | 'calendar'>('list');
+  protected readonly display = signal<'activities' | 'calendar'>('activities');
   protected readonly confirming = signal(false);
   protected readonly downloading = signal(false);
 
@@ -387,30 +371,19 @@ export class ElaborerTab {
     return `${plural(count, 'activité')} · ${plural(days, 'jour')} · ${formatHours(hours)} h`;
   });
 
-  protected readonly rowLabel = (line: PlanLine) =>
-    `${formatPeriod(line)} · ${this.store.activityLabel(line.activityId)}`;
-
-  protected readonly columns: readonly TableColumn<PlanLine>[] = [
-    {
-      id: 'date',
-      header: 'Période',
-      text: (l) => formatPeriod(l),
-      sub: (l) => (l.endDate === l.date ? '' : `${spanDays(l)} jours`),
-    },
-    {
-      id: 'activity',
-      header: 'Activité',
-      text: (l) => this.store.activityLabel(l.activityId),
-      sub: (l) => this.store.categoryLabel(l.activityId),
-    },
-    { id: 'place', header: 'Lot / section', text: (l) => l.place },
-    { id: 'hours', header: 'Heures / jour', text: (l) => `${formatHours(l.hours)} h` },
-  ];
-
   protected readonly categoryOf = (id: string) => this.store.categoryOf(id);
   protected readonly labelOf = (id: string) => this.store.activityLabel(id);
 
   /** Ouvre la fenêtre d'une ligne ; `date` propose le jour choisi dans le calendrier. */
+  protected verifyPlan(): void {
+    this.dialog.open(PlanCheckDialog, {
+      panelClass: 'ui-dialog-panel',
+      width: 'min(560px, calc(100vw - 32px))',
+      backdropClass: 'ui-dialog-backdrop',
+      injector: this.injector,
+    });
+  }
+
   protected openLine(line: PlanLine | null, date?: string): void {
     this.dialog.open(PlanLineDialog, {
       ...DRAWER,

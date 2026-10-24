@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { DeadlineItemComponent } from './deadline-item/deadline-item.component';
 import { DeltaPillComponent } from './delta-pill/delta-pill.component';
+import { DataTableComponent, type TableColumn } from './data-table/data-table.component';
 import { DonutComponent } from './donut/donut.component';
 
 describe('ui components', () => {
@@ -35,5 +36,54 @@ describe('ui components', () => {
     const text = ((fixture.nativeElement as HTMLElement).textContent ?? '').replace(/\s/g, ' ');
     expect(text).toContain('75 %');
     expect(text).toContain('25 %');
+  });
+
+  it('data-table filtre par colonne et garde les zones de filtre sans résultat', () => {
+    interface Row {
+      readonly id: string;
+      readonly name: string;
+      readonly active: boolean;
+    }
+    const columns: readonly TableColumn<Row>[] = [
+      { id: 'name', header: 'Nom', text: (r) => r.name, filter: 'text' },
+      {
+        id: 'active',
+        header: 'Statut',
+        text: (r) => (r.active ? 'Actif' : 'Inactif'),
+        filter: ['Actif', 'Inactif'],
+      },
+    ];
+    const fixture = TestBed.createComponent(DataTableComponent<Row>);
+    fixture.componentRef.setInput('columns', columns);
+    fixture.componentRef.setInput('caption', 'Test');
+    fixture.componentRef.setInput('rowLabel', (r: Row) => r.name);
+    fixture.componentRef.setInput('columnFilters', true);
+    fixture.componentRef.setInput('rows', [
+      { id: '1', name: 'Aka', active: true },
+      { id: '2', name: 'Kra', active: false },
+      { id: '3', name: 'Kané', active: true },
+    ]);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const rows = () => root.querySelectorAll('tbody tr').length;
+    const type = (selector: string, value: string, event: string) => {
+      const el = root.querySelector<HTMLInputElement | HTMLSelectElement>(selector);
+      expect(el).not.toBeNull();
+      el!.value = value;
+      el!.dispatchEvent(new Event(event));
+      fixture.detectChanges();
+    };
+
+    expect(rows()).toBe(3);
+    type('tr.filters input', 'k', 'input');
+    expect(rows()).toBe(3);
+    // « Inactif » ne doit pas ressortir pour « Actif » : valeur exacte.
+    type('tr.filters select', 'Actif', 'change');
+    expect(rows()).toBe(2);
+    type('tr.filters input', 'zzz', 'input');
+    // Plus aucune ligne de données : une seule ligne de message, les filtres restent affichés.
+    expect(root.querySelectorAll('tbody td.none').length).toBe(1);
+    expect(root.querySelector('tr.filters')).not.toBeNull();
+    expect(root.textContent).toContain('Aucun élément ne correspond');
   });
 });

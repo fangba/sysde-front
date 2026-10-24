@@ -29,6 +29,7 @@ const STATUS: Readonly<Record<ContractStatus, { label: string; tone: Tone }>> = 
     <ui-card heading="Contrats" subheading="Un contrat triennal par opérateur technique.">
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="store.contracts.items()"
         [loading]="store.status() === 'loading'"
         caption="Liste des contrats"
@@ -53,15 +54,22 @@ export class ContractsTab {
 
   protected readonly rowLabel = (c: Contract) => c.reference;
   protected readonly columns: readonly TableColumn<Contract>[] = [
-    { id: 'reference', header: 'Référence', text: (c) => c.reference },
-    { id: 'operator', header: 'Opérateur', text: (c) => this.store.operatorLabel(c.operatorId) },
+    { id: 'reference', filter: 'text', header: 'Référence', text: (c) => c.reference },
+    {
+      id: 'operator',
+      filter: 'text',
+      header: 'Opérateur',
+      text: (c) => this.store.operatorLabel(c.operatorId),
+    },
     {
       id: 'period',
+      filter: 'text',
       header: 'Période',
       text: (c) => `${formatDate(c.startDate)} → ${formatDate(c.endDate)}`,
     },
     {
       id: 'status',
+      filter: ['À venir', 'En cours', 'Terminé'],
       header: 'Statut',
       text: (c) => STATUS[this.statusOf(c)].label,
       pill: (c) => STATUS[this.statusOf(c)],

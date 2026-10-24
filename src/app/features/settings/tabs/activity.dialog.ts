@@ -12,11 +12,18 @@ import { ButtonComponent } from '@shared/ui/button/button.component';
 import { DialogShellComponent } from '@shared/ui/dialog-shell/dialog-shell.component';
 import { FieldComponent } from '@shared/ui/field/field.component';
 
-import { ACTIVITY_CATEGORY_LABEL, POSTE_LABEL } from '../data/settings.constants';
+import {
+  ACTIVITY_CATEGORY_LABEL,
+  FREQUENCY_PERIODS,
+  FREQUENCY_UNITS,
+  POSTE_LABEL,
+} from '../data/settings.constants';
 import type {
   Activity,
   ActivityCategory,
   ActivityInput,
+  FrequencyPeriod,
+  FrequencyUnit,
   PlanningPoste,
 } from '../data/settings.models';
 import { findActivityConflict } from '../data/settings.rules';
@@ -42,13 +49,36 @@ export interface ActivityDialogData extends EntityDialogData<Activity> {
         <ui-field class="span-2" label="Libellé" [control]="form.controls.label">
           <input class="ui-input" formControlName="label" autocomplete="off" />
         </ui-field>
-        <ui-field
-          label="Objectif annuel"
-          [control]="form.controls.annualTarget"
-          hint="Séances par an. Laissez vide s'il n'y en a pas."
-        >
-          <input class="ui-input" type="number" formControlName="annualTarget" min="1" step="1" />
-        </ui-field>
+        <fieldset class="span-2 freq">
+          <legend>Fréquence</legend>
+          <ui-field
+            label="Nombre de séances"
+            [control]="form.controls.count"
+            hint="Laissez vide si aucune fréquence n'est définie."
+          >
+            <input class="ui-input" type="number" formControlName="count" min="1" step="1" />
+          </ui-field>
+          <ui-field label="Période" [control]="form.controls.period">
+            <select class="ui-input" formControlName="period">
+              @for (p of periods; track p.code) {
+                <option [value]="p.code">{{ p.label }}</option>
+              }
+            </select>
+          </ui-field>
+          <ui-field
+            class="span-2"
+            label="Pour chaque"
+            [control]="form.controls.unit"
+            hint="Ex. : 3 par an pour chaque plantation. Laissez « Aucun » pour un total sur la période."
+          >
+            <select class="ui-input" formControlName="unit">
+              <option value="">Aucun</option>
+              @for (u of units; track u.code) {
+                <option [value]="u.code">{{ u.label }}</option>
+              }
+            </select>
+          </ui-field>
+        </fieldset>
         <ui-field
           label="Durée d’une séance (jours)"
           [control]="form.controls.durationDays"
@@ -73,11 +103,30 @@ export interface ActivityDialogData extends EntityDialogData<Activity> {
       </div>
     </ui-dialog-shell>
   `,
+  styles: `
+    .freq {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+      margin: 0;
+      padding: 12px 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+    legend {
+      padding: 0 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-700);
+    }
+  `,
 })
 export class ActivityDialog extends EntityDialog<Activity, ActivityInput> {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly data = inject<ActivityDialogData>(DIALOG_DATA);
 
+  protected readonly periods = FREQUENCY_PERIODS;
+  protected readonly units = FREQUENCY_UNITS;
   protected readonly state = this.store.activities;
   protected readonly successMessage = this.editing ? 'Activité modifiée.' : 'Activité créée.';
   private readonly poste = this.item?.poste ?? this.data.poste;
@@ -90,10 +139,12 @@ export class ActivityDialog extends EntityDialog<Activity, ActivityInput> {
       [Validators.required, Validators.maxLength(80), (c: AbstractControl) => this.labelTaken(c)],
     ],
     active: [this.item?.active ?? true],
-    annualTarget: [
-      this.item?.annualTarget ?? (null as number | null),
+    count: [
+      this.item?.frequency?.count ?? (null as number | null),
       [Validators.min(1), Validators.max(366), Validators.pattern(/^\d+$/)],
     ],
+    period: [this.item?.frequency?.period ?? ('YEAR' as FrequencyPeriod)],
+    unit: [this.item?.frequency?.unit ?? ('' as FrequencyUnit | '')],
     durationDays: [
       this.item?.durationDays ?? 1,
       [Validators.required, Validators.min(1), Validators.max(366), Validators.pattern(/^\d+$/)],
@@ -119,8 +170,10 @@ export class ActivityDialog extends EntityDialog<Activity, ActivityInput> {
       category: this.category,
       label: v.label.trim(),
       active: v.active,
-      annualTarget:
-        v.annualTarget === null || String(v.annualTarget) === '' ? null : Number(v.annualTarget),
+      frequency:
+        v.count === null || String(v.count) === ''
+          ? null
+          : { count: Number(v.count), period: v.period, unit: v.unit === '' ? null : v.unit },
       durationDays: Number(v.durationDays),
     };
   }

@@ -15,12 +15,19 @@ import { FieldComponent } from '@shared/ui/field/field.component';
 
 import { POSTE_LABEL } from '../../settings/data/settings.constants';
 import type { Poste, User, UserInput } from '../../settings/data/settings.models';
-import { findEmailConflict, sectorsOfOperator } from '../../settings/data/settings.rules';
+import {
+  findEmailConflict,
+  findMatriculeConflict,
+  lotsOfOperatorInSector,
+  sectorsOfOperator,
+} from '../../settings/data/settings.rules';
 import { EntityDialog, type EntityDialogData } from '../../settings/shell/entity-dialog';
 import { STAFF_CONFIG, type StaffKind } from './staff.config';
 import { createStaffScope } from './staff.scope';
 
 const PHONE = /^[0-9 +().-]{8,20}$/;
+const MATRICULE = /^[A-Za-z0-9]{2,10}-[0-9]{5,7}$/;
+const SECTION = /^[A-Za-z0-9 ,.-]{1,30}$/;
 
 /** Création et modification du personnel d'un opérateur technique, selon la catégorie ouverte. */
 @Component({
@@ -33,6 +40,16 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
       subtitle="Il est rattaché à un opérateur d’encadrement technique."
     >
       <form id="staff-form" class="ui-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        @if (config.matriculeField) {
+          <ui-field
+            class="span-2"
+            label="Matricule"
+            [control]="form.controls.matricule"
+            hint="Format ACRONYME-NUMÉRO, par exemple SAPH-00348."
+          >
+            <input class="ui-input" formControlName="matricule" autocomplete="off" />
+          </ui-field>
+        }
         <ui-field label="Nom" [control]="form.controls.lastName">
           <input class="ui-input" formControlName="lastName" autocomplete="off" />
         </ui-field>
@@ -46,7 +63,7 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
           <input class="ui-input" type="tel" formControlName="phone" autocomplete="off" />
         </ui-field>
         <ui-field
-          [class.span-2]="config.postes.length === 1"
+          [class.span-2]="config.postes.length === 1 && config.sector === 'none'"
           label="Opérateur"
           [control]="form.controls.operatorId"
         >
@@ -69,7 +86,7 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
         }
         @if (config.sector !== 'none') {
           <ui-field
-            class="span-2"
+            [class.span-2]="config.postes.length > 1"
             label="Secteur"
             [control]="form.controls.sectorId"
             [hint]="
@@ -86,6 +103,23 @@ const PHONE = /^[0-9 +().-]{8,20}$/;
                 <option [value]="s.id">{{ s.code }} · {{ s.name }}</option>
               }
             </select>
+          </ui-field>
+        }
+        @if (config.assignment) {
+          <ui-field
+            label="Lot"
+            [control]="form.controls.lot"
+            [hint]="sectorId() ? 'Lots de ce secteur.' : 'Choisissez d’abord le secteur.'"
+          >
+            <select class="ui-input" formControlName="lot">
+              <option value="">Aucun</option>
+              @for (l of lots(); track l) {
+                <option [value]="l">Lot {{ l }}</option>
+              }
+            </select>
+          </ui-field>
+          <ui-field label="Section" [control]="form.controls.section" hint="Ex. : A ou A, B.">
+            <input class="ui-input" formControlName="section" autocomplete="off" />
           </ui-field>
         }
         <label class="ui-check span-2">
@@ -142,7 +176,17 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       this.item?.sectorId ?? this.scope.sector()?.id ?? '',
       this.config.sector === 'required' || this.scope.sector() ? Validators.required : [],
     ],
+    matricule: [
+      this.item?.matricule ?? '',
+      [Validators.pattern(MATRICULE), (c: AbstractControl) => this.matriculeTaken(c)],
+    ],
+    lot: [this.item?.lot === undefined ? '' : String(this.item.lot)],
+    section: [this.item?.section ?? '', Validators.pattern(SECTION)],
     active: [this.item?.active ?? true],
+  });
+
+  protected readonly sectorId = toSignal(this.form.controls.sectorId.valueChanges, {
+    initialValue: this.form.controls.sectorId.value,
   });
 
   protected readonly operatorId = toSignal(this.form.controls.operatorId.valueChanges, {
@@ -167,8 +211,38 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
     return kept && !list.some((s) => s.id === kept.id) ? [...list, kept] : list;
   });
 
+  /** Lots du secteur choisi attribués à l'opérateur ; le lot déjà enregistré reste proposé. */
+  protected readonly lots = computed(() => {
+    const list = this.sectorId()
+      ? lotsOfOperatorInSector(
+          this.operatorId(),
+          this.sectorId(),
+          this.store.contracts.items(),
+          this.store.attributions.items(),
+        )
+      : [];
+    const kept = this.item?.lot;
+    return kept !== undefined && this.item?.sectorId === this.sectorId() && !list.includes(kept)
+      ? [...list, kept].sort((a, b) => a - b)
+      : list;
+  });
+
   constructor() {
     super();
+    // L'opérateur (chef département et chef secteur) et le secteur (chef secteur) sont imposés.
+    if (this.scope.restricted()) {
+      this.form.controls.operatorId.disable();
+    }
+    if (this.scope.isSectorHead()) {
+      this.form.controls.sectorId.disable();
+    }
+    // Un autre secteur peut ne pas avoir le lot choisi.
+    this.form.controls.sectorId.valueChanges.subscribe(() => {
+      const lot = this.form.controls.lot.value;
+      if (lot && !this.lots().includes(Number(lot))) {
+        this.form.controls.lot.setValue('');
+      }
+    });
     // Changer d'opérateur peut rendre le secteur choisi impossible.
     this.form.controls.operatorId.valueChanges.subscribe(() => {
       const sectorId = this.form.controls.sectorId.value;
@@ -185,6 +259,13 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       : null;
   }
 
+  private matriculeTaken(control: AbstractControl): ValidationErrors | null {
+    const value = String(control.value ?? '').trim();
+    return value && findMatriculeConflict(value, this.store.users.items(), this.item?.id)
+      ? { taken: 'Ce matricule est déjà attribué.' }
+      : null;
+  }
+
   protected toInput(): UserInput {
     const v = this.form.getRawValue();
     return {
@@ -195,6 +276,11 @@ export class StaffDialog extends EntityDialog<User, UserInput> {
       operatorId: v.operatorId,
       poste: v.poste as Poste,
       ...(this.config.sector !== 'none' && v.sectorId ? { sectorId: v.sectorId } : {}),
+      ...(this.config.matriculeField && v.matricule.trim()
+        ? { matricule: v.matricule.trim().toUpperCase() }
+        : {}),
+      ...(this.config.assignment && v.sectorId && v.lot ? { lot: Number(v.lot) } : {}),
+      ...(this.config.assignment && v.section.trim() ? { section: v.section.trim() } : {}),
       active: v.active,
     };
   }

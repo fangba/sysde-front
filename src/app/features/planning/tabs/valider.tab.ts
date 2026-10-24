@@ -19,9 +19,16 @@ import { POSTE_LABEL } from '../../settings/data/settings.constants';
 import type { User } from '../../settings/data/settings.models';
 import { SettingsStore } from '../../settings/state/settings.store';
 import type { AnnualPlan } from '../data/planning.models';
-import { formatHours, planStatusView, summarize } from '../data/planning.rules';
+import {
+  activityStatusView,
+  formatHours,
+  frequencyLabel,
+  planStatusView,
+  summarize,
+} from '../data/planning.rules';
 import { PlanningStore } from '../state/planning.store';
-import { ReviewStore } from '../state/review.store';
+import { ReviewStore, type ActivityReviewRow } from '../state/review.store';
+import { ActivityReviewDialog } from './activity-review.dialog';
 import { PlanReviewDialog } from './review.dialog';
 
 /** Validation des plannings annuels des collaborateurs du secteur (chef secteur). */
@@ -62,11 +69,35 @@ import { PlanReviewDialog } from './review.dialog';
           (rowEdit)="open($event)"
         />
       </ui-card>
+
+      <ui-card
+        class="activities"
+        [heading]="'Activités soumises ' + mine.year()"
+        [subheading]="activitiesSubheading()"
+      >
+        <ui-data-table
+          [columns]="activityColumns()"
+          [rows]="store.activityRows()"
+          [loading]="store.status() === 'loading'"
+          [caption]="'Activités soumises ' + mine.year()"
+          [rowLabel]="activityRowLabel"
+          editLabel="Examiner l'activité de"
+          editIcon="eye"
+          searchPlaceholder="Rechercher une activité ou un collaborateur…"
+          emptyTitle="Aucune activité soumise"
+          emptyDescription="Les activités soumises une par une par vos collaborateurs apparaîtront ici."
+          (rowEdit)="openActivity($event)"
+        />
+      </ui-card>
     }
   `,
   styles: `
     :host {
       display: block;
+    }
+    .activities {
+      display: block;
+      margin-top: 24px;
     }
   `,
 })
@@ -88,6 +119,16 @@ export class ValiderTab {
     return pending === 0
       ? 'Aucun planning en attente de validation.'
       : `${pending} planning${pending > 1 ? 's' : ''} en attente de validation.`;
+  });
+
+  protected readonly activitiesSubheading = computed(() => {
+    if (this.readOnly()) {
+      return 'Consultation des activités soumises par votre équipe.';
+    }
+    const pending = this.store.pendingActivities();
+    return pending === 0
+      ? 'Aucune activité en attente de validation.'
+      : `${pending} activité${pending > 1 ? 's' : ''} en attente de validation.`;
   });
 
   constructor() {
@@ -133,6 +174,64 @@ export class ValiderTab {
       pill: (p) => planStatusView(p),
     },
   ]);
+
+  private nameOf(plan: AnnualPlan): string {
+    const user = this.userOf(plan);
+    return user ? `${user.lastName} ${user.firstName}` : '—';
+  }
+
+  protected readonly activityRowLabel = (row: ActivityReviewRow) =>
+    `${this.settings.activityLabel(row.activityId)} de ${this.nameOf(row.plan)}`;
+
+  protected readonly activityColumns = computed<readonly TableColumn<ActivityReviewRow>[]>(() => [
+    {
+      id: 'name',
+      header: 'Collaborateur',
+      text: (r) => this.nameOf(r.plan),
+      sub: (r) => {
+        const user = this.userOf(r.plan);
+        return user ? POSTE_LABEL[user.poste] : '';
+      },
+    },
+    {
+      id: 'activity',
+      header: 'Activité',
+      text: (r) => this.settings.activityLabel(r.activityId),
+    },
+    {
+      id: 'frequency',
+      header: 'Fréquence',
+      text: (r) => {
+        const activity = this.settings.activityOf(r.activityId);
+        return activity ? frequencyLabel(activity) : '—';
+      },
+      nowrap: true,
+    },
+    {
+      id: 'dates',
+      header: 'Dates',
+      text: (r) => String(r.plan.lines.filter((l) => l.activityId === r.activityId).length),
+      nowrap: true,
+    },
+    {
+      id: 'status',
+      header: 'Statut',
+      text: (r) => activityStatusView(r.submission.status).label,
+      pill: (r) => activityStatusView(r.submission.status),
+    },
+  ]);
+
+  protected openActivity(row: ActivityReviewRow): void {
+    this.dialog.open(ActivityReviewDialog, {
+      data: { planId: row.plan.id, activityId: row.activityId, readOnly: this.readOnly() },
+      injector: this.injector,
+      panelClass: 'ui-drawer-panel',
+      width: 'min(640px, 100vw)',
+      height: '100%',
+      maxHeight: '100vh',
+      backdropClass: 'ui-dialog-backdrop',
+    });
+  }
 
   protected open(plan: AnnualPlan): void {
     this.dialog.open(PlanReviewDialog, {

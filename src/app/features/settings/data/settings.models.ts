@@ -77,6 +77,12 @@ export interface User {
   readonly poste: Poste;
   /** Secteur d'affectation (chefs secteur et collaborateurs) ; absent pour les autres postes. */
   readonly sectorId?: string;
+  /** Matricule du collaborateur (ex. SAPH-00348). */
+  readonly matricule?: string;
+  /** Lot d'affectation, dans le secteur du collaborateur. */
+  readonly lot?: number;
+  /** Section(s) d'affectation, en texte libre (ex. « A » ou « A, B »). */
+  readonly section?: string;
   readonly active: boolean;
 }
 export type UserInput = Omit<User, 'id'>;
@@ -86,6 +92,18 @@ export type PlanningPoste = Extract<Poste, 'CS' | 'CF' | 'CO' | 'FS' | 'MO' | 'E
 
 /** Catégories d'activité d'un planning. */
 export type ActivityCategory = 'FORMATION' | 'VISITE' | 'RENCONTRE';
+
+/** Période sur laquelle la fréquence s'apprécie. */
+export type FrequencyPeriod = 'YEAR' | 'SEMESTER' | 'MONTH';
+/** Ce que la fréquence répète : une séance par plantation, par saigneur, etc. */
+export type FrequencyUnit = 'PLANTATION' | 'SAIGNEUR' | 'MONITEUR' | 'GROUPE';
+
+/** « 3 par an et par plantation » : `count` séances par `period`, pour chaque `unit` (si défini). */
+export interface ActivityFrequency {
+  readonly count: number;
+  readonly period: FrequencyPeriod;
+  readonly unit: FrequencyUnit | null;
+}
 
 /**
  * Activité qu'un poste peut inscrire à son planning. Une activité désactivée n'est plus
@@ -97,8 +115,8 @@ export interface Activity {
   readonly category: ActivityCategory;
   readonly label: string;
   readonly active: boolean;
-  /** Nombre de séances à réaliser par an ; `null` : pas d'objectif fixé. */
-  readonly annualTarget: number | null;
+  /** Fréquence demandée ; `null` : aucune fréquence n'est définie. */
+  readonly frequency: ActivityFrequency | null;
   /** Durée d'une séance, en jours (1 au minimum). */
   readonly durationDays: number;
 }

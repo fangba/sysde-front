@@ -2,8 +2,20 @@ import { formatDate } from '@shared/util/format';
 import type { Tone } from '@shared/models/tone';
 import { addDays, daysBetween, isValidIso, yearOf } from '@shared/util/dates';
 
-import type { Activity } from '../../settings/data/settings.models';
-import type { AnnualPlan, PlanLine, PlanLineInput, PlanStatus } from './planning.models';
+import { frequencyLabel, periodInfo } from '../../settings/data/settings.rules';
+import type {
+  Activity,
+  ActivityFrequency,
+  FrequencyPeriod,
+} from '../../settings/data/settings.models';
+import type {
+  ActivityStatus,
+  ActivitySubmission,
+  AnnualPlan,
+  PlanLine,
+  PlanLineInput,
+  PlanStatus,
+} from './planning.models';
 
 export const MAX_HOURS = 12;
 export const MAX_PLACE_LENGTH = 60;
@@ -119,22 +131,186 @@ export interface Objective {
   readonly target: number;
 }
 
-/** Une entrée par activité ayant un objectif annuel. */
+/**
+ * Séances attendues sur l'année pour l'ensemble de l'activité ; `null` sans fréquence, ou quand
+ * elle s'applique « par plantation / saigneur… » (le total dépend alors du nombre d'unités).
+ */
+export function annualTotal(frequency: ActivityFrequency | null): number | null {
+  if (!frequency || frequency.unit) {
+    return null;
+  }
+  return frequency.count * periodInfo(frequency.period).perYear;
+}
+
+/** Une entrée par activité dont le total annuel est connu. */
 export function objectives(
   activities: readonly Activity[],
   lines: readonly PlanLineInput[],
 ): Objective[] {
-  return activities.flatMap((activity) =>
-    activity.annualTarget === null
+  return activities.flatMap((activity) => {
+    const target = annualTotal(activity.frequency);
+    return target === null
       ? []
-      : [
-          {
-            activity,
-            planned: lines.filter((l) => l.activityId === activity.id).length,
-            target: activity.annualTarget,
-          },
-        ],
-  );
+      : [{ activity, planned: lines.filter((l) => l.activityId === activity.id).length, target }];
+  });
+}
+
+/** Résultat du contrôle des dates d'une activité face à sa fréquence. */
+export interface FrequencyCheck {
+  /** Toutes les dates sont cohérentes avec la fréquence demandée. */
+  readonly ok: boolean;
+  /** Séances attendues sur l'année ; `null` sans fréquence ou si elle dépend d'un nombre d'unités. */
+  readonly expected: number | null;
+  /** Séances programmées. */
+  readonly actual: number;
+  /** Ce qui n'est pas cohérent, en français ; vide si `ok`. */
+  readonly issues: readonly string[];
+}
+
+export { frequencyLabel };
+
+const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? 's' : ''}`;
+
+const MONTH_NAMES = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+];
+
+/** Périodes d'une année pour une fréquence : libellé (vide pour l'année entière) et mois couverts. */
+function periodsOf(period: FrequencyPeriod): { label: string; months: readonly number[] }[] {
+  switch (period) {
+    case 'YEAR':
+      return [{ label: '', months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }];
+    case 'SEMESTER':
+      return [
+        { label: 'au 1er semestre', months: [1, 2, 3, 4, 5, 6] },
+        { label: 'au 2e semestre', months: [7, 8, 9, 10, 11, 12] },
+      ];
+    case 'MONTH':
+      return MONTH_NAMES.map((name, i) => ({
+        label: `en ${name}`,
+        months: [i + 1],
+      }));
+  }
+}
+
+/**
+ * Vérifie les dates programmées d'une activité :
+ * 1. pour chaque période de la fréquence (année, semestre ou mois), le nombre de séances est celui
+ *    demandé ; quand la fréquence est « par plantation / saigneur… », chaque lot ou section
+ *    distinct du planning (colonne « Lot / section ») doit atteindre ce nombre ;
+ * 2. chaque séance dure le nombre de jours prévu pour l'activité ;
+ * 3. deux séances d'un même lot ou section ne se chevauchent pas.
+ * Les unités qui n'apparaissent pas du tout dans le planning ne peuvent pas être détectées.
+ */
+export function checkFrequency(
+  activity: Pick<Activity, 'frequency' | 'durationDays'>,
+  lines: readonly PlanLineInput[],
+): FrequencyCheck {
+  const sorted = [...lines].sort((a, b) => a.date.localeCompare(b.date));
+  const issues: string[] = [];
+  const frequency = activity.frequency;
+
+  if (frequency && sorted.length === 0) {
+    issues.push("Aucune séance n'est programmée.");
+  } else if (frequency) {
+    const groups = new Map<string, PlanLineInput[]>();
+    for (const line of sorted) {
+      const key = frequency.unit ? line.place.trim() : '';
+      groups.set(key, [...(groups.get(key) ?? []), line]);
+    }
+    for (const [place, group] of groups) {
+      for (const { label, months } of periodsOf(frequency.period)) {
+        const n = group.filter((l) => months.includes(Number(l.date.slice(5, 7)))).length;
+        if (n !== frequency.count) {
+          issues.push(
+            `${place ? `${place} : ` : ''}${plural(n, 'séance')} programmée${n > 1 ? 's' : ''}` +
+              `${label ? ` ${label}` : ''} pour ${plural(frequency.count, 'séance')} attendue${frequency.count > 1 ? 's' : ''}.`,
+          );
+        }
+      }
+    }
+  }
+  for (const line of sorted) {
+    const days = spanDays(line);
+    if (days !== activity.durationDays) {
+      issues.push(
+        `La séance du ${formatPeriod(line)} dure ${plural(days, 'jour')} au lieu de ${plural(activity.durationDays, 'jour')}.`,
+      );
+    }
+  }
+  const lastOf = new Map<string, PlanLineInput>();
+  for (const line of sorted) {
+    const key = frequency?.unit ? line.place.trim() : '';
+    const previous = lastOf.get(key);
+    if (previous && line.date <= previous.endDate) {
+      issues.push(
+        `Les séances du ${formatPeriod(previous)} et du ${formatPeriod(line)} se chevauchent.`,
+      );
+    }
+    if (!previous || line.endDate > previous.endDate) {
+      lastOf.set(key, line);
+    }
+  }
+  return {
+    ok: issues.length === 0,
+    expected: annualTotal(frequency),
+    actual: sorted.length,
+    issues,
+  };
+}
+
+/** Message affiché après le contrôle d'une activité : information si cohérent, alerte sinon. */
+export function checkMessage(
+  activity: Pick<Activity, 'label' | 'frequency'>,
+  check: FrequencyCheck,
+): { readonly tone: 'info' | 'warning'; readonly text: string } {
+  if (check.ok) {
+    return {
+      tone: 'info',
+      text:
+        activity.frequency === null
+          ? `Les dates de « ${activity.label} » sont cohérentes (aucune fréquence n'est définie pour cette activité).`
+          : `L'ensemble des dates de « ${activity.label} » sont cohérentes avec la fréquence demandée (${frequencyLabel(activity)}).`,
+    };
+  }
+  const more = check.issues.length - 1;
+  return {
+    tone: 'warning',
+    text:
+      `Des dates de « ${activity.label} » ne sont pas cohérentes : ${check.issues[0]}` +
+      (more > 0 ? ` (et ${plural(more, 'autre point')}, voir le détail dans « Détails »)` : ''),
+  };
+}
+
+/** Message affiché après le contrôle de toutes les activités. */
+export function checkAllMessage(
+  results: readonly {
+    readonly activity: Pick<Activity, 'label'>;
+    readonly check: FrequencyCheck;
+  }[],
+): { readonly tone: 'info' | 'warning'; readonly text: string } {
+  const failed = results.filter((r) => !r.check.ok);
+  if (failed.length === 0) {
+    return {
+      tone: 'info',
+      text: `Les dates des ${plural(results.length, 'activité')} sont cohérentes.`,
+    };
+  }
+  return {
+    tone: 'warning',
+    text: `${failed.length} activité${failed.length > 1 ? 's' : ''} sur ${results.length} comporte${failed.length > 1 ? 'nt' : ''} des dates non cohérentes : ${failed.map((r) => r.activity.label).join(', ')}.`,
+  };
 }
 
 const HOURS_FORMAT = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
@@ -146,6 +322,51 @@ export function formatHours(hours: number): string {
 
 export function isEditable(status: PlanStatus): boolean {
   return status === 'BROUILLON';
+}
+
+/** Soumission propre à une activité, s'il y en a une. */
+export function submissionOf(
+  plan: Pick<AnnualPlan, 'submissions'> | null | undefined,
+  activityId: string,
+): ActivitySubmission | undefined {
+  return plan?.submissions?.find((s) => s.activityId === activityId);
+}
+
+/** Les dates d'une activité ne se modifient plus : planning soumis ou activité soumise/validée. */
+export function isActivityLocked(
+  plan: Pick<AnnualPlan, 'status' | 'submissions'> | null | undefined,
+  activityId: string,
+): boolean {
+  if (!plan || !isEditable(plan.status)) {
+    return true;
+  }
+  const status = submissionOf(plan, activityId)?.status;
+  return status === 'SOUMIS' || status === 'VALIDE';
+}
+
+/** Libellé et teinte de l'état de soumission d'une activité. */
+export function activityStatusView(status: ActivityStatus): {
+  readonly label: string;
+  readonly tone: Tone;
+} {
+  switch (status) {
+    case 'SOUMIS':
+      return { label: 'Soumis', tone: 'amber' };
+    case 'VALIDE':
+      return { label: 'Validé', tone: 'green' };
+    case 'REJETE':
+      return { label: 'Rejeté', tone: 'red' };
+  }
+}
+
+/** Remplace (ou ajoute) l'état de soumission d'une activité ; `null` le retire. */
+export function withSubmission(
+  plan: Pick<AnnualPlan, 'submissions'>,
+  activityId: string,
+  next: ActivitySubmission | null,
+): readonly ActivitySubmission[] {
+  const others = (plan.submissions ?? []).filter((s) => s.activityId !== activityId);
+  return next ? [...others, next] : others;
 }
 
 /** Libellé et teinte d'un planning ; un brouillon rejeté se distingue d'un brouillon neuf. */
@@ -176,7 +397,10 @@ export interface ImportResult {
   readonly errors: readonly ImportError[];
 }
 
-const HEADER_ALIASES: Readonly<Record<keyof PlanLineInput, readonly string[]>> = {
+/** Colonnes du fichier d'import (la plantation n'y figure pas). */
+type ImportKey = Exclude<keyof PlanLineInput, 'plantation'>;
+
+const HEADER_ALIASES: Readonly<Record<ImportKey, readonly string[]>> = {
   date: ['date debut', 'date', 'debut', 'jour'],
   endDate: ['date fin', 'fin'],
   activityId: ['activite', 'type d activite', 'type activite'],
@@ -243,9 +467,9 @@ export function parsePlanRows(
     return { lines: [], errors: [{ row: 1, message: 'Le fichier est vide.' }] };
   }
   const header = rows[headerIndex]!.map((cell) => normalizeText(String(cell ?? '')));
-  const columns = {} as Record<keyof PlanLineInput, number>;
+  const columns = {} as Record<ImportKey, number>;
   const missing: string[] = [];
-  (Object.keys(HEADER_ALIASES) as (keyof PlanLineInput)[]).forEach((key, index) => {
+  (Object.keys(HEADER_ALIASES) as ImportKey[]).forEach((key, index) => {
     const column = header.findIndex((name) => HEADER_ALIASES[key].includes(name));
     columns[key] = column;
     if (column < 0 && key !== 'endDate') {

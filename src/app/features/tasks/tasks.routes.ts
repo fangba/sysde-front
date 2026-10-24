@@ -59,7 +59,7 @@ export const TASKS_ROUTES: Routes = [
       },
       staffRoute('chefs-departement', 'Chef département', 'chef-departement'),
       staffRoute('chefs-secteur', 'Chef secteur', 'chef-secteur'),
-      staffRoute('collaborateurs', 'Collaborateur', 'collaborateur'),
+      staffRoute('collaborateurs', 'Collaborateurs', 'collaborateur'),
     ],
   },
 ];

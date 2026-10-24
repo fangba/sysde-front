@@ -12,6 +12,8 @@ export interface PlanLine {
   readonly activityId: string;
   /** Lot ou section concerné, en texte libre (« Lot 3 », « Section B »). */
   readonly place: string;
+  /** Nom de la plantation visitée ; renseigné pour les activités de catégorie Visite. */
+  readonly plantation?: string;
   /** Durée prévue, en heures par jour. */
   readonly hours: number;
 }
@@ -24,6 +26,19 @@ export interface PlanRejection {
   readonly date: string;
 }
 
+/**
+ * État d'une activité soumise seule au chef secteur. Une activité sans entrée est en brouillon.
+ * `SOUMIS` et `VALIDE` verrouillent ses dates ; `REJETE` la rend de nouveau modifiable.
+ */
+export type ActivityStatus = 'SOUMIS' | 'VALIDE' | 'REJETE';
+
+export interface ActivitySubmission {
+  readonly activityId: string;
+  readonly status: ActivityStatus;
+  /** Motif du dernier rejet, conservé jusqu'à la nouvelle soumission. */
+  readonly rejection?: PlanRejection;
+}
+
 /** Planning annuel d'activités d'un compte. */
 export interface AnnualPlan {
   readonly id: string;
@@ -32,6 +47,8 @@ export interface AnnualPlan {
   readonly status: PlanStatus;
   readonly lines: readonly PlanLine[];
   readonly rejection?: PlanRejection;
+  /** Activités soumises une par une ; vide si aucune ne l'a été. */
+  readonly submissions?: readonly ActivitySubmission[];
 }
 
 /** Décision du chef secteur sur un planning soumis. */

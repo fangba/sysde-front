@@ -75,12 +75,13 @@ describe('PlanningStore (collaborateur)', () => {
   it('ne propose que les activités actives du poste et refuse les autres', async () => {
     const { mine } = await setup('collaborateur@sysde.ci', 'CF');
     expect(mine.activities().map((a) => a.label)).toEqual([
-      'Formation initiale',
+      'Formation à la saignée',
       'Suivi post perfectionnement',
       'Recyclage des saigneurs',
+      'Perfectionnement in situ',
     ]);
     expect(mine.upsertLine(null, { ...input(5), activityId: 'ac-7' })).toContain('pas proposée');
-    expect(mine.activityLabel('ac-4')).toBe('Formation initiale');
+    expect(mine.activityLabel('ac-4')).toBe('Formation à la saignée');
   });
 
   it('enregistre puis soumet, et le planning devient non modifiable', async () => {
@@ -106,6 +107,103 @@ describe('PlanningStore (collaborateur)', () => {
     expect(mine.draft()).toHaveLength(before + 2);
     expect(mine.importLines([input(12)], 'replace')).toBeNull();
     expect(mine.draft()).toHaveLength(1);
+  });
+});
+
+describe("soumission d'une seule activité", () => {
+  const recyclage = (day: number, over: Partial<ReturnType<typeof input>> = {}) => ({
+    ...input(day),
+    endDate: `${year}-06-${String(day + 2).padStart(2, '0')}`,
+    activityId: 'ac-6',
+    ...over,
+  });
+
+  it("verrouille l'activité soumise sans toucher aux autres", async () => {
+    const { mine } = await setup('collaborateur@sysde.ci', 'CF');
+    mine.load();
+    await wait();
+    expect(mine.canSubmitActivities()).toBe(true);
+    expect(mine.upsertLine(null, recyclage(9))).toBeNull();
+
+    mine.submitActivity('ac-6');
+    await wait();
+    await wait();
+    expect(mine.plan()?.status).toBe('BROUILLON');
+    expect(mine.submissionOf('ac-6')?.status).toBe('SOUMIS');
+    expect(mine.isLocked('ac-6')).toBe(true);
+    expect(mine.isLocked('ac-4')).toBe(false);
+    expect(mine.upsertLine(null, recyclage(20))).toContain('soumise');
+    const line = mine.draft().find((l) => l.activityId === 'ac-6')!;
+    expect(mine.removeLine(line.id)).toContain('soumise');
+    expect(mine.upsertLine(null, input(25))).toBeNull();
+    // Remplacer le brouillon par un import garde les dates de l'activité soumise.
+    expect(mine.importLines([input(12)], 'replace')).toBeNull();
+    expect(mine.draft().filter((l) => l.activityId === 'ac-6')).toHaveLength(1);
+  });
+
+  it('refuse de soumettre une activité sans date ou dont les dates sont incohérentes', async () => {
+    const { mine } = await setup('collaborateur@sysde.ci', 'CF');
+    mine.load();
+    await wait();
+    mine.submitActivity('ac-6');
+    await wait();
+    expect(mine.submissionOf('ac-6')).toBeUndefined();
+    // Deux séances pour 1 attendue par an.
+    mine.upsertLine(null, recyclage(9));
+    mine.upsertLine(null, recyclage(16));
+    mine.submitActivity('ac-6');
+    await wait();
+    expect(mine.submissionOf('ac-6')).toBeUndefined();
+    expect(mine.isLocked('ac-6')).toBe(false);
+  });
+
+  it("n'est pas proposée au chef secteur, dont le planning est validé d'office", async () => {
+    const { mine } = await setup('chef.secteur@sysde.ci', 'CS');
+    mine.load();
+    await wait();
+    expect(mine.canSubmitActivities()).toBe(false);
+  });
+
+  it('est validée ou rejetée par le chef secteur, un rejet rend les dates modifiables', async () => {
+    const { mine, review } = await setup('collaborateur@sysde.ci', 'CF');
+    mine.load();
+    await wait();
+    mine.upsertLine(null, recyclage(9));
+    mine.submitActivity('ac-6');
+    await wait();
+    await wait();
+    review.plans.set([mine.plan()!]);
+    expect(review.pendingActivities()).toBe(1);
+
+    let closed = 0;
+    review.decideActivity(mine.plan()!, 'ac-6', { approve: false, reason: ' ' }, () => closed++);
+    await wait();
+    expect(closed).toBe(0);
+    review.decideActivity(
+      mine.plan()!,
+      'ac-6',
+      { approve: false, reason: 'Revoir la date.' },
+      () => closed++,
+    );
+    await wait();
+    expect(closed).toBe(1);
+    expect(review.activityRows()[0]?.submission).toMatchObject({
+      status: 'REJETE',
+      rejection: { reason: 'Revoir la date.' },
+    });
+    expect(review.pendingActivities()).toBe(0);
+    mine.load();
+    await wait();
+    expect(mine.isLocked('ac-6')).toBe(false);
+    expect(mine.submissionOf('ac-6')?.rejection?.reason).toBe('Revoir la date.');
+
+    mine.submitActivity('ac-6');
+    await wait();
+    await wait();
+    review.plans.set([mine.plan()!]);
+    review.decideActivity(mine.plan()!, 'ac-6', { approve: true }, () => closed++);
+    await wait();
+    expect(review.activityRows()[0]?.submission.status).toBe('VALIDE');
   });
 });
 

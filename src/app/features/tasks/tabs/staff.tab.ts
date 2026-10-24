@@ -34,6 +34,7 @@ import { createStaffScope } from './staff.scope';
         [columns]="columns()"
         [rows]="rows()"
         [loading]="store.status() === 'loading'"
+        [columnFilters]="true"
         [caption]="'Liste : ' + config().heading"
         [rowLabel]="rowLabel"
         [searchPlaceholder]="'Rechercher : ' + config().singular + '…'"
@@ -76,43 +77,86 @@ export class StaffTab {
   protected readonly rowLabel = (u: User) => `${u.firstName} ${u.lastName}`;
 
   protected readonly columns = computed<readonly TableColumn<User>[]>(() => {
-    const { postes, sector } = this.config();
-    const columns: TableColumn<User>[] = [
-      {
-        id: 'name',
-        header: 'Nom',
-        text: (u) => `${u.lastName} ${u.firstName}`,
-        sub: (u) => u.email,
-      },
-      {
-        id: 'operator',
-        header: 'Opérateur',
-        text: (u) => this.store.operatorLabel(u.operatorId),
-        sub: (u) => this.store.operatorOf(u.operatorId)?.name ?? '',
-      },
-    ];
-    if (postes.length > 1) {
-      columns.push({
-        id: 'poste',
-        header: 'Poste',
-        text: (u) => u.poste,
-        sub: (u) => POSTE_LABEL[u.poste],
-      });
-    }
-    if (sector !== 'none') {
-      columns.push({
-        id: 'sector',
-        header: 'Secteur',
-        text: (u) => (u.sectorId ? this.store.sectorLabel(u.sectorId) : '—'),
-      });
-    }
-    columns.push({
+    const { postes, sector, assignment, showMatricule } = this.config();
+    // Un chef secteur ne voit que son opérateur et son secteur : ces colonnes seraient constantes.
+    const fixedScope = this.scope.isSectorHead();
+    const name: TableColumn<User> = {
+      id: 'name',
+      filter: 'text',
+      header: 'Nom',
+      text: (u) => `${u.lastName} ${u.firstName}`,
+      sub: (u) => u.email,
+    };
+    const matricule: TableColumn<User> = {
+      id: 'matricule',
+      filter: 'text',
+      header: 'Matricule',
+      text: (u) => u.matricule ?? '—',
+      nowrap: true,
+    };
+    const operator: TableColumn<User> = {
+      id: 'operator',
+      filter: 'text',
+      header: 'Opérateur',
+      text: (u) => this.store.operatorLabel(u.operatorId),
+      sub: (u) => this.store.operatorOf(u.operatorId)?.name ?? '',
+    };
+    const poste: TableColumn<User> = {
+      id: 'poste',
+      filter: 'text',
+      header: 'Poste',
+      text: (u) => u.poste,
+      sub: (u) => POSTE_LABEL[u.poste],
+    };
+    const sectorColumn: TableColumn<User> = {
+      id: 'sector',
+      filter: 'text',
+      header: 'Secteur',
+      text: (u) => (u.sectorId ? this.store.sectorLabel(u.sectorId) : '—'),
+    };
+    const lot: TableColumn<User> = {
+      id: 'lot',
+      filter: 'text',
+      header: 'Lot',
+      text: (u) => (u.lot === undefined ? '—' : `Lot ${u.lot}`),
+      nowrap: true,
+    };
+    const section: TableColumn<User> = {
+      id: 'section',
+      filter: 'text',
+      header: 'Section',
+      text: (u) => u.section || '—',
+    };
+    const active: TableColumn<User> = {
       id: 'active',
+      filter: ['Actif', 'Inactif'],
       header: 'Statut',
       text: (u) => (u.active ? 'Actif' : 'Inactif'),
       pill: (u) => ({ label: u.active ? 'Actif' : 'Inactif', tone: ACTIVE_TONE[`${u.active}`] }),
-    });
-    return columns;
+    };
+
+    if (assignment) {
+      // Matricule, Nom, Poste, Lot, Section, Statut ; l'opérateur et le secteur ne s'ajoutent
+      // que pour ceux qui voient plusieurs opérateurs ou secteurs.
+      return [
+        matricule,
+        name,
+        poste,
+        ...(fixedScope ? [] : [operator, sectorColumn]),
+        lot,
+        section,
+        active,
+      ];
+    }
+    return [
+      ...(showMatricule ? [matricule] : []),
+      name,
+      // Un chef de département ne voit que son opérateur : la colonne serait constante.
+      ...(this.scope.restricted() ? [] : [operator]),
+      ...(postes.length > 1 ? [poste] : []),
+      ...(sector !== 'none' ? [sectorColumn] : []),
+      active,
+    ];
   });
 
   protected open(item: User | null): void {

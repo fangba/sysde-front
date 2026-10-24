@@ -13,6 +13,12 @@ export interface StaffConfig {
   readonly postes: readonly Poste[];
   /** Secteur d'affectation : absent, facultatif ou obligatoire. */
   readonly sector: 'none' | 'optional' | 'required';
+  /** Matricule, lot et section : renseignés pour les collaborateurs seulement. */
+  readonly assignment: boolean;
+  /** Colonne Matricule en première position. */
+  readonly showMatricule: boolean;
+  /** Champ Matricule dans le formulaire (en première position). */
+  readonly matriculeField: boolean;
   readonly created: string;
   readonly updated: string;
 }
@@ -25,6 +31,9 @@ export const STAFF_CONFIG: Readonly<Record<StaffKind, StaffConfig>> = {
     newLabel: 'Nouveau chef de département',
     postes: ['CD'],
     sector: 'none',
+    assignment: false,
+    showMatricule: true,
+    matriculeField: false,
     created: 'Chef de département créé.',
     updated: 'Chef de département modifié.',
   },
@@ -36,6 +45,9 @@ export const STAFF_CONFIG: Readonly<Record<StaffKind, StaffConfig>> = {
     newLabel: 'Nouveau chef secteur',
     postes: ['CS'],
     sector: 'required',
+    assignment: false,
+    showMatricule: true,
+    matriculeField: true,
     created: 'Chef secteur créé.',
     updated: 'Chef secteur modifié.',
   },
@@ -47,6 +59,9 @@ export const STAFF_CONFIG: Readonly<Record<StaffKind, StaffConfig>> = {
     newLabel: 'Nouveau collaborateur',
     postes: COLLABORATOR_POSTES,
     sector: 'optional',
+    assignment: true,
+    showMatricule: true,
+    matriculeField: true,
     created: 'Collaborateur créé.',
     updated: 'Collaborateur modifié.',
   },

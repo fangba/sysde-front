@@ -5,13 +5,13 @@ export interface PlanningTabDef {
 }
 
 export const PLANNING_TAB_DEFS: readonly PlanningTabDef[] = [
-  { path: 'elaborer', label: 'Élaborer' },
-  { path: 'valider', label: 'Valider' },
+  { path: 'elaboration', label: 'Élaboration' },
+  { path: 'validation', label: 'Validation' },
   { path: 'equipe', label: 'Équipe' },
 ];
 
 /**
- * Élaborer pour les postes qui planifient ; Valider en plus pour le chef secteur ;
+ * Élaboration pour les postes qui planifient ; Validation en plus pour le chef secteur ;
  * la secrétaire n'a que Équipe (consultation des plannings du secteur).
  */
 export function planningTabsFor(profile: {
@@ -21,6 +21,6 @@ export function planningTabsFor(profile: {
   return PLANNING_TAB_DEFS.filter((tab) =>
     profile.secretary
       ? tab.path === 'equipe'
-      : tab.path === 'elaborer' || (profile.sectorHead && tab.path === 'valider'),
+      : tab.path === 'elaboration' || (profile.sectorHead && tab.path === 'validation'),
   );
 }

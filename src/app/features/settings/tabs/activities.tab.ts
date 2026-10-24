@@ -16,6 +16,7 @@ import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.componen
 
 import { ACTIVITY_CATEGORIES, PLANNING_POSTE_LIST, POSTE_LABEL } from '../data/settings.constants';
 import type { Activity, ActivityCategory, PlanningPoste } from '../data/settings.models';
+import { frequencyLabel } from '../data/settings.rules';
 import { SettingsStore } from '../state/settings.store';
 import { ActivityDialog } from './activity.dialog';
 
@@ -125,10 +126,10 @@ export class ActivitiesTab {
       .filter((a) => a.poste === this.selected() && a.category === category);
   }
 
-  /** « 12 séances/an · 20 jours » */
+  /** « 1 par mois et par saigneur · 20 jours » */
   protected meta(a: Activity): string {
     const days = `${a.durationDays} jour${a.durationDays > 1 ? 's' : ''}`;
-    return a.annualTarget === null ? days : `${a.annualTarget}/an · ${days}`;
+    return a.frequency === null ? days : `${frequencyLabel(a)} · ${days}`;
   }
 
   protected open(item: Activity | null, category: ActivityCategory): void {

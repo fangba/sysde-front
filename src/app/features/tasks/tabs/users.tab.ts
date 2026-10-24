@@ -25,6 +25,7 @@ import { UserDialog } from './users.dialog';
     >
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="users()"
         [loading]="store.status() === 'loading'"
         caption="Liste des comptes utilisateur"
@@ -66,10 +67,30 @@ export class UsersTab {
 
   protected readonly rowLabel = (u: User) => `${u.firstName} ${u.lastName}`;
   protected readonly columns: readonly TableColumn<User>[] = [
-    { id: 'name', header: 'Nom', text: (u) => `${u.lastName} ${u.firstName}`, sub: (u) => u.email },
-    { id: 'poste', header: 'Poste', text: (u) => u.poste, sub: (u) => POSTE_LABEL[u.poste] },
+    {
+      id: 'matricule',
+      filter: 'text',
+      header: 'Matricule',
+      text: (u) => u.matricule ?? '—',
+      nowrap: true,
+    },
+    {
+      id: 'name',
+      filter: 'text',
+      header: 'Nom',
+      text: (u) => `${u.lastName} ${u.firstName}`,
+      sub: (u) => u.email,
+    },
+    {
+      id: 'poste',
+      filter: 'text',
+      header: 'Poste',
+      text: (u) => u.poste,
+      sub: (u) => POSTE_LABEL[u.poste],
+    },
     {
       id: 'active',
+      filter: ['Actif', 'Inactif'],
       header: 'Statut',
       text: (u) => (u.active ? 'Actif' : 'Inactif'),
       pill: (u) => ({ label: u.active ? 'Actif' : 'Inactif', tone: ACTIVE_TONE[`${u.active}`] }),

@@ -21,7 +21,7 @@
   </div>
 } @else if (rows().length === 0) {
   <ui-empty-state [title]="emptyTitle()" [description]="emptyDescription()" />
-} @else if (filtered().length === 0) {
+} @else if (filtered().length === 0 && !columnFilters()) {
   <ui-empty-state
     icon="search"
     title="Aucun résultat"
@@ -40,14 +40,69 @@
           @for (column of columns(); track column.id) {
             <th scope="col">{{ column.header }}</th>
           }
-          <th scope="col" class="end"><span class="sr-only">Actions</span></th>
+          <th scope="col" class="end">
+            @if (rowActions()) {
+              {{ actionsHeader() }}
+            } @else {
+              <span class="sr-only">Actions</span>
+            }
+          </th>
         </tr>
+        @if (columnFilters()) {
+          <tr class="filters">
+            @for (column of columns(); track column.id) {
+              <td>
+                @if (column.filter === 'text') {
+                  <input
+                    type="search"
+                    class="ui-input"
+                    placeholder="Filtrer"
+                    [attr.aria-label]="'Filtrer la colonne ' + column.header"
+                    [value]="columnQuery()[column.id] ?? ''"
+                    (input)="onColumnFilter(column.id, $event)"
+                  />
+                } @else if (column.filter) {
+                  <select
+                    class="ui-input"
+                    [attr.aria-label]="'Filtrer la colonne ' + column.header"
+                    [value]="columnQuery()[column.id] ?? ''"
+                    (change)="onColumnFilter(column.id, $event)"
+                  >
+                    <option value="">Tous</option>
+                    @for (option of listOf(column); track option) {
+                      <option [value]="option">{{ option }}</option>
+                    }
+                  </select>
+                }
+              </td>
+            }
+            <td class="end">
+              @if (hasColumnFilter()) {
+                <button
+                  type="button"
+                  class="edit"
+                  aria-label="Effacer les filtres"
+                  (click)="clearColumnFilters()"
+                >
+                  <ui-icon name="close" />
+                </button>
+              }
+            </td>
+          </tr>
+        }
       </thead>
       <tbody>
+        @if (filtered().length === 0) {
+          <tr>
+            <td class="none" [attr.colspan]="columns().length + 1">
+              Aucun élément ne correspond à votre recherche.
+            </td>
+          </tr>
+        }
         @for (row of visible(); track row.id) {
           <tr>
             @for (column of columns(); track column.id) {
-              <td>
+              <td [class.nowrap]="column.nowrap">
                 @if (column.pill) {
                   @let pill = column.pill(row);
                   <ui-status-pill [tone]="pill.tone">{{ pill.label }}</ui-status-pill>
@@ -60,7 +115,9 @@
               </td>
             }
             <td class="end">
-              @if (editable()) {
+              @if (rowActions(); as actions) {
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: row }" />
+              } @else if (editable()) {
                 <button
                   type="button"
                   class="edit"

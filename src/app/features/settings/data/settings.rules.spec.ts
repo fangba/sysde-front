@@ -20,6 +20,8 @@ import {
   findExerciseDuplicate,
   findLotConflict,
   findLotNumberConflict,
+  findMatriculeConflict,
+  lotsOfOperatorInSector,
   findSectorCodeConflict,
   findOperatorAcronymConflict,
   sectorIdsOfContract,
@@ -130,15 +132,16 @@ describe('activités des plannings', () => {
 
   it('reprend le référentiel de chaque poste, catégorie par catégorie', () => {
     expect(byPoste('CF', 'FORMATION')).toEqual([
-      'Formation initiale',
+      'Formation à la saignée',
       'Suivi post perfectionnement',
       'Recyclage des saigneurs',
+      'Perfectionnement in situ',
     ]);
     expect(byPoste('CF', 'VISITE')).toEqual([]);
     expect(byPoste('CO', 'VISITE')).toEqual(['Visite de plantation', 'Visite de conformité']);
-    expect(byPoste('FS', 'FORMATION')).toEqual(['Formation initiale']);
+    expect(byPoste('FS', 'FORMATION')).toEqual(['Formation à la saignée']);
     expect(byPoste('MO', 'FORMATION')).toEqual(['Perfectionnement in situ']);
-    expect(byPoste('MO', 'VISITE')).toEqual(['Visite de plantation', 'Découverte du verger']);
+    expect(byPoste('MO', 'VISITE')).toEqual(['Visite de plantation', 'Découverte de verger']);
     expect(byPoste('ES', 'VISITE')).toEqual(["Visite d'intervention"]);
     expect(byPoste('MO', 'RENCONTRE')).toEqual(['Groupe de vulgarisation']);
     expect(byPoste('ES', 'RENCONTRE')).toEqual([]);
@@ -154,5 +157,22 @@ describe('activités des plannings', () => {
     expect(
       findActivityConflict({ poste: 'FS', label: 'Visite de plantation' }, DEMO_ACTIVITIES),
     ).toBeUndefined();
+  });
+});
+
+describe('matricule, lot et section des collaborateurs', () => {
+  it('liste les lots d’un secteur confiés à un opérateur', () => {
+    expect(lotsOfOperatorInSector('op-3', 'sec-1', DEMO_CONTRACTS, DEMO_ATTRIBUTIONS)).toEqual([
+      1, 2,
+    ]);
+    expect(lotsOfOperatorInSector('op-3', 'sec-4', DEMO_CONTRACTS, DEMO_ATTRIBUTIONS)).toEqual([]);
+  });
+
+  it('détecte un matricule déjà attribué, sans tenir compte de la casse', () => {
+    const owner = DEMO_USERS.find((u) => u.matricule);
+    expect(owner).toBeDefined();
+    const matricule = owner?.matricule?.toLowerCase() ?? '';
+    expect(findMatriculeConflict(matricule, DEMO_USERS)?.id).toBe(owner?.id);
+    expect(findMatriculeConflict(matricule, DEMO_USERS, owner?.id)).toBeUndefined();
   });
 });

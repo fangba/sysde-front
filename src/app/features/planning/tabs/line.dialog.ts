@@ -19,6 +19,8 @@ export interface LineDialogData {
   readonly item: PlanLine | null;
   /** Date proposée pour une nouvelle ligne (jour choisi dans le calendrier). */
   readonly date?: string;
+  /** Activité imposée pour une nouvelle ligne (ajout depuis le détail d'une activité). */
+  readonly activityId?: string;
 }
 
 /** Ajout, modification et suppression d'une ligne du brouillon. */
@@ -28,7 +30,7 @@ export interface LineDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ui-dialog-shell
-      [title]="editing ? 'Modifier l’activité' : 'Nouvelle activité'"
+      [title]="editing ? 'Modifier l’activité' : locked ? 'Nouvelle date' : 'Nouvelle activité'"
       [subtitle]="'Planning ' + store.year()"
     >
       <form id="line-form" class="ui-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -89,6 +91,21 @@ export interface LineDialogData {
             }
           </datalist>
         </ui-field>
+        @if (isVisit()) {
+          <ui-field
+            class="span-2"
+            label="Plantation"
+            [control]="form.controls.plantation"
+            hint="Nom de la plantation visitée."
+          >
+            <input
+              class="ui-input"
+              formControlName="plantation"
+              autocomplete="off"
+              [maxlength]="maxPlace"
+            />
+          </ui-field>
+        }
         @if (error()) {
           <p class="ui-form__error span-2" role="alert">{{ error() }}</p>
         }
@@ -121,11 +138,19 @@ export class PlanLineDialog {
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly editing = this.item !== null;
+  /** Activité figée : on ajoute une date depuis le détail d'une activité. */
+  protected readonly locked = this.item === null && !!this.data.activityId;
   /** Activités du poste, regroupées par catégorie (celles sans activité n'apparaissent pas). */
   protected readonly groups = computed(() =>
     ACTIVITY_CATEGORIES.map((category) => ({
       label: category.label,
-      items: this.store.activities().filter((a) => a.category === category.code),
+      items: this.store
+        .activities()
+        .filter(
+          (a) =>
+            a.category === category.code &&
+            (!this.store.isLocked(a.id) || a.id === this.item?.activityId),
+        ),
     })).filter((group) => group.items.length > 0),
   );
   protected readonly maxPlace = MAX_PLACE_LENGTH;
@@ -143,14 +168,24 @@ export class PlanLineDialog {
 
   protected readonly form = this.fb.group({
     date: [this.item?.date ?? this.defaultDate(), Validators.required],
-    endDate: [this.item?.endDate ?? this.defaultDate(), Validators.required],
-    activityId: [this.item?.activityId ?? '', Validators.required],
+    endDate: [this.item?.endDate ?? this.defaultEnd(), Validators.required],
+    activityId: [
+      { value: this.item?.activityId ?? this.data.activityId ?? '', disabled: this.locked },
+      Validators.required,
+    ],
+    plantation: [this.item?.plantation ?? '', Validators.maxLength(MAX_PLACE_LENGTH)],
     place: [this.item?.place ?? '', [Validators.required, Validators.maxLength(MAX_PLACE_LENGTH)]],
     hours: [
       this.item?.hours ?? 4,
       [Validators.required, Validators.min(0.5), Validators.max(MAX_HOURS)],
     ],
   });
+
+  private readonly activityId = signal(this.form.controls.activityId.value);
+  /** L'activité choisie est une visite : la plantation devient obligatoire. */
+  protected readonly isVisit = computed(
+    () => this.settings.activityOf(this.activityId())?.category === 'VISITE',
+  );
 
   /** Durée de la période choisie, affichée sous l'activité. */
   protected readonly span = signal('');
@@ -171,7 +206,9 @@ export class PlanLineDialog {
         this.form.controls.endDate.setValue(endFor(date, this.store.durationOf(activityId)));
       }
     };
-    this.form.controls.activityId.valueChanges.subscribe(() => {
+    this.form.controls.activityId.valueChanges.subscribe((id) => {
+      this.activityId.set(id);
+      this.syncPlantation();
       if (!this.endTouched) {
         propose();
       }
@@ -190,10 +227,26 @@ export class PlanLineDialog {
     });
     this.form.valueChanges.subscribe(refresh);
     refresh();
+    this.syncPlantation();
+  }
+
+  private syncPlantation(): void {
+    const control = this.form.controls.plantation;
+    control.setValidators(
+      this.isVisit() ? [Validators.required, Validators.maxLength(MAX_PLACE_LENGTH)] : [],
+    );
+    control.updateValueAndValidity();
   }
 
   /** Vrai dès que l'utilisateur a saisi lui-même la date de fin (ou en modification). */
   private endTouched = this.item !== null;
+
+  private defaultEnd(): string {
+    const { activityId } = this.data;
+    return activityId
+      ? endFor(this.defaultDate(), this.store.durationOf(activityId))
+      : this.defaultDate();
+  }
 
   private defaultDate(): string {
     if (this.data.date?.startsWith(`${this.store.year()}-`)) {
@@ -214,6 +267,7 @@ export class PlanLineDialog {
       endDate: v.endDate,
       activityId: v.activityId,
       place: v.place,
+      plantation: this.isVisit() ? v.plantation : undefined,
       hours: Number(v.hours),
     });
     if (message) {
@@ -224,8 +278,10 @@ export class PlanLineDialog {
   }
 
   protected remove(): void {
-    if (this.item) {
-      this.store.removeLine(this.item.id);
+    const message = this.item ? this.store.removeLine(this.item.id) : null;
+    if (message) {
+      this.error.set(message);
+      return;
     }
     this.ref.close();
   }

@@ -19,6 +19,7 @@ import { OperatorDialog } from './operators.dialog';
     <ui-card heading="Opérateurs" subheading="Organismes et opérateurs d’encadrement technique.">
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="store.operators.items()"
         [loading]="store.status() === 'loading'"
         caption="Liste des opérateurs"
@@ -42,12 +43,19 @@ export class OperatorsTab {
 
   protected readonly rowLabel = (o: Operator) => o.acronym;
   protected readonly columns: readonly TableColumn<Operator>[] = [
-    { id: 'acronym', header: 'Acronyme', text: (o) => o.acronym },
-    { id: 'name', header: 'Dénomination', text: (o) => o.name },
-    { id: 'type', header: 'Type', text: (o) => OPERATOR_TYPE_LABEL[o.type] },
-    { id: 'email', header: 'Contact', text: (o) => o.email || '—', sub: (o) => o.phone },
+    { id: 'acronym', filter: 'text', header: 'Acronyme', text: (o) => o.acronym },
+    { id: 'name', filter: 'text', header: 'Dénomination', text: (o) => o.name },
+    { id: 'type', filter: 'text', header: 'Type', text: (o) => OPERATOR_TYPE_LABEL[o.type] },
+    {
+      id: 'email',
+      filter: 'text',
+      header: 'Contact',
+      text: (o) => o.email || '—',
+      sub: (o) => o.phone,
+    },
     {
       id: 'active',
+      filter: ['Actif', 'Inactif'],
       header: 'Statut',
       text: (o) => (o.active ? 'Actif' : 'Inactif'),
       pill: (o) => ({ label: o.active ? 'Actif' : 'Inactif', tone: ACTIVE_TONE[`${o.active}`] }),

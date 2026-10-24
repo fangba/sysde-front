@@ -89,6 +89,37 @@ td {
   vertical-align: middle;
 }
 
+// Zones de filtre : ligne claire sous l'en-tête vert.
+thead tr.filters {
+  background: var(--paper);
+
+  td {
+    padding: 8px 12px;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ui-input {
+    height: 34px;
+    min-width: 72px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+}
+
+td.none {
+  padding: 28px 16px;
+  color: var(--ink-500);
+  text-align: center;
+}
+
+td.nowrap {
+  white-space: nowrap;
+}
+
 tbody tr:hover {
   background: var(--green-50);
 }

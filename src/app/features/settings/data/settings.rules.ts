@@ -1,11 +1,12 @@
 import { periodsOverlap, yearOf } from '@shared/util/dates';
 
-import { POSTES_BY_OPERATOR_TYPE } from './settings.constants';
+import { FREQUENCY_PERIODS, FREQUENCY_UNITS, POSTES_BY_OPERATOR_TYPE } from './settings.constants';
 import type {
   Activity,
   Attribution,
   Contract,
   Exercise,
+  FrequencyPeriod,
   Lot,
   Operator,
   OperatorType,
@@ -124,6 +125,31 @@ export function allowedPostes(type: OperatorType, current?: Poste): readonly Pos
   return current && !base.includes(current) ? [...base, current] : base;
 }
 
+/** Lots d'un secteur confiés à un opérateur, par l'un quelconque de ses contrats. */
+export function lotsOfOperatorInSector(
+  operatorId: string,
+  sectorId: string,
+  contracts: readonly Contract[],
+  attributions: readonly Attribution[],
+): readonly number[] {
+  const contractIds = new Set(
+    contracts.filter((c) => c.operatorId === operatorId).map((c) => c.id),
+  );
+  const lots = attributions
+    .filter((a) => a.sectorId === sectorId && contractIds.has(a.contractId))
+    .flatMap((a) => a.lots);
+  return [...new Set(lots)].sort((a, b) => a - b);
+}
+
+export function findMatriculeConflict(
+  matricule: string,
+  users: readonly User[],
+  ignoreId?: string,
+): User | undefined {
+  const wanted = matricule.trim().toUpperCase();
+  return users.find((u) => u.id !== ignoreId && u.matricule?.trim().toUpperCase() === wanted);
+}
+
 export function findEmailConflict(
   email: string,
   users: readonly User[],
@@ -192,4 +218,17 @@ export function findActivityConflict(
   return activities.find(
     (a) => a.id !== ignoreId && a.poste === candidate.poste && normalizeLabel(a.label) === wanted,
   );
+}
+
+export const periodInfo = (period: FrequencyPeriod) =>
+  FREQUENCY_PERIODS.find((p) => p.code === period) ?? FREQUENCY_PERIODS[0]!;
+
+/** « 4 par an », « 3 par an et par plantation » ; « Non définie » sans fréquence. */
+export function frequencyLabel(activity: Pick<Activity, 'frequency'>): string {
+  const f = activity.frequency;
+  if (!f) {
+    return 'Non définie';
+  }
+  const unit = f.unit ? FREQUENCY_UNITS.find((u) => u.code === f.unit)?.label.toLowerCase() : null;
+  return `${f.count} par ${periodInfo(f.period).word}${unit ? ` et par ${unit}` : ''}`;
 }

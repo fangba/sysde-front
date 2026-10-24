@@ -8,10 +8,17 @@ import { ApiError } from '@core/http/api-error';
 import { todayIso } from '@shared/util/dates';
 import { uniqueId } from '@shared/util/ids';
 
-import { DEMO_USERS } from '../../settings/data/settings.demo';
+import { DEMO_ACTIVITIES, DEMO_USERS } from '../../settings/data/settings.demo';
 import { DEMO_PLANS } from './planning.demo';
 import type { AnnualPlan, PlanDecision, PlanLineInput } from './planning.models';
-import { sortLines, validateLine } from './planning.rules';
+import {
+  checkFrequency,
+  isActivityLocked,
+  sortLines,
+  submissionOf,
+  validateLine,
+  withSubmission,
+} from './planning.rules';
 
 /**
  * Contrat d'accès aux plannings annuels. Le back décide de l'état à la soumission : le planning
@@ -23,11 +30,22 @@ export abstract class PlanningApi {
   /** Remplace toutes les lignes d'un planning en brouillon. */
   abstract saveLines(year: number, lines: readonly PlanLineInput[]): Observable<AnnualPlan>;
   abstract submit(year: number): Observable<AnnualPlan>;
+  /**
+   * Soumet une seule activité au chef secteur : ses dates sont verrouillées jusqu'à sa décision.
+   * Refusée si l'activité n'a aucune date ou si ses dates ne sont pas cohérentes avec sa fréquence.
+   */
+  abstract submitActivity(year: number, activityId: string): Observable<AnnualPlan>;
   /** Plannings des collaborateurs du chef secteur connecté. */
   abstract toReview(year: number): Observable<readonly AnnualPlan[]>;
   /** Plannings de l'équipe du secteur, en lecture seule (chef secteur et secrétaire). */
   abstract team(year: number): Observable<readonly AnnualPlan[]>;
   abstract decide(planId: string, decision: PlanDecision): Observable<AnnualPlan>;
+  /** Valide ou rejette (avec motif) une activité soumise seule. */
+  abstract decideActivity(
+    planId: string,
+    activityId: string,
+    decision: PlanDecision,
+  ): Observable<AnnualPlan>;
 }
 
 /** Appelle la passerelle Spring Boot : `{apiBaseUrl}/plannings/…`. */
@@ -53,6 +71,14 @@ export class HttpPlanningApi extends PlanningApi {
     );
   }
 
+  submitActivity(year: number, activityId: string): Observable<AnnualPlan> {
+    return this.http.post<AnnualPlan>(
+      `/plannings/mon-planning/activites/${activityId}/soumission`,
+      {},
+      { params: { annee: year } },
+    );
+  }
+
   toReview(year: number): Observable<readonly AnnualPlan[]> {
     return this.http.get<readonly AnnualPlan[]>('/plannings/a-valider', {
       params: { annee: year },
@@ -67,6 +93,17 @@ export class HttpPlanningApi extends PlanningApi {
     return decision.approve
       ? this.http.post<AnnualPlan>(`/plannings/${planId}/validation`, {})
       : this.http.post<AnnualPlan>(`/plannings/${planId}/rejet`, { motif: decision.reason });
+  }
+
+  decideActivity(
+    planId: string,
+    activityId: string,
+    decision: PlanDecision,
+  ): Observable<AnnualPlan> {
+    const base = `/plannings/${planId}/activites/${activityId}`;
+    return decision.approve
+      ? this.http.post<AnnualPlan>(`${base}/validation`, {})
+      : this.http.post<AnnualPlan>(`${base}/rejet`, { motif: decision.reason });
   }
 }
 
@@ -122,6 +159,20 @@ export class DemoPlanningApi extends PlanningApi {
     if (current.status !== 'BROUILLON') {
       return throwError(() => new ApiError(409, "Ce planning n'est plus modifiable."));
     }
+    const signature = (items: readonly PlanLineInput[], activityId: string) =>
+      items
+        .filter((l) => l.activityId === activityId)
+        .map((l) => `${l.date}~${l.endDate}~${l.place}~${l.plantation ?? ''}~${l.hours}`)
+        .sort()
+        .join('|');
+    const lockedChanged = (current.submissions ?? [])
+      .filter((s) => isActivityLocked(current, s.activityId))
+      .some((s) => signature(lines, s.activityId) !== signature(current.lines, s.activityId));
+    if (lockedChanged) {
+      return throwError(
+        () => new ApiError(409, "Les dates d'une activité soumise ne sont plus modifiables."),
+      );
+    }
     const saved = lines.map((line) => ({ ...line, id: uniqueId('ligne') }));
     const invalid = saved
       .map((line) => validateLine(line, year, saved, line.id))
@@ -148,9 +199,58 @@ export class DemoPlanningApi extends PlanningApi {
     }
     // Le chef secteur n'a pas de validateur : son planning est validé d'office.
     const status = me.poste === 'CS' ? 'VALIDE' : 'SOUMIS';
-    const submitted: AnnualPlan = { ...current, status };
+    const kept = (current.submissions ?? []).filter((s) => s.status === 'VALIDE');
+    const submitted: AnnualPlan = { ...current, status, submissions: kept };
     delete (submitted as { rejection?: unknown }).rejection;
     return of(this.store(submitted)).pipe(delay(LATENCY_MS));
+  }
+
+  submitActivity(year: number, activityId: string): Observable<AnnualPlan> {
+    const me = this.me();
+    if (!me) {
+      return throwError(() => new ApiError(403, "Vous n'avez pas accès à cette ressource."));
+    }
+    const current = this.plan(me.id, year);
+    if (me.poste === 'CS') {
+      return throwError(
+        () => new ApiError(409, "Le planning du chef secteur est validé d'office."),
+      );
+    }
+    if (current.status !== 'BROUILLON') {
+      return throwError(() => new ApiError(409, 'Ce planning a déjà été soumis.'));
+    }
+    const activity = DEMO_ACTIVITIES.find(
+      (a) => a.id === activityId && a.poste === me.poste && a.active,
+    );
+    if (!activity) {
+      return throwError(
+        () => new ApiError(400, "Cette activité n'est pas proposée à votre poste."),
+      );
+    }
+    if (isActivityLocked(current, activityId)) {
+      return throwError(() => new ApiError(409, 'Cette activité a déjà été soumise.'));
+    }
+    const lines = current.lines.filter((l) => l.activityId === activityId);
+    if (lines.length === 0) {
+      return throwError(
+        () => new ApiError(400, 'Ajoutez au moins une date avant de soumettre cette activité.'),
+      );
+    }
+    const check = checkFrequency(activity, lines);
+    if (!check.ok) {
+      return throwError(
+        () =>
+          new ApiError(
+            400,
+            `Les dates de « ${activity.label} » ne sont pas cohérentes : ${check.issues[0]}`,
+          ),
+      );
+    }
+    const next: AnnualPlan = {
+      ...current,
+      submissions: withSubmission(current, activityId, { activityId, status: 'SOUMIS' }),
+    };
+    return of(this.store(next)).pipe(delay(LATENCY_MS));
   }
 
   toReview(year: number): Observable<readonly AnnualPlan[]> {
@@ -205,6 +305,40 @@ export class DemoPlanningApi extends PlanningApi {
           status: 'BROUILLON',
           rejection: { reason: decision.reason.trim(), date: todayIso(new Date()) },
         };
+    return of(this.store(next)).pipe(delay(LATENCY_MS));
+  }
+
+  decideActivity(
+    planId: string,
+    activityId: string,
+    decision: PlanDecision,
+  ): Observable<AnnualPlan> {
+    const current = [...this.plans.values()].find((plan) => plan.id === planId);
+    if (!current) {
+      return throwError(() => new ApiError(404, 'La ressource demandée est introuvable.'));
+    }
+    if (submissionOf(current, activityId)?.status !== 'SOUMIS') {
+      return throwError(
+        () => new ApiError(409, "Cette activité n'est pas en attente de validation."),
+      );
+    }
+    if (!decision.approve && !decision.reason.trim()) {
+      return throwError(() => new ApiError(400, 'Le motif du rejet est obligatoire.'));
+    }
+    const next: AnnualPlan = {
+      ...current,
+      submissions: withSubmission(
+        current,
+        activityId,
+        decision.approve
+          ? { activityId, status: 'VALIDE' }
+          : {
+              activityId,
+              status: 'REJETE',
+              rejection: { reason: decision.reason.trim(), date: todayIso(new Date()) },
+            },
+      ),
+    };
     return of(this.store(next)).pipe(delay(LATENCY_MS));
   }
 }

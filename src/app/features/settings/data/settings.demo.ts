@@ -1,6 +1,9 @@
 import type {
   Activity,
   ActivityCategory,
+  ActivityFrequency,
+  FrequencyPeriod,
+  FrequencyUnit,
   Attribution,
   Contract,
   Exercise,
@@ -198,7 +201,7 @@ const user = (
   active: true,
 });
 
-export const DEMO_USERS: readonly User[] = [
+const DEMO_USERS_BASE: readonly User[] = [
   user(1, 'Koné', 'Mariam', 'op-2', 'DI'),
   user(2, 'Yao', 'Konan', 'op-2', 'SU'),
   user(3, 'Diabaté', 'Salif', 'op-1', 'SU'),
@@ -235,7 +238,15 @@ export const DEMO_USERS: readonly User[] = [
 let activityCounter = 0;
 /** Activité du référentiel : libellé seul, ou libellé, objectif annuel et durée en jours. */
 type ActivitySeed =
-  string | readonly [label: string, target: number | null, days: number, active?: boolean];
+  | string
+  | readonly [label: string, frequency: ActivityFrequency | null, days: number, active?: boolean];
+
+/** Fréquence : `count` séances par période, pour chaque `unit` quand il est donné. */
+const every = (
+  count: number,
+  period: FrequencyPeriod,
+  unit: FrequencyUnit | null = null,
+): ActivityFrequency => ({ count, period, unit });
 const activities = (
   poste: PlanningPoste,
   category: ActivityCategory,
@@ -243,7 +254,7 @@ const activities = (
 ): Activity[] =>
   seeds.map((seed) => {
     activityCounter += 1;
-    const [label, annualTarget, durationDays, active = true] =
+    const [label, frequency, durationDays, active = true] =
       typeof seed === 'string' ? [seed, null, 1] : seed;
     return {
       id: `ac-${activityCounter}`,
@@ -251,27 +262,63 @@ const activities = (
       category,
       label,
       active,
-      annualTarget,
+      frequency,
       durationDays,
     };
   });
 
 /** Activités de planning de chaque poste (catégories sans activité : aucune ligne). */
 export const DEMO_ACTIVITIES: readonly Activity[] = [
-  ...activities('CS', 'VISITE', ['Visite de plantation']),
+  ...activities('CS', 'VISITE', [['Visite de plantation', every(3, 'YEAR', 'PLANTATION'), 1]]),
   ...activities('CS', 'RENCONTRE', [
-    ['Conférence thématique', 4, 1],
-    ["Voyage d'étude", 4, 1],
+    ['Conférence thématique', every(4, 'YEAR'), 1],
+    ["Voyage d'étude", every(4, 'YEAR'), 1],
   ]),
   ...activities('CF', 'FORMATION', [
-    ['Formation initiale', 2, 20],
-    ['Suivi post perfectionnement', 12, 1],
-    ['Recyclage des saigneurs', 1, 3],
+    ['Formation à la saignée', every(1, 'SEMESTER'), 20],
+    ['Suivi post perfectionnement', every(1, 'MONTH', 'SAIGNEUR'), 1],
+    ['Recyclage des saigneurs', every(1, 'YEAR'), 3],
   ]),
-  ...activities('CO', 'VISITE', ['Visite de plantation', ['Visite de conformité', 72, 1]]),
-  ...activities('FS', 'FORMATION', [['Formation initiale', 12, 20]]),
-  ...activities('MO', 'FORMATION', [['Perfectionnement in situ', 12, 1]]),
-  ...activities('MO', 'VISITE', ['Visite de plantation', ['Découverte du verger', null, 1, false]]),
-  ...activities('MO', 'RENCONTRE', [['Groupe de vulgarisation', 24, 1]]),
-  ...activities('ES', 'VISITE', ["Visite d'intervention"]),
+  ...activities('CO', 'VISITE', [
+    ['Visite de plantation', every(3, 'YEAR', 'PLANTATION'), 1],
+    ['Visite de conformité', every(1, 'MONTH', 'MONITEUR'), 1],
+  ]),
+  ...activities('FS', 'FORMATION', [['Formation à la saignée', every(1, 'MONTH'), 20]]),
+  ...activities('MO', 'FORMATION', [
+    ['Perfectionnement in situ', every(1, 'MONTH', 'SAIGNEUR'), 1],
+  ]),
+  ...activities('MO', 'VISITE', [
+    ['Visite de plantation', every(4, 'YEAR', 'PLANTATION'), 1],
+    ['Découverte de verger', null, 1],
+  ]),
+  ...activities('MO', 'RENCONTRE', [['Groupe de vulgarisation', every(4, 'YEAR', 'GROUPE'), 1]]),
+  ...activities('ES', 'VISITE', [["Visite d'intervention", every(2, 'YEAR', 'PLANTATION'), 1]]),
+  ...activities('CF', 'FORMATION', [
+    ['Perfectionnement in situ', every(1, 'MONTH', 'SAIGNEUR'), 1],
+  ]),
 ];
+
+/** Matricule, lot et section de démonstration des collaborateurs (numéro de compte → affectation). */
+const COLLABORATOR_ASSIGNMENT: Readonly<
+  Record<number, { readonly lot?: number; readonly section?: string }>
+> = {
+  14: { lot: 1 },
+  15: {},
+  16: { lot: 1, section: 'A' },
+  17: { lot: 2, section: 'B' },
+  23: { lot: 1 },
+  24: { lot: 1, section: 'A, B' },
+  25: { lot: 1, section: 'B' },
+  26: {},
+  27: {},
+};
+
+export const DEMO_USERS: readonly User[] = DEMO_USERS_BASE.map((u) => {
+  const n = Number(u.id.slice(3));
+  const acronym = DEMO_OPERATORS.find((o) => o.id === u.operatorId)?.acronym;
+  return {
+    ...u,
+    ...(acronym ? { matricule: `${acronym}-${String(300 + n * 7).padStart(5, '0')}` } : {}),
+    ...COLLABORATOR_ASSIGNMENT[n],
+  };
+});

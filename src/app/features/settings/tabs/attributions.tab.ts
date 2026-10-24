@@ -24,6 +24,7 @@ import { AttributionDialog } from './attributions.dialog';
     >
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="store.attributions.items()"
         [loading]="store.status() === 'loading'"
         caption="Liste des attributions"
@@ -48,20 +49,28 @@ export class AttributionsTab {
   protected readonly rowLabel = (a: Attribution) =>
     `${this.store.sectorLabel(a.sectorId)} ${lotsLabel(a.lots)}`;
   protected readonly columns: readonly TableColumn<Attribution>[] = [
-    { id: 'sector', header: 'Secteur', text: (a) => this.store.sectorLabel(a.sectorId) },
-    { id: 'lots', header: 'Lots', text: (a) => lotsLabel(a.lots) },
+    {
+      id: 'sector',
+      filter: 'text',
+      header: 'Secteur',
+      text: (a) => this.store.sectorLabel(a.sectorId),
+    },
+    { id: 'lots', filter: 'text', header: 'Lots', text: (a) => lotsLabel(a.lots) },
     {
       id: 'operator',
+      filter: 'text',
       header: 'Opérateur',
       text: (a) => this.store.operatorLabel(this.store.contractOf(a.contractId)?.operatorId ?? ''),
     },
     {
       id: 'contract',
+      filter: 'text',
       header: 'Contrat',
       text: (a) => this.store.contractOf(a.contractId)?.reference ?? '—',
     },
     {
       id: 'period',
+      filter: 'text',
       header: 'Période',
       text: (a) => {
         const c = this.store.contractOf(a.contractId);

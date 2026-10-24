@@ -5,6 +5,20 @@ const YEAR = new Date().getFullYear();
 const iso = (month: number, day: number): string =>
   new Date(Date.UTC(YEAR, month - 1, day)).toISOString().slice(0, 10);
 
+/** Activités de catégorie Visite du référentiel de démonstration. */
+const VISIT_IDS: ReadonlySet<string> = new Set(['ac-1', 'ac-7', 'ac-8', 'ac-11', 'ac-14']);
+
+const DEMO_PLANTATIONS = ['Plantation 03', 'Plantation 07', 'Plantation 12', 'Plantation 18'];
+
+/** Plantation de démonstration déterminée par le lot ou la section. */
+function plantationOf(place: string): string {
+  let hash = 0;
+  for (const char of place) {
+    hash = (hash * 31 + char.charCodeAt(0)) % 997;
+  }
+  return DEMO_PLANTATIONS[hash % DEMO_PLANTATIONS.length]!;
+}
+
 const line = (
   n: number,
   month: number,
@@ -19,6 +33,7 @@ const line = (
   endDate: iso(month, day + days - 1),
   activityId,
   place,
+  ...(VISIT_IDS.has(activityId) ? { plantation: plantationOf(place) } : {}),
   hours,
 });
 
@@ -78,7 +93,13 @@ export const DEMO_PLANS: readonly AnnualPlan[] = [
       line(46, 6, 15, 'ac-13', 'Groupe 1', 4),
       line(47, 10, 28, 'ac-11', 'Section B', 6),
       line(48, 11, 17, 'ac-13', 'Groupe 2', 4),
+      line(49, 7, 7, 'ac-11', 'Section A', 6),
+      line(50, 10, 6, 'ac-11', 'Section A', 6),
+      line(54, 4, 21, 'ac-11', 'Section B', 6),
+      line(55, 7, 14, 'ac-11', 'Section B', 6),
     ],
+    // Visite de plantation : 4 visites par section, soumise seule au chef secteur.
+    submissions: [{ activityId: 'ac-11', status: 'SOUMIS' }],
   },
   {
     id: 'plan-demo-es',
@@ -95,7 +116,22 @@ export const DEMO_PLANS: readonly AnnualPlan[] = [
     id: 'plan-demo-cs',
     userId: 'us-21',
     year: YEAR,
-    status: 'VALIDE',
-    lines: [line(31, 2, 2, 'ac-2', 'Lot 1', 3), line(32, 3, 2, 'ac-1', 'Lot 2', 6)],
+    status: 'BROUILLON',
+    // Conférence thématique : 4 séances (cohérent) ; Voyage d'étude : 3 sur 4 (à compléter).
+    lines: [
+      line(31, 2, 2, 'ac-2', 'Lot 1', 3),
+      line(32, 3, 2, 'ac-1', 'Lot 2', 6),
+      line(33, 5, 4, 'ac-2', 'Lot 2', 3),
+      line(34, 8, 3, 'ac-2', 'Lot 1', 3),
+      line(35, 11, 2, 'ac-2', 'Lot 2', 3),
+      line(36, 4, 6, 'ac-3', 'Lot 1', 8),
+      line(37, 7, 6, 'ac-3', 'Lot 2', 8),
+      line(38, 10, 5, 'ac-3', 'Lot 1', 8),
+      line(39, 6, 9, 'ac-1', 'Lot 1', 6),
+      line(40, 9, 15, 'ac-1', 'Lot 2', 6),
+      line(41, 2, 10, 'ac-1', 'Lot 1', 6),
+      line(42, 10, 20, 'ac-1', 'Lot 1', 6),
+      line(43, 6, 22, 'ac-1', 'Lot 2', 6),
+    ],
   },
 ];

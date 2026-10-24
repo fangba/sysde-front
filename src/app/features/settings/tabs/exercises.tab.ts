@@ -22,6 +22,7 @@ import { ExerciseDialog } from './exercises.dialog';
     <ui-card heading="Exercices" subheading="Exercices annuels par contrat et par attribution.">
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="rows()"
         [loading]="store.status() === 'loading'"
         caption="Liste des exercices"
@@ -49,13 +50,24 @@ export class ExercisesTab {
   protected readonly rowLabel = (e: Exercise) =>
     `${e.year} ${this.store.sectorLabel(e.sectorId)} ${this.lotLabel(e)}`;
   protected readonly columns: readonly TableColumn<Exercise>[] = [
-    { id: 'year', header: 'Exercice', text: (e) => String(e.year) },
-    { id: 'sector', header: 'Secteur', text: (e) => this.store.sectorLabel(e.sectorId) },
-    { id: 'lots', header: 'Lots', text: (e) => this.lotLabel(e) },
-    { id: 'contract', header: 'Contrat', text: (e) => this.store.contractLabel(e.contractId) },
-    { id: 'closing', header: 'Clôture', text: (e) => formatDate(e.closingDate) },
+    { id: 'year', filter: 'text', header: 'Exercice', text: (e) => String(e.year) },
+    {
+      id: 'sector',
+      filter: 'text',
+      header: 'Secteur',
+      text: (e) => this.store.sectorLabel(e.sectorId),
+    },
+    { id: 'lots', filter: 'text', header: 'Lots', text: (e) => this.lotLabel(e) },
+    {
+      id: 'contract',
+      filter: 'text',
+      header: 'Contrat',
+      text: (e) => this.store.contractLabel(e.contractId),
+    },
+    { id: 'closing', filter: 'text', header: 'Clôture', text: (e) => formatDate(e.closingDate) },
     {
       id: 'status',
+      filter: ['Ouvert', 'Clôturé'],
       header: 'Statut',
       text: (e) => (this.isClosed(e) ? 'Clôturé' : 'Ouvert'),
       pill: (e) => ({

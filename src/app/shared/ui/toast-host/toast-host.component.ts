@@ -53,6 +53,9 @@ import { IconComponent } from '../icon/icon.component';
     .toast[data-tone='success'] {
       border-left-color: var(--green-600);
     }
+    .toast[data-tone='warning'] {
+      border-left-color: var(--amber-700);
+    }
     .toast[data-tone='error'] {
       border-left-color: var(--red-700);
     }

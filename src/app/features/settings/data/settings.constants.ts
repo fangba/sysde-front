@@ -1,6 +1,13 @@
 import type { Tone } from '@shared/models/tone';
 
-import type { ActivityCategory, OperatorType, PlanningPoste, Poste } from './settings.models';
+import type {
+  ActivityCategory,
+  FrequencyPeriod,
+  FrequencyUnit,
+  OperatorType,
+  PlanningPoste,
+  Poste,
+} from './settings.models';
 
 export const OPERATOR_TYPE_LABEL: Readonly<Record<OperatorType, string>> = {
   ORGANISME: 'Organisme (administrateur)',
@@ -55,3 +62,25 @@ export const ACTIVITY_CATEGORY_LABEL: Readonly<Record<ActivityCategory, string>>
     ActivityCategory,
     string
   >;
+
+/** Période d'une fréquence : libellé du sélecteur et mot employé dans « 1 par mois ». */
+export const FREQUENCY_PERIODS: readonly {
+  readonly code: FrequencyPeriod;
+  readonly label: string;
+  readonly word: string;
+  /** Nombre de périodes dans une année. */
+  readonly perYear: number;
+}[] = [
+  { code: 'YEAR', label: 'Par an', word: 'an', perYear: 1 },
+  { code: 'SEMESTER', label: 'Par semestre', word: 'semestre', perYear: 2 },
+  { code: 'MONTH', label: 'Par mois', word: 'mois', perYear: 12 },
+];
+
+/** Ce sur quoi la fréquence s'applique : chaque plantation, chaque saigneur… */
+export const FREQUENCY_UNITS: readonly { readonly code: FrequencyUnit; readonly label: string }[] =
+  [
+    { code: 'PLANTATION', label: 'Plantation' },
+    { code: 'SAIGNEUR', label: 'Saigneur' },
+    { code: 'MONITEUR', label: 'Moniteur' },
+    { code: 'GROUPE', label: 'Groupe' },
+  ];
