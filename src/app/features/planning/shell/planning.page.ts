@@ -8,6 +8,7 @@ import { TabNavComponent } from '@shared/ui/tab-nav/tab-nav.component';
 import { SettingsStore } from '../../settings/state/settings.store';
 import { planningTabsFor } from '../planning.access';
 import { PlanningStore } from '../state/planning.store';
+import { ReviewStore } from '../state/review.store';
 
 /** Coque de l'écran Planning : choix de l'année, onglets et contenu de l'onglet actif. */
 @Component({
@@ -66,11 +67,15 @@ export class PlanningPage {
   private readonly settings = inject(SettingsStore);
   private readonly currentUser = inject(CurrentUser);
 
+  private readonly review = inject(ReviewStore);
+
   protected readonly tabs = computed(() =>
     planningTabsFor({
       sectorHead: this.currentUser.isSectorHead(),
       secretary: this.currentUser.isSecretary(),
-    }),
+    }).map((tab) =>
+      tab.path === 'validation' ? { ...tab, badge: this.review.pendingTotal() } : tab,
+    ),
   );
   protected readonly subtitle = computed(() =>
     this.currentUser.isSecretary()
@@ -87,6 +92,10 @@ export class PlanningPage {
     // La secrétaire n'a pas de planning à elle : seule l'année est utilisée.
     if (!this.currentUser.isSecretary()) {
       this.store.load();
+    }
+    // Le chef secteur voit tout de suite, sur l'onglet Validation, combien d'éléments l'attendent.
+    if (this.currentUser.isSectorHead()) {
+      this.review.load();
     }
   }
 

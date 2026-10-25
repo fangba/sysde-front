@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { delay, of, throwError, type Observable } from 'rxjs';
 
 import { PLANNING_POSTES } from '@core/auth/access';
+import { APP_CONFIG } from '@core/config/app-config';
 import { CurrentUser } from '@core/auth/current-user';
 import { ApiError } from '@core/http/api-error';
 import { todayIso } from '@shared/util/dates';
@@ -24,6 +25,11 @@ import {
  * Contrat d'accès aux plannings annuels. Le back décide de l'état à la soumission : le planning
  * d'un chef secteur n'a pas de validateur et passe directement à « validé ».
  */
+@Injectable({
+  providedIn: 'root',
+  useFactory: () =>
+    inject(APP_CONFIG).useDemoData ? inject(DemoPlanningApi) : inject(HttpPlanningApi),
+})
 export abstract class PlanningApi {
   /** Planning de l'utilisateur connecté pour une année (créé vide s'il n'existe pas). */
   abstract mine(year: number): Observable<AnnualPlan>;
@@ -49,7 +55,7 @@ export abstract class PlanningApi {
 }
 
 /** Appelle la passerelle Spring Boot : `{apiBaseUrl}/plannings/…`. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class HttpPlanningApi extends PlanningApi {
   private readonly http = inject(HttpClient);
 
@@ -110,7 +116,7 @@ export class HttpPlanningApi extends PlanningApi {
 const LATENCY_MS = 250;
 
 /** Plannings en mémoire, pour le mode démonstration. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DemoPlanningApi extends PlanningApi {
   private readonly currentUser = inject(CurrentUser);
   private readonly plans = new Map<string, AnnualPlan>(

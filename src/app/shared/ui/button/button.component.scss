@@ -63,6 +63,16 @@
   }
 }
 
+:host([data-variant='danger']) {
+  color: var(--on-danger);
+  background: var(--red-700);
+  border-color: var(--red-700);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
 .ui-button__spinner {
   width: 14px;
   height: 14px;

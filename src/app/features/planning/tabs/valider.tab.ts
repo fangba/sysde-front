@@ -28,16 +28,19 @@ import {
 } from '../data/planning.rules';
 import { PlanningStore } from '../state/planning.store';
 import { ReviewStore, type ActivityReviewRow } from '../state/review.store';
+import { ReviewDesk } from '../ui/review-desk.component';
 import { ActivityReviewDialog } from './activity-review.dialog';
 import { PlanReviewDialog } from './review.dialog';
 
 /** Validation des plannings annuels des collaborateurs du secteur (chef secteur). */
 @Component({
   selector: 'sysde-valider-tab',
-  imports: [ButtonComponent, CardComponent, DataTableComponent, EmptyStateComponent],
+  imports: [ButtonComponent, CardComponent, DataTableComponent, EmptyStateComponent, ReviewDesk],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (store.status() === 'error') {
+    @if (!readOnly()) {
+      <sysde-review-desk />
+    } @else if (store.status() === 'error') {
       <ui-card>
         <ui-empty-state
           icon="alert"

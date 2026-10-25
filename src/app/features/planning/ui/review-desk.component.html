@@ -1,0 +1,295 @@
+@if (store.status() === 'error') {
+  <ui-empty-state
+    icon="alert"
+    tone="red"
+    title="Chargement impossible"
+    [description]="store.error()"
+  >
+    <button ui-button variant="primary" type="button" (click)="store.load()">Réessayer</button>
+  </ui-empty-state>
+} @else if (store.status() === 'ready' && all().length === 0) {
+  <ui-empty-state
+    icon="check"
+    title="Rien à valider"
+    description="Aucun planning ni aucune activité n'attend votre décision pour l'année {{
+      mine.year()
+    }}."
+  />
+} @else {
+  <div class="filters">
+    <label class="search">
+      <ui-icon name="search" />
+      <input
+        type="search"
+        class="ui-input"
+        placeholder="Nom ou matricule…"
+        aria-label="Rechercher un collaborateur"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </label>
+    <div class="chips" role="group" aria-label="Filtrer par poste">
+      @for (chip of chips(); track chip.code) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="poste() === chip.code"
+          [attr.title]="chip.title"
+          (click)="poste.set(chip.code)"
+        >
+          {{ chip.label }} <b>{{ chip.count }}</b>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="desk">
+    <div class="lanes">
+      <section class="lane warn" aria-labelledby="lane-review">
+        <header>
+          <span class="dot"></span>
+          <h3 id="lane-review">À examiner</h3>
+          <span class="count">{{ review().length }}</span>
+          <span class="hint"
+            >Une anomalie de fréquence a été détectée : à lire avant de décider.</span
+          >
+        </header>
+        @for (row of reviewShown(); track row.item.id) {
+          <button
+            type="button"
+            class="row review"
+            [class.focused]="current()?.item?.id === row.item.id"
+            (click)="focus(row)"
+          >
+            <span class="avatar" aria-hidden="true">{{ row.initials }}</span>
+            <span class="who">
+              <strong>{{ row.name }}</strong>
+              <span>{{ row.matricule }} · {{ row.posteLabel }}</span>
+            </span>
+            <span class="kind" [class.activity]="row.item.kind === 'ACTIVITY'">
+              {{ row.item.kind === 'PLAN' ? 'Planning' : 'Activité seule' }}
+            </span>
+            <span class="issue">{{ row.issue }}</span>
+          </button>
+        } @empty {
+          <p class="none">Aucune anomalie à examiner.</p>
+        }
+        @if (review().length > reviewShown().length) {
+          <button type="button" class="more" (click)="reviewLimit.set(reviewLimit() + 5)">
+            Voir les {{ review().length - reviewShown().length }} autres
+          </button>
+        }
+      </section>
+
+      <section class="lane ok" aria-labelledby="lane-ready">
+        <header>
+          <span class="dot"></span>
+          <h3 id="lane-ready">Prêts à valider</h3>
+          <span class="count">{{ ready().length }}</span>
+          <span class="hint"
+            >Fréquences respectées : validation possible sans ouvrir chaque planning.</span
+          >
+        </header>
+        @if (ready().length > 0) {
+          <div class="head-row">
+            <input
+              type="checkbox"
+              aria-label="Tout sélectionner"
+              [checked]="allSelected()"
+              [indeterminate]="selected().length > 0 && !allSelected()"
+              (change)="toggleAll()"
+            />
+            <span class="c-name">Collaborateur</span>
+            <span class="c-poste">Poste</span>
+            <span class="c-content">Contenu</span>
+          </div>
+        }
+        @for (row of readyShown(); track row.item.id) {
+          <div class="row ready" [class.focused]="current()?.item?.id === row.item.id">
+            <input
+              type="checkbox"
+              [attr.aria-label]="'Sélectionner ' + row.name"
+              [checked]="isSelected(row)"
+              (change)="toggle(row)"
+            />
+            <button type="button" class="open" (click)="focus(row)">
+              <span class="c-name">
+                <strong>{{ row.name }}</strong>
+                <span>{{ row.matricule }}</span>
+              </span>
+              <span class="c-poste"
+                ><i>{{ row.poste }}</i></span
+              >
+              <span class="c-content">{{ row.content }}</span>
+            </button>
+          </div>
+        } @empty {
+          <p class="none">Aucun élément prêt avec ces filtres.</p>
+        }
+        @if (ready().length > readyShown().length) {
+          <button type="button" class="more" (click)="readyLimit.set(readyLimit() + 8)">
+            Afficher la suite ({{ readyShown().length }} sur {{ ready().length }})
+          </button>
+        }
+      </section>
+    </div>
+
+    <aside class="preview" aria-label="Aperçu de l'élément">
+      @if (current(); as row) {
+        <div class="nav">
+          <span
+            ><strong>{{ lane().index + 1 }}</strong> sur {{ lane().rows.length }}
+            {{ lane().label }}</span
+          >
+          <span class="arrows">
+            <button
+              type="button"
+              aria-label="Précédent"
+              [disabled]="lane().index <= 0"
+              (click)="step(-1)"
+            >
+              <ui-icon name="chevronLeft" />
+            </button>
+            <button
+              type="button"
+              aria-label="Suivant"
+              [disabled]="lane().index >= lane().rows.length - 1"
+              (click)="step(1)"
+            >
+              <ui-icon name="chevronRight" />
+            </button>
+          </span>
+        </div>
+        <div class="who-big">
+          <span class="avatar big" aria-hidden="true">{{ row.initials }}</span>
+          <div>
+            <strong>{{ row.name }}</strong>
+            <span
+              >{{ row.matricule }} · {{ row.posteLabel }} ·
+              {{ row.item.kind === 'PLAN' ? 'planning complet' : 'activité seule' }}</span
+            >
+          </div>
+        </div>
+        <div class="kpis">
+          @for (k of kpis(); track k.label) {
+            <div>
+              <strong>{{ k.value }}</strong>
+              <span>{{ k.label }}</span>
+            </div>
+          }
+        </div>
+        <div class="cards">
+          @for (card of cards(); track card.id) {
+            <article [class.bad]="!card.ok">
+              <div class="card-head">
+                <strong>{{ card.label }}</strong>
+                <span class="state" [class.bad]="!card.ok">{{
+                  card.ok ? 'Cohérent' : 'À examiner'
+                }}</span>
+              </div>
+              <span class="freq"
+                >{{ card.frequency }} · {{ card.sessions }} séance{{
+                  card.sessions > 1 ? 's' : ''
+                }}</span
+              >
+              <div class="months" aria-hidden="true">
+                @for (m of card.months; track $index) {
+                  <i [attr.data-n]="m.count > 2 ? 2 : m.count" [class.flag]="m.bad"></i>
+                }
+              </div>
+              <div class="letters" aria-hidden="true">
+                @for (l of monthLetters; track $index) {
+                  <span>{{ l }}</span>
+                }
+              </div>
+              @for (issue of card.issues.slice(0, 3); track issue) {
+                <p class="note">{{ issue }}</p>
+              }
+              @if (card.issues.length > 3) {
+                <p class="note">
+                  et {{ card.issues.length - 3 }} autres anomalies (voir « Détail complet »).
+                </p>
+              }
+            </article>
+          } @empty {
+            <p class="none">Aucune date programmée.</p>
+          }
+        </div>
+
+        @if (rejecting()) {
+          <label class="reason">
+            <span>Motif du rejet <b aria-hidden="true">*</b></span>
+            <textarea
+              class="ui-input"
+              rows="4"
+              maxlength="500"
+              placeholder="Expliquez ce que le collaborateur doit corriger."
+              [ngModel]="reason()"
+              (ngModelChange)="reason.set($event)"
+            ></textarea>
+            <small>Le collaborateur verra ce motif. {{ MIN_REASON }} caractères minimum.</small>
+          </label>
+        }
+
+        <div class="actions">
+          <button ui-button variant="ghost" type="button" (click)="openDetail()">
+            Détail complet
+          </button>
+          @if (rejecting()) {
+            <button ui-button variant="secondary" type="button" (click)="rejecting.set(false)">
+              Retour
+            </button>
+            <button
+              ui-button
+              variant="danger"
+              type="button"
+              [disabled]="reason().trim().length < MIN_REASON"
+              [loading]="store.deciding()"
+              (click)="decide(false)"
+            >
+              Confirmer le rejet
+            </button>
+          } @else {
+            <button
+              ui-button
+              variant="secondary"
+              type="button"
+              class="reject"
+              (click)="rejecting.set(true)"
+            >
+              Rejeter…
+            </button>
+            <button
+              ui-button
+              variant="primary"
+              type="button"
+              [loading]="store.deciding()"
+              (click)="decide(true)"
+            >
+              Valider et suivant
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="none">Aucun élément avec ces filtres.</p>
+      }
+    </aside>
+  </div>
+
+  @if (selected().length > 0) {
+    <div class="bulk" role="region" aria-label="Validation en lot">
+      <span
+        ><strong>{{ selected().length }} sélectionné{{ selected().length > 1 ? 's' : '' }}</strong>
+        sur {{ ready().length }} prêts</span
+      >
+      @if (!allSelected()) {
+        <button type="button" class="link" (click)="toggleAll()">
+          Tout sélectionner ({{ ready().length }})
+        </button>
+      }
+      <button ui-button variant="primary" type="button" (click)="approveSelection()">
+        Valider la sélection
+      </button>
+    </div>
+  }
+}

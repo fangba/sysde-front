@@ -20,6 +20,7 @@ import {
   checkMessage,
   isActivityLocked,
   isEditable,
+  annualOverview,
   objectives,
   sortLines,
   submissionOf,
@@ -108,6 +109,8 @@ export class PlanningStore {
   readonly summary = computed(() => summarize(this.draft()));
   /** Séances prévues face aux objectifs annuels des activités du poste. */
   readonly objectives = computed(() => objectives(this.activities(), this.draft()));
+  /** Toutes les activités à fréquence, avec leur état (bilan annuel de l'Élaboration). */
+  readonly overview = computed(() => annualOverview(this.activities(), this.draft()));
   /** Séances programmées d'une activité dans le brouillon, par date. */
   datesOf(activityId: string): readonly PlanLine[] {
     return this.draft()

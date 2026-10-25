@@ -46,7 +46,7 @@ export const DEMO_PLANS: readonly AnnualPlan[] = [
     id: 'plan-demo-fs',
     userId: 'us-14',
     year: YEAR,
-    status: 'SOUMIS',
+    status: 'BROUILLON',
     lines: [
       line(1, 2, 3, 'ac-9', 'Lot 1', 6, 20),
       line(2, 2, 10, 'ac-9', 'Lot 2', 6),
@@ -60,12 +60,12 @@ export const DEMO_PLANS: readonly AnnualPlan[] = [
     id: 'plan-demo-co',
     userId: 'us-24',
     year: YEAR,
-    status: 'SOUMIS',
+    status: 'BROUILLON',
     lines: [
       line(11, 2, 5, 'ac-7', 'Section A', 5),
-      line(12, 2, 12, 'ac-8', 'Section B', 5),
-      line(13, 3, 6, 'ac-7', 'Section A', 4),
-      line(14, 3, 20, 'ac-8', 'Section C', 2),
+      line(13, 6, 6, 'ac-7', 'Section A', 4),
+      line(14, 10, 8, 'ac-7', 'Section A', 4),
+      ...Array.from({ length: 12 }, (_, m) => line(30 + m, m + 1, 12, 'ac-8', 'Section B', 5)),
     ],
   },
   {
@@ -105,7 +105,7 @@ export const DEMO_PLANS: readonly AnnualPlan[] = [
     id: 'plan-demo-es',
     userId: 'us-26',
     year: YEAR,
-    status: 'VALIDE',
+    status: 'BROUILLON',
     lines: [
       line(51, 3, 5, 'ac-14', 'Lot 2', 6),
       line(52, 9, 8, 'ac-14', 'Lot 2', 6),

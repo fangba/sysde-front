@@ -5,6 +5,8 @@ export interface TabLink {
   /** Chemin relatif de la route enfant. */
   readonly path: string;
   readonly label: string;
+  /** Nombre d'éléments en attente, affiché en pastille (masqué à 0). */
+  readonly badge?: number;
 }
 
 /**
@@ -18,9 +20,12 @@ export interface TabLink {
   host: { class: 'ui-tab-nav', role: 'navigation', '[attr.aria-label]': 'label()' },
   template: `
     @for (tab of tabs(); track tab.path) {
-      <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
-        tab.label
-      }}</a>
+      <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page"
+        >{{ tab.label }}
+        @if (tab.badge) {
+          <span class="badge">{{ tab.badge }}<span class="sr-only"> en attente</span></span>
+        }
+      </a>
     }
   `,
   styleUrl: './tab-nav.component.scss',

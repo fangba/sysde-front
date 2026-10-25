@@ -67,8 +67,10 @@ const DRAWER = {
     } @else {
       <ui-card [heading]="'Planning ' + store.year()" [subheading]="subheading()">
         <div cardActions class="bar">
-          @let view = statusView();
-          <ui-status-pill [tone]="view.tone">{{ view.label }}</ui-status-pill>
+          @if (!isSectorHead()) {
+            @let view = statusView();
+            <ui-status-pill [tone]="view.tone">{{ view.label }}</ui-status-pill>
+          }
           @if (store.editable()) {
             @if (store.dirty()) {
               <button
@@ -90,15 +92,17 @@ const DRAWER = {
                 Enregistrer
               </button>
             }
-            <button
-              ui-button
-              variant="primary"
-              type="button"
-              [disabled]="store.summary().count === 0 || store.saving()"
-              (click)="confirming.set(true)"
-            >
-              {{ submitLabel() }}
-            </button>
+            @if (!isSectorHead()) {
+              <button
+                ui-button
+                variant="primary"
+                type="button"
+                [disabled]="store.summary().count === 0 || store.saving()"
+                (click)="confirming.set(true)"
+              >
+                {{ submitLabel() }}
+              </button>
+            }
           }
         </div>
 
@@ -179,8 +183,8 @@ const DRAWER = {
           }
         }
 
-        @if (store.objectives().length > 0 && display() !== 'activities') {
-          <sysde-plan-objectives [objectives]="store.objectives()" />
+        @if (store.overview().length > 0 && display() !== 'activities') {
+          <sysde-plan-objectives [objectives]="store.overview()" />
         }
 
         <div class="toolbar">

@@ -223,42 +223,47 @@ describe("plannings de l'équipe (lecture seule)", () => {
 });
 
 describe('ReviewStore (chef secteur)', () => {
-  it("liste les plannings de l'équipe, les soumis d'abord, puis valide et rejette", async () => {
+  it("liste les plannings de l'équipe et l'activité soumise seule, puis la valide", async () => {
     const { review } = await setup('chef.secteur@sysde.ci', 'CS');
     review.load();
     await wait();
-    const plans = review.sorted();
-    expect(plans.map((p) => p.status)).toEqual([
-      'SOUMIS',
-      'SOUMIS',
-      'BROUILLON',
-      'BROUILLON',
-      'VALIDE',
-    ]);
-    expect(review.pending()).toBe(2);
-
-    const [first, second] = plans;
-    let closed = 0;
-    review.decide(first!, { approve: true }, () => closed++);
-    await wait();
-    review.decide(second!, { approve: false, reason: 'Revoir les dates de mars.' }, () => closed++);
-    await wait();
-    expect(closed).toBe(2);
-    expect(review.plans().find((p) => p.id === first!.id)?.status).toBe('VALIDE');
-    const rejected = review.plans().find((p) => p.id === second!.id);
-    expect(rejected?.status).toBe('BROUILLON');
-    expect(rejected?.rejection?.reason).toBe('Revoir les dates de mars.');
+    expect(review.sorted().map((p) => p.status)).toEqual(Array(5).fill('BROUILLON'));
     expect(review.pending()).toBe(0);
+    expect(review.pendingActivities()).toBe(1);
+    expect(review.pendingTotal()).toBe(1);
+
+    const [row] = review.activityRows();
+    let closed = 0;
+    review.decideActivity(row!.plan, row!.activityId, { approve: true }, () => closed++);
+    await wait();
+    expect(closed).toBe(1);
+    expect(review.pendingTotal()).toBe(0);
   });
 
-  it('refuse le rejet sans motif', async () => {
+  it('rejette une activité avec motif et refuse le rejet sans motif', async () => {
     const { review } = await setup('chef.secteur@sysde.ci', 'CS');
     review.load();
     await wait();
+    const [row] = review.activityRows();
     let closed = 0;
-    review.decide(review.sorted()[0]!, { approve: false, reason: '  ' }, () => closed++);
+    review.decideActivity(
+      row!.plan,
+      row!.activityId,
+      { approve: false, reason: '  ' },
+      () => closed++,
+    );
     await wait();
     expect(closed).toBe(0);
-    expect(review.pending()).toBe(2);
+    expect(review.pendingTotal()).toBe(1);
+
+    review.decideActivity(
+      row!.plan,
+      row!.activityId,
+      { approve: false, reason: 'Revoir les dates de mars.' },
+      () => closed++,
+    );
+    await wait();
+    expect(closed).toBe(1);
+    expect(review.pendingTotal()).toBe(0);
   });
 });

@@ -13,6 +13,7 @@ import {
   endFor,
   formatPeriod,
   isActivityLocked,
+  annualOverview,
   objectives,
   parsePlanRows,
   planStatusView,
@@ -99,6 +100,30 @@ describe('sortLines et summarize', () => {
     expect(
       objectives([target, { ...CO[1]!, frequency: null }], [line(), line({ id: 'b' })]),
     ).toEqual([{ activity: target, planned: 2, target: 2 }]);
+  });
+});
+
+describe('annualOverview', () => {
+  it("multiplie l'objectif « par plantation » par le nombre d'unités du planning", () => {
+    const fixed = { ...CO[0]!, frequency: { count: 2, period: 'YEAR' as const, unit: null } };
+    const perUnit = {
+      ...CO[1]!,
+      frequency: { count: 3, period: 'YEAR' as const, unit: 'PLANTATION' as const },
+    };
+    const none = { ...CO[1]!, id: 'x', frequency: null };
+    const rows = annualOverview(
+      [fixed, perUnit, none],
+      [
+        line(),
+        line({ id: 'b' }),
+        line({ id: 'c', activityId: perUnit.id, place: 'Lot 1' }),
+        line({ id: 'd', activityId: perUnit.id, place: 'Lot 2' }),
+      ],
+    );
+    expect(rows.map((r) => [r.activity.id, r.planned, r.target])).toEqual([
+      [fixed.id, 2, 2],
+      [perUnit.id, 2, 6],
+    ]);
   });
 });
 

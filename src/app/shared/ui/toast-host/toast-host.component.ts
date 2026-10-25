@@ -51,19 +51,30 @@ import { IconComponent } from '../icon/icon.component';
       font-size: 14px;
     }
     .toast[data-tone='success'] {
-      border-left-color: var(--green-600);
+      border-color: var(--green-600);
+      background: var(--ok-100);
+      color: var(--ok-700);
     }
     .toast[data-tone='warning'] {
-      border-left-color: var(--amber-700);
+      border-color: var(--amber-700);
+      background: var(--amber-100);
+      color: var(--amber-700);
     }
     .toast[data-tone='error'] {
-      border-left-color: var(--red-700);
+      border-color: var(--red-700);
+      background: var(--red-100);
+      color: var(--red-700);
     }
     .toast[data-tone='info'] {
       border-left-color: var(--violet-ink);
     }
     .message {
       flex: 1;
+    }
+    .toast[data-tone='success'] .close,
+    .toast[data-tone='warning'] .close,
+    .toast[data-tone='error'] .close {
+      color: inherit;
     }
     .close {
       display: grid;

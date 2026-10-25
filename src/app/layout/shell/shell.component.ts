@@ -4,6 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 import { ThemeToggleComponent } from '@shared/ui/theme-toggle/theme-toggle.component';
 
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
 
@@ -20,7 +21,14 @@ function readCollapsed(): boolean {
 /** Coque de l'application : barre latérale fixe (tiroir sous 960 px) et zone de contenu. */
 @Component({
   selector: 'sysde-shell',
-  imports: [RouterOutlet, SidebarComponent, IconComponent, ThemeToggleComponent, UserMenuComponent],
+  imports: [
+    RouterOutlet,
+    SidebarComponent,
+    IconComponent,
+    NotificationBellComponent,
+    ThemeToggleComponent,
+    UserMenuComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown.escape)': 'closeDrawer()', '[class.collapsed]': 'collapsed()' },
   templateUrl: './shell.component.html',

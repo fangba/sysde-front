@@ -155,6 +155,27 @@ export function objectives(
   });
 }
 
+/**
+ * Objectif de chaque activité qui a une fréquence, y compris « par plantation / saigneur… » :
+ * dans ce cas l'objectif est celui d'une unité multiplié par le nombre d'unités (lots ou
+ * sections) déjà présentes dans le planning pour cette activité, avec au moins une.
+ */
+export function annualOverview(
+  activities: readonly Activity[],
+  lines: readonly PlanLineInput[],
+): Objective[] {
+  return activities.flatMap((activity) => {
+    const frequency = activity.frequency;
+    if (!frequency) {
+      return [];
+    }
+    const own = lines.filter((l) => l.activityId === activity.id);
+    const perUnit = frequency.count * periodInfo(frequency.period).perYear;
+    const units = frequency.unit ? Math.max(1, new Set(own.map((l) => l.place.trim())).size) : 1;
+    return [{ activity, planned: own.length, target: perUnit * units }];
+  });
+}
+
 /** Résultat du contrôle des dates d'une activité face à sa fréquence. */
 export interface FrequencyCheck {
   /** Toutes les dates sont cohérentes avec la fréquence demandée. */

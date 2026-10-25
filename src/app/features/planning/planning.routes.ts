@@ -6,7 +6,6 @@ import { APP_CONFIG } from '@core/config/app-config';
 
 import { DemoSettingsApi, HttpSettingsApi, SettingsApi } from '../settings/data/settings.api';
 import { SettingsStore } from '../settings/state/settings.store';
-import { DemoPlanningApi, HttpPlanningApi, PlanningApi } from './data/planning.api';
 import { planningTabsFor } from './planning.access';
 import { PlanningStore } from './state/planning.store';
 import { ReviewStore } from './state/review.store';
@@ -39,13 +38,6 @@ export const PLANNING_ROUTES: Routes = [
         provide: SettingsApi,
         useFactory: () =>
           inject(APP_CONFIG).useDemoData ? inject(DemoSettingsApi) : inject(HttpSettingsApi),
-      },
-      DemoPlanningApi,
-      HttpPlanningApi,
-      {
-        provide: PlanningApi,
-        useFactory: () =>
-          inject(APP_CONFIG).useDemoData ? inject(DemoPlanningApi) : inject(HttpPlanningApi),
       },
       PlanningStore,
       ReviewStore,

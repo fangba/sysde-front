@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CurrentUser } from '@core/auth/current-user';
 import { IconComponent } from '@shared/ui/icon/icon.component';
 
+import { PendingReviewService } from '../../features/planning/state/pending-review.service';
 import { NAV_ITEMS } from '../nav.config';
 
 /** Navigation principale : marque, contexte, sections et profil. */
@@ -23,6 +24,11 @@ export class SidebarComponent {
   readonly toggled = output<void>();
 
   protected readonly currentUser = inject(CurrentUser);
+  private readonly review = inject(PendingReviewService);
+
+  /** Éléments de planning en attente de décision, pour la pastille du chef secteur. */
+  protected readonly pending = this.review.count;
+
   /** Un administrateur voit toutes les sections ; le superviseur, Dashboard, Reporting et Carte ; les autres, celles qui ne leur sont pas réservées. */
   protected readonly items = computed(() =>
     NAV_ITEMS.filter((item) =>
