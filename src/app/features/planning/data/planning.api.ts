@@ -31,11 +31,18 @@ import {
     inject(APP_CONFIG).useDemoData ? inject(DemoPlanningApi) : inject(HttpPlanningApi),
 })
 export abstract class PlanningApi {
-  /** Planning de l'utilisateur connecté pour une année (créé vide s'il n'existe pas). */
-  abstract mine(year: number): Observable<AnnualPlan>;
+  /**
+   * Planning de l'utilisateur connecté pour une année (créé vide s'il n'existe pas). La secrétaire
+   * passe `userId` pour lire, saisir et soumettre le planning d'un collaborateur de son secteur.
+   */
+  abstract mine(year: number, userId?: string): Observable<AnnualPlan>;
   /** Remplace toutes les lignes d'un planning en brouillon. */
-  abstract saveLines(year: number, lines: readonly PlanLineInput[]): Observable<AnnualPlan>;
-  abstract submit(year: number): Observable<AnnualPlan>;
+  abstract saveLines(
+    year: number,
+    lines: readonly PlanLineInput[],
+    userId?: string,
+  ): Observable<AnnualPlan>;
+  abstract submit(year: number, userId?: string): Observable<AnnualPlan>;
   /**
    * Soumet une seule activité au chef secteur : ses dates sont verrouillées jusqu'à sa décision.
    * Refusée si l'activité n'a aucune date ou si ses dates ne sont pas cohérentes avec sa fréquence.
@@ -128,6 +135,36 @@ export class DemoPlanningApi extends PlanningApi {
     return DEMO_USERS.find((u) => u.email === email);
   }
 
+  /**
+   * Le titulaire du planning : soi-même, ou — pour la secrétaire — un collaborateur de son
+   * secteur (chef secteur compris). `null` si l'accès n'est pas permis.
+   */
+  private owner(userId?: string) {
+    const me = this.me();
+    if (!userId || userId === me?.id) {
+      return me ?? null;
+    }
+    const target = DEMO_USERS.find((u) => u.id === userId);
+    const allowed =
+      me?.poste === 'SE' &&
+      !!target &&
+      target.active &&
+      target.poste !== 'SE' &&
+      PLANNING_POSTES.includes(target.poste) &&
+      target.operatorId === me.operatorId &&
+      target.sectorId === me.sectorId;
+    return allowed ? target : null;
+  }
+
+  private stamp(plan: AnnualPlan, userId?: string): AnnualPlan {
+    const me = this.me();
+    return {
+      ...plan,
+      editedBy: userId && userId !== me?.id ? 'SECRETARY' : 'SELF',
+      editedAt: new Date().toISOString(),
+    };
+  }
+
   private plan(userId: string, year: number): AnnualPlan {
     const found = this.plans.get(key(userId, year));
     if (found) {
@@ -149,15 +186,19 @@ export class DemoPlanningApi extends PlanningApi {
     return plan;
   }
 
-  mine(year: number): Observable<AnnualPlan> {
-    const me = this.me();
+  mine(year: number, userId?: string): Observable<AnnualPlan> {
+    const me = this.owner(userId);
     return me
       ? of(this.plan(me.id, year)).pipe(delay(LATENCY_MS))
       : throwError(() => new ApiError(403, "Vous n'avez pas accès à cette ressource."));
   }
 
-  saveLines(year: number, lines: readonly PlanLineInput[]): Observable<AnnualPlan> {
-    const me = this.me();
+  saveLines(
+    year: number,
+    lines: readonly PlanLineInput[],
+    userId?: string,
+  ): Observable<AnnualPlan> {
+    const me = this.owner(userId);
     if (!me) {
       return throwError(() => new ApiError(403, "Vous n'avez pas accès à cette ressource."));
     }
@@ -186,11 +227,13 @@ export class DemoPlanningApi extends PlanningApi {
     if (invalid) {
       return throwError(() => new ApiError(400, invalid));
     }
-    return of(this.store({ ...current, lines: sortLines(saved) })).pipe(delay(LATENCY_MS));
+    return of(this.store(this.stamp({ ...current, lines: sortLines(saved) }, userId))).pipe(
+      delay(LATENCY_MS),
+    );
   }
 
-  submit(year: number): Observable<AnnualPlan> {
-    const me = this.me();
+  submit(year: number, userId?: string): Observable<AnnualPlan> {
+    const me = this.owner(userId);
     if (!me) {
       return throwError(() => new ApiError(403, "Vous n'avez pas accès à cette ressource."));
     }
@@ -284,7 +327,7 @@ export class DemoPlanningApi extends PlanningApi {
     const members = DEMO_USERS.filter(
       (u) =>
         u.active &&
-        u.poste !== 'CS' &&
+        (u.poste !== 'CS' || me.poste === 'SE') &&
         u.poste !== 'SE' &&
         PLANNING_POSTES.includes(u.poste) &&
         u.operatorId === me.operatorId &&

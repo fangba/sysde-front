@@ -49,6 +49,10 @@ export interface AnnualPlan {
   readonly rejection?: PlanRejection;
   /** Activités soumises une par une ; vide si aucune ne l'a été. */
   readonly submissions?: readonly ActivitySubmission[];
+  /** Qui a enregistré les dates en dernier : le titulaire ou la secrétaire à sa place. */
+  readonly editedBy?: 'SELF' | 'SECRETARY';
+  /** Date ISO de ce dernier enregistrement. */
+  readonly editedAt?: string;
 }
 
 /** Décision du chef secteur sur un planning soumis. */

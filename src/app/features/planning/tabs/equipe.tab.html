@@ -1,0 +1,144 @@
+@if (store.status() === 'error') {
+  <ui-empty-state
+    icon="alert"
+    tone="red"
+    title="Chargement impossible"
+    [description]="store.error()"
+  >
+    <button ui-button variant="primary" type="button" (click)="store.load()">Réessayer</button>
+  </ui-empty-state>
+} @else {
+  <div class="top">
+    <div class="chips" role="group" aria-label="Filtrer par statut">
+      @for (chip of statusChips(); track chip.code) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="filter() === chip.code"
+          (click)="setFilter(chip.code)"
+        >
+          {{ chip.label }} <b>{{ chip.count }}</b>
+        </button>
+      }
+    </div>
+    <div class="actions">
+      <button
+        ui-button
+        variant="secondary"
+        type="button"
+        [loading]="downloading()"
+        (click)="downloadTemplate()"
+      >
+        <ui-icon name="download" /> Modèle Excel
+      </button>
+      <button
+        ui-button
+        variant="primary"
+        type="button"
+        [disabled]="store.deciding() || rows().length === 0"
+        (click)="file.click()"
+      >
+        <ui-icon name="upload" /> Importer plusieurs plannings
+      </button>
+      <input
+        #file
+        type="file"
+        class="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        aria-label="Choisir un fichier Excel d'équipe"
+        tabindex="-1"
+        (change)="onFile($event)"
+      />
+    </div>
+  </div>
+
+  <div class="tools">
+    <label class="search">
+      <ui-icon name="search" />
+      <input
+        type="search"
+        class="ui-input"
+        placeholder="Nom ou matricule…"
+        aria-label="Rechercher un collaborateur"
+        [ngModel]="search()"
+        (ngModelChange)="setSearch($event)"
+      />
+    </label>
+    <div class="chips" role="group" aria-label="Filtrer par poste">
+      @for (chip of posteChips(); track chip.code) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="poste() === chip.code"
+          [attr.title]="chip.code === 'ALL' ? null : posteLabel(chip.code)"
+          (click)="setPoste(chip.code)"
+        >
+          {{ chip.label }} <b>{{ chip.count }}</b>
+        </button>
+      }
+    </div>
+  </div>
+
+  <section class="roster" [attr.aria-busy]="store.status() === 'loading'">
+    <div class="line head">
+      <span class="c-name">Collaborateur</span>
+      <span class="c-poste">Poste</span>
+      <span class="c-status">Statut</span>
+      <span class="c-prog">Activités saisies</span>
+      <span class="c-last">Dernière saisie</span>
+      <span class="c-act">Action</span>
+    </div>
+    @for (row of shown(); track row.userId) {
+      <div class="line">
+        <span class="c-name">
+          <span class="avatar" aria-hidden="true">{{ row.initials }}</span>
+          <span>
+            <strong>{{ row.name }}</strong>
+            <small>{{ row.matricule }}</small>
+          </span>
+        </span>
+        <span class="c-poste"
+          ><i>{{ row.poste }}</i></span
+        >
+        <span class="c-status">
+          <ui-status-pill [tone]="statuses[row.status].tone">{{
+            statuses[row.status].label
+          }}</ui-status-pill>
+        </span>
+        <span class="c-prog">
+          <span class="meter" aria-hidden="true"
+            ><i [style.width.%]="row.total ? (row.done / row.total) * 100 : 0"></i
+          ></span>
+          <span>{{ row.done }} / {{ row.total }}</span>
+        </span>
+        <span class="c-last">{{ row.last }}</span>
+        <span class="c-act">
+          <a
+            ui-button
+            [variant]="row.status === 'SENT' || row.status === 'OK' ? 'ghost' : 'primary'"
+            [routerLink]="[row.userId]"
+            [attr.aria-label]="statuses[row.status].action + ' le planning de ' + row.name"
+          >
+            {{ statuses[row.status].action }}
+          </a>
+        </span>
+      </div>
+    } @empty {
+      <p class="none">
+        {{ store.status() === 'loading' ? 'Chargement…' : 'Aucun collaborateur avec ces filtres.' }}
+      </p>
+    }
+    <ui-pagination
+      [total]="filtered().length"
+      [(page)]="page"
+      [(pageSize)]="pageSize"
+      [pageSizeOptions]="[5, 10, 25]"
+    />
+  </section>
+
+  <p class="note">
+    <strong>Qui peut modifier quoi.</strong> « Saisir », « Compléter » et « Corriger » ouvrent le
+    planning de la personne : ce que vous enregistrez est signé « Vous ». Un planning soumis ou
+    validé est verrouillé : seul « Consulter » reste possible.
+  </p>
+}

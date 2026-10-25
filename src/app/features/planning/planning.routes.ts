@@ -59,9 +59,20 @@ export const PLANNING_ROUTES: Routes = [
       },
       {
         path: 'equipe',
-        title: 'Équipe',
         canActivate: [tabGuard],
-        loadComponent: () => import('./tabs/valider.tab').then((m) => m.ValiderTab),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            title: 'Équipe',
+            loadComponent: () => import('./tabs/equipe.tab').then((m) => m.EquipeTab),
+          },
+          {
+            path: ':userId',
+            title: 'Planning d’un collaborateur',
+            loadComponent: () => import('./tabs/saisie.page').then((m) => m.SaisiePage),
+          },
+        ],
       },
     ],
   },

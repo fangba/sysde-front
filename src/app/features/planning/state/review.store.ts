@@ -1,5 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { concat, defer, forkJoin, map, toArray } from 'rxjs';
+import { catchError, concat, defer, forkJoin, map, of, switchMap, toArray } from 'rxjs';
 
 import { CurrentUser } from '@core/auth/current-user';
 import { toApiError } from '@core/http/api-error';
@@ -11,7 +11,14 @@ import { SettingsStore } from '../../settings/state/settings.store';
 import { PendingReviewService } from './pending-review.service';
 import { PlanningApi } from '../data/planning.api';
 import type { ActivitySubmission, AnnualPlan, PlanDecision } from '../data/planning.models';
-import { checkFrequency } from '../data/planning.rules';
+import {
+  checkFrequency,
+  isActivityLocked,
+  sortLines,
+  validateLine,
+  type TeamImportPerson,
+  type TeamMember,
+} from '../data/planning.rules';
 import { PlanningStore, type PlanLoadStatus } from './planning.store';
 
 const ORDER = { SOUMIS: 0, BROUILLON: 1, VALIDE: 2 } as const;
@@ -46,6 +53,14 @@ export interface ActivityAssessment {
 }
 
 /** Résultat du contrôle automatique d'un élément : « prêt » s'il n'a aucune anomalie. */
+/** Résultat de l'import d'un planning de l'équipe. */
+export interface ImportOutcome {
+  readonly userId: string;
+  readonly status: 'ok' | 'skipped' | 'failed';
+  readonly message?: string;
+  readonly plan?: AnnualPlan;
+}
+
 export interface ItemAssessment {
   readonly activities: readonly ActivityAssessment[];
   readonly ready: boolean;
@@ -122,6 +137,25 @@ export class ReviewStore {
   /** Contrôle automatique de chaque élément, recalculé quand les données changent. */
   readonly assessments = computed<ReadonlyMap<string, ItemAssessment>>(
     () => new Map(this.items().map((item) => [item.id, this.assess(item)])),
+  );
+
+  /** Collaborateurs du secteur, avec les activités de leur poste (fichier d'équipe de la secrétaire). */
+  readonly members = computed<readonly TeamMember[]>(() =>
+    this.plans().flatMap((plan) => {
+      const user = this.userOf(plan);
+      return user
+        ? [
+            {
+              userId: user.id,
+              matricule: user.matricule ?? '',
+              name: `${user.lastName} ${user.firstName}`,
+              activities: this.settings.activities
+                .items()
+                .filter((a) => a.active && a.poste === user.poste),
+            },
+          ]
+        : [];
+    }),
   );
 
   userOf(plan: AnnualPlan): User | undefined {
@@ -309,5 +343,84 @@ export class ReviewStore {
           this.toast.show(toApiError(error).message, 'error');
         },
       });
+  }
+
+  /**
+   * Importe les plannings d'un fichier d'équipe : un brouillon par personne, jamais de soumission.
+   * Les plannings soumis ou validés sont ignorés ; `mode` règle le cas d'un brouillon existant.
+   */
+  importMany(
+    people: readonly TeamImportPerson[],
+    mode: 'append' | 'replace' | 'skip',
+    onDone: (results: readonly ImportOutcome[]) => void,
+  ): void {
+    if (this.deciding() || people.length === 0) {
+      return;
+    }
+    const year = this.mine.year();
+    this.deciding.set(true);
+    const jobs = people.map((person) => {
+      const userId = person.member.userId;
+      const allowed = new Set(person.member.activities.map((a) => a.id));
+      return this.api.mine(year, userId).pipe(
+        switchMap((current) => {
+          if (current.status !== 'BROUILLON') {
+            return of<ImportOutcome>({
+              userId,
+              status: 'skipped',
+              message: 'Déjà soumis ou validé.',
+            });
+          }
+          if (mode === 'skip' && current.lines.length > 0) {
+            return of<ImportOutcome>({ userId, status: 'skipped', message: 'Brouillon conservé.' });
+          }
+          const base =
+            mode === 'replace'
+              ? current.lines.filter((l) => isActivityLocked(current, l.activityId))
+              : current.lines;
+          const merged = [...base];
+          for (const input of person.lines) {
+            const duplicate = merged.some(
+              (l) =>
+                l.date === input.date &&
+                l.endDate === input.endDate &&
+                l.activityId === input.activityId &&
+                l.place === input.place,
+            );
+            if (duplicate) {
+              continue;
+            }
+            const message = validateLine(input, year, merged, undefined, allowed);
+            if (message) {
+              return of<ImportOutcome>({ userId, status: 'failed', message });
+            }
+            merged.push({ ...input, id: `import-${merged.length}` });
+          }
+          return this.api
+            .saveLines(
+              year,
+              sortLines(merged).map(({ id: _id, ...line }) => line),
+              userId,
+            )
+            .pipe(map((plan): ImportOutcome => ({ userId, status: 'ok', plan })));
+        }),
+        catchError((error: unknown) =>
+          of<ImportOutcome>({ userId, status: 'failed', message: toApiError(error).message }),
+        ),
+      );
+    });
+    forkJoin(jobs).subscribe((results) => {
+      const byId = new Map(results.flatMap((r) => (r.plan ? [[r.plan.id, r.plan] as const] : [])));
+      this.plans.update((list) => list.map((p) => byId.get(p.id) ?? p));
+      this.deciding.set(false);
+      const ok = results.filter((r) => r.status === 'ok').length;
+      this.toast.show(
+        ok === 0
+          ? "Aucun planning n'a été importé."
+          : `${ok} planning${ok > 1 ? 's ont été importés' : ' a été importé'} en brouillon.`,
+        ok === 0 ? 'warning' : 'success',
+      );
+      onDone(results);
+    });
   }
 }

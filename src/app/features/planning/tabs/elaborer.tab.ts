@@ -67,7 +67,7 @@ const DRAWER = {
     } @else {
       <ui-card [heading]="'Planning ' + store.year()" [subheading]="subheading()">
         <div cardActions class="bar">
-          @if (!isSectorHead()) {
+          @if (!ownPlanOfSectorHead()) {
             @let view = statusView();
             <ui-status-pill [tone]="view.tone">{{ view.label }}</ui-status-pill>
           }
@@ -92,7 +92,7 @@ const DRAWER = {
                 Enregistrer
               </button>
             }
-            @if (!isSectorHead()) {
+            @if (!ownPlanOfSectorHead()) {
               <button
                 ui-button
                 variant="primary"
@@ -136,9 +136,9 @@ const DRAWER = {
         @if (settings.status() === 'ready' && store.activities().length === 0) {
           <div class="notice" data-tone="amber" role="status">
             <p>
-              Aucune activité n'est configurée pour votre poste : vous ne pouvez pas encore élaborer
-              de planning. Demandez à un administrateur d'en ajouter dans Paramètres, onglet
-              Activités.
+              Aucune activité n'est configurée pour {{ store.proxy() ? 'son' : 'votre' }} poste : le
+              planning ne peut pas encore être élaboré. Demandez à un administrateur d'en ajouter
+              dans Paramètres, onglet Activités.
             </p>
           </div>
         }
@@ -154,8 +154,8 @@ const DRAWER = {
           } @else if (plan.status === 'SOUMIS') {
             <div class="notice" data-tone="amber" role="status">
               <p>
-                Planning soumis : il attend la validation de votre chef secteur et n'est plus
-                modifiable.
+                Planning soumis : il attend la validation
+                {{ store.proxy() ? 'du' : 'de votre' }} chef secteur et n'est plus modifiable.
               </p>
             </div>
           } @else if (plan.status === 'VALIDE') {
@@ -164,19 +164,24 @@ const DRAWER = {
                 @if (isSectorHead()) {
                   Planning validé d'office : le planning d'un chef secteur n'a pas de validateur.
                 } @else {
-                  Planning validé par votre chef secteur.
+                  Planning validé par {{ store.proxy() ? 'le' : 'votre' }} chef secteur.
                 }
               </p>
             </div>
           } @else {
             <div class="notice" data-tone="neutral">
               <p>
-                Ajoutez vos activités une à une, ou importez un fichier Excel (le modèle est
-                téléchargeable ci-dessous).
-                @if (isSectorHead()) {
-                  Votre planning sera validé d'office.
+                @if (store.proxy()) {
+                  Ajoutez les activités une à une, ou importez un fichier Excel pour cette personne
+                  (le modèle est téléchargeable ci-dessous).
                 } @else {
-                  Soumettez-le ensuite à votre chef secteur.
+                  Ajoutez vos activités une à une, ou importez un fichier Excel (le modèle est
+                  téléchargeable ci-dessous).
+                }
+                @if (isSectorHead()) {
+                  {{ store.proxy() ? 'Ce planning' : 'Votre planning' }} sera validé d'office.
+                } @else {
+                  Soumettez-le ensuite {{ store.proxy() ? 'au' : 'à votre' }} chef secteur.
                 }
               </p>
             </div>
@@ -212,7 +217,8 @@ const DRAWER = {
               [disabled]="store.activities().length === 0"
               (click)="verifyPlan()"
             >
-              <ui-icon name="check" /> Vérifier mon planning
+              <ui-icon name="check" />
+              {{ store.proxy() ? 'Vérifier ce planning' : 'Vérifier mon planning' }}
             </button>
             <button
               ui-button
@@ -352,7 +358,13 @@ export class ElaborerTab {
   private readonly dialog = inject(Dialog);
   private readonly injector = inject(Injector);
   private readonly toast = inject(ToastService);
-  protected readonly isSectorHead = inject(CurrentUser).isSectorHead;
+  private readonly currentUser = inject(CurrentUser);
+  /** Le titulaire du planning affiché est chef secteur (soi-même ou, pour la secrétaire, lui). */
+  protected readonly isSectorHead = this.store.ownerIsSectorHead;
+  /** Le chef secteur devant son propre planning : validé d'office, rien à soumettre. */
+  protected readonly ownPlanOfSectorHead = computed(
+    () => !this.store.proxy() && this.currentUser.isSectorHead(),
+  );
 
   protected readonly formatDate = formatDate;
   protected readonly display = signal<'activities' | 'calendar'>('activities');
@@ -363,9 +375,12 @@ export class ElaborerTab {
     const plan = this.store.plan();
     return planStatusView(plan ?? { status: 'BROUILLON' });
   });
-  protected readonly submitLabel = computed(() =>
-    this.isSectorHead() ? 'Valider mon planning' : 'Soumettre',
-  );
+  protected readonly submitLabel = computed(() => {
+    if (this.store.proxy()) {
+      return this.isSectorHead() ? 'Valider le planning' : 'Soumettre au chef secteur';
+    }
+    return this.isSectorHead() ? 'Valider mon planning' : 'Soumettre';
+  });
   protected readonly subheading = computed(() => {
     const { count, hours, days } = this.store.summary();
     if (count === 0) {

@@ -2,11 +2,12 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { CurrentUser } from '@core/auth/current-user';
 import { toApiError } from '@core/http/api-error';
+import { NotificationService } from '@core/notifications/notification.service';
 import { ToastService } from '@core/notifications/toast.service';
 import { uniqueId } from '@shared/util/ids';
 
 import { ACTIVITY_CATEGORIES } from '../../settings/data/settings.constants';
-import type { Activity, ActivityCategory } from '../../settings/data/settings.models';
+import type { Activity, ActivityCategory, User } from '../../settings/data/settings.models';
 import { SettingsStore } from '../../settings/state/settings.store';
 import { PlanningApi } from '../data/planning.api';
 import type {
@@ -51,6 +52,20 @@ export class PlanningStore {
   private readonly toast = inject(ToastService);
   private readonly settings = inject(SettingsStore);
   private readonly currentUser = inject(CurrentUser);
+  private readonly notifications = inject(NotificationService);
+
+  /**
+   * Collaborateur dont la secrétaire saisit le planning à sa place ; `null` pour son propre
+   * planning. Tant qu'il est défini, `load`, `save` et `submit` agissent sur son planning.
+   */
+  readonly target = signal<User | null>(null);
+  readonly proxy = computed(() => this.target() !== null);
+  /** Poste du titulaire du planning (le collaborateur ciblé, sinon l'utilisateur connecté). */
+  readonly ownerPoste = computed(() => this.target()?.poste ?? this.currentUser.user().poste);
+  /** Le titulaire est chef secteur : son planning est validé d'office. */
+  readonly ownerIsSectorHead = computed(() =>
+    this.proxy() ? this.target()?.poste === 'CS' : this.currentUser.isSectorHead(),
+  );
 
   readonly year = signal(new Date().getFullYear());
   readonly plan = signal<AnnualPlan | null>(null);
@@ -62,7 +77,7 @@ export class PlanningStore {
 
   /** Activités que le poste de l'utilisateur peut inscrire à son planning (actives seulement). */
   readonly activities = computed<readonly Activity[]>(() => {
-    const poste = this.currentUser.user().poste;
+    const poste = this.ownerPoste();
     return this.settings.activities
       .items()
       .filter((a) => a.poste === poste && a.active)
@@ -94,7 +109,7 @@ export class PlanningStore {
   });
   /** Le chef secteur n'a pas de validateur : seuls les autres postes soumettent une activité. */
   readonly canSubmitActivities = computed(
-    () => !this.currentUser.isSectorHead() && this.editable(),
+    () => !this.currentUser.isSectorHead() && !this.proxy() && this.editable(),
   );
 
   /** Soumission propre à une activité (soumise, validée ou rejetée), si elle en a une. */
@@ -192,7 +207,7 @@ export class PlanningStore {
     this.year.set(year);
     this.results.set({});
     this.status.set('loading');
-    this.api.mine(year).subscribe({
+    this.api.mine(year, this.target()?.id).subscribe({
       next: (plan) => {
         this.apply(plan);
         this.status.set('ready');
@@ -265,7 +280,7 @@ export class PlanningStore {
       return;
     }
     this.saving.set(true);
-    this.api.saveLines(this.year(), this.draft()).subscribe({
+    this.api.saveLines(this.year(), this.draft(), this.target()?.id).subscribe({
       next: (plan) => {
         this.apply(plan);
         this.saving.set(false);
@@ -282,19 +297,35 @@ export class PlanningStore {
       return;
     }
     this.saving.set(true);
-    this.api.saveLines(this.year(), this.draft()).subscribe({
+    const owner = this.target();
+    this.api.saveLines(this.year(), this.draft(), owner?.id).subscribe({
       next: (saved) => {
         this.apply(saved);
-        this.api.submit(this.year()).subscribe({
+        this.api.submit(this.year(), owner?.id).subscribe({
           next: (plan) => {
             this.apply(plan);
             this.saving.set(false);
+            const name = owner ? `${owner.firstName} ${owner.lastName}` : '';
             this.toast.show(
-              plan.status === 'VALIDE'
-                ? 'Votre planning est validé.'
-                : 'Votre planning a été soumis au chef secteur.',
+              owner
+                ? plan.status === 'VALIDE'
+                  ? `Le planning de ${name} est validé.`
+                  : `Le planning de ${name} a été soumis au chef secteur.`
+                : plan.status === 'VALIDE'
+                  ? 'Votre planning est validé.'
+                  : 'Votre planning a été soumis au chef secteur.',
               'success',
             );
+            if (owner) {
+              this.notifications.notify(
+                owner.email,
+                plan.status === 'VALIDE' ? 'Planning validé' : 'Planning soumis',
+                plan.status === 'VALIDE'
+                  ? `Votre planning ${plan.year} a été saisi et validé par la secrétaire.`
+                  : `Votre planning ${plan.year} a été saisi par la secrétaire et soumis au chef secteur.`,
+                'info',
+              );
+            }
           },
           error: (error: unknown) => this.fail(error),
         });

@@ -79,7 +79,7 @@ export class PlanningPage {
   );
   protected readonly subtitle = computed(() =>
     this.currentUser.isSecretary()
-      ? 'Plannings annuels d’activités des collaborateurs de votre secteur (lecture seule).'
+      ? 'Plannings annuels d’activités de votre secteur : saisie et import pour toute l’équipe.'
       : 'Planning annuel d’activités : élaboration puis validation.',
   );
   protected readonly years = (() => {

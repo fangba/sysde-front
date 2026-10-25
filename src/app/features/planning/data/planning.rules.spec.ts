@@ -14,6 +14,8 @@ import {
   formatPeriod,
   isActivityLocked,
   annualOverview,
+  parseTeamRows,
+  rosterStatusOf,
   objectives,
   parsePlanRows,
   planStatusView,
@@ -401,5 +403,59 @@ describe("soumission d'une activité", () => {
     ]);
     expect(withSubmission(plan, 'a', null)).toEqual([]);
     expect(activityStatusView('REJETE').tone).toBe('red');
+  });
+});
+
+describe('parseTeamRows', () => {
+  const members = [
+    { userId: 'u1', matricule: 'SAPH-001', name: 'Kouamé Éric', activities: CO },
+    { userId: 'u2', matricule: 'SAPH-002', name: 'Diallo Awa', activities: CO },
+  ];
+  const header = [
+    'Matricule',
+    'Date début',
+    'Date fin',
+    'Activité',
+    'Lot / section',
+    'Heures par jour',
+  ];
+  const label = CO[0]!.label;
+
+  it('regroupe les lignes par matricule et garde la numérotation du fichier', () => {
+    const rows = [
+      header,
+      ['SAPH-001', '10/03/2026', '', label, 'Lot 1', 4],
+      ['saph-002', '11/03/2026', '', 'Inconnue', 'Lot 1', 4],
+      ['SAPH-999', '12/03/2026', '', label, 'Lot 1', 4],
+      ['SAPH-001', '20/03/2026', '', label, 'Lot 1', 4],
+    ];
+    const result = parseTeamRows(rows, 2026, members);
+    expect(result.fileError).toBeNull();
+    expect(result.people.find((p) => p.member.userId === 'u1')?.lines.length).toBe(2);
+    const other = result.people.find((p) => p.member.userId === 'u2')!;
+    expect(other.lines.length).toBe(0);
+    expect(other.errors[0]?.row).toBe(3);
+    expect(result.unknown).toEqual([{ matricule: 'SAPH-999', rows: 1 }]);
+  });
+
+  it('refuse un fichier sans colonne Matricule', () => {
+    const result = parseTeamRows([['Date début', 'Activité']], 2026, members);
+    expect(result.fileError).toContain('Matricule');
+  });
+});
+
+describe('rosterStatusOf', () => {
+  it('distingue rien saisi, brouillon, rejeté, soumis et validé', () => {
+    expect(rosterStatusOf({ status: 'BROUILLON', lines: [] })).toBe('NONE');
+    expect(rosterStatusOf({ status: 'BROUILLON', lines: [line()] })).toBe('DRAFT');
+    expect(
+      rosterStatusOf({
+        status: 'BROUILLON',
+        lines: [line()],
+        rejection: { reason: 'x', date: '2026-01-01' },
+      }),
+    ).toBe('REJECTED');
+    expect(rosterStatusOf({ status: 'SOUMIS', lines: [line()] })).toBe('SENT');
+    expect(rosterStatusOf({ status: 'VALIDE', lines: [line()] })).toBe('OK');
   });
 });

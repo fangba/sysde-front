@@ -267,3 +267,36 @@ describe('ReviewStore (chef secteur)', () => {
     expect(review.pendingTotal()).toBe(0);
   });
 });
+
+describe('PlanningStore (secrétaire : saisie pour un collaborateur)', () => {
+  it('charge, enregistre et soumet le planning du collaborateur choisi', async () => {
+    const { mine, review } = await setup('secretaire@sysde.ci', 'SE');
+    review.load();
+    await wait();
+    const cf = review.members().find((m) => m.matricule === 'SAPH-00461')!;
+    const user = TestBed.inject(SettingsStore)
+      .users.items()
+      .find((u) => u.id === cf.userId)!;
+    mine.target.set(user);
+    mine.load();
+    await wait();
+    expect(mine.proxy()).toBe(true);
+    expect(mine.plan()?.userId).toBe(user.id);
+    expect(mine.activities().every((a) => a.poste === 'CF')).toBe(true);
+
+    expect(mine.upsertLine(null, input(9))).toBeNull();
+    mine.save();
+    await wait();
+    expect(mine.plan()?.editedBy).toBe('SECRETARY');
+    expect(mine.plan()?.lines.some((l) => l.date === `${year}-06-09`)).toBe(true);
+  });
+
+  it("refuse l'accès au planning d'un autre secteur ou sans être secrétaire", async () => {
+    const { mine } = await setup('collaborateur@sysde.ci', 'CF');
+    const settings = TestBed.inject(SettingsStore);
+    mine.target.set(settings.users.items().find((u) => u.poste === 'MO')!);
+    mine.load();
+    await wait();
+    expect(mine.status()).toBe('error');
+  });
+});

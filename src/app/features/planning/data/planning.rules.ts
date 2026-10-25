@@ -613,3 +613,127 @@ export function templateRows(year: number, activities: readonly Activity[]): (st
       : []),
   ];
 }
+
+/** Un collaborateur du secteur reconnu par son matricule dans un fichier d'équipe. */
+export interface TeamMember {
+  readonly userId: string;
+  readonly matricule: string;
+  readonly name: string;
+  /** Activités actives que son poste peut inscrire. */
+  readonly activities: readonly Activity[];
+}
+
+/** Lignes d'un fichier d'équipe pour un collaborateur. */
+export interface TeamImportPerson {
+  readonly member: TeamMember;
+  readonly lines: readonly PlanLineInput[];
+  readonly errors: readonly ImportError[];
+}
+
+export interface TeamImportResult {
+  readonly people: readonly TeamImportPerson[];
+  /** Matricules absents du secteur, avec le nombre de lignes concernées. */
+  readonly unknown: readonly { readonly matricule: string; readonly rows: number }[];
+  /** Erreur qui empêche toute lecture (colonne Matricule absente, fichier vide…). */
+  readonly fileError: string | null;
+  readonly totalRows: number;
+}
+
+const MATRICULE_ALIASES = ['matricule', 'mat', 'matricule collaborateur'];
+
+/**
+ * Lit le fichier d'équipe : le modèle d'un planning précédé d'une colonne « Matricule ». Les lignes
+ * de chaque personne sont contrôlées avec les activités de son poste ; les numéros de ligne
+ * restent ceux du fichier.
+ */
+export function parseTeamRows(
+  rows: readonly (readonly unknown[])[],
+  year: number,
+  members: readonly TeamMember[],
+): TeamImportResult {
+  const headerIndex = rows.findIndex((row) => row.some((cell) => !isBlank(cell)));
+  if (headerIndex < 0) {
+    return { people: [], unknown: [], fileError: 'Le fichier est vide.', totalRows: 0 };
+  }
+  const header = rows[headerIndex]!.map((cell) => normalizeText(String(cell ?? '')));
+  const column = header.findIndex((name) => MATRICULE_ALIASES.includes(name));
+  if (column < 0) {
+    return {
+      people: [],
+      unknown: [],
+      fileError: 'Colonne manquante : Matricule. Utilisez le modèle Excel de l’équipe.',
+      totalRows: 0,
+    };
+  }
+  const body = rows.slice(headerIndex + 1);
+  if (body.length > MAX_IMPORT_ROWS * 10) {
+    return {
+      people: [],
+      unknown: [],
+      fileError: `Le fichier dépasse ${MAX_IMPORT_ROWS * 10} lignes.`,
+      totalRows: body.length,
+    };
+  }
+  const byMatricule = new Map<string, number[]>();
+  body.forEach((cells, offset) => {
+    if (cells.every(isBlank)) {
+      return;
+    }
+    const matricule = String(cells[column] ?? '')
+      .trim()
+      .toUpperCase();
+    byMatricule.set(matricule, [...(byMatricule.get(matricule) ?? []), offset]);
+  });
+  const people: TeamImportPerson[] = [];
+  const unknown: { matricule: string; rows: number }[] = [];
+  for (const [matricule, offsets] of byMatricule) {
+    const member = members.find((m) => m.matricule.toUpperCase() === matricule);
+    if (!member) {
+      unknown.push({ matricule: matricule || '(vide)', rows: offsets.length });
+      continue;
+    }
+    // Les autres lignes deviennent vides : elles sont ignorées mais la numérotation est gardée.
+    const keep = new Set(offsets);
+    const own = rows.map((row, index) =>
+      index <= headerIndex || keep.has(index - headerIndex - 1) ? row : [],
+    );
+    const result = parsePlanRows(own, year, member.activities);
+    people.push({ member, lines: result.lines, errors: result.errors });
+  }
+  return {
+    people,
+    unknown,
+    fileError: null,
+    totalRows: [...byMatricule.values()].reduce((n, o) => n + o.length, 0),
+  };
+}
+
+/** Modèle Excel de l'équipe : en-tête avec Matricule et un exemple par collaborateur type. */
+export function teamTemplateRows(
+  year: number,
+  members: readonly TeamMember[],
+): (string | number)[][] {
+  const [header, ...examples] = templateRows(year, members[0]?.activities ?? []);
+  return [
+    ['Matricule', ...header!],
+    ...examples.map((row) => [members[0]?.matricule ?? '', ...row]),
+  ];
+}
+
+/** État d'un planning vu de la secrétaire : rien saisi, brouillon, soumis, validé ou rejeté. */
+export type RosterStatus = 'NONE' | 'DRAFT' | 'SENT' | 'OK' | 'REJECTED';
+
+export function rosterStatusOf(
+  plan: Pick<AnnualPlan, 'status' | 'rejection' | 'lines'>,
+): RosterStatus {
+  if (plan.status === 'VALIDE') {
+    return 'OK';
+  }
+  if (plan.status === 'SOUMIS') {
+    return 'SENT';
+  }
+  if (plan.rejection) {
+    return 'REJECTED';
+  }
+  return plan.lines.length === 0 ? 'NONE' : 'DRAFT';
+}
