@@ -18,7 +18,6 @@ import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.componen
 import { IconComponent } from '@shared/ui/icon/icon.component';
 import { PaginationComponent } from '@shared/ui/pagination/pagination.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
-import type { Tone } from '@shared/models/tone';
 import { formatDate } from '@shared/util/format';
 
 import { POSTE_LABEL } from '../../settings/data/settings.constants';
@@ -27,6 +26,7 @@ import { SettingsStore } from '../../settings/state/settings.store';
 import { downloadTeamTemplate, readPlanFile } from '../data/planning.excel';
 import { parseTeamRows, rosterStatusOf, type RosterStatus } from '../data/planning.rules';
 import type { AnnualPlan } from '../data/planning.models';
+import { ROSTER_STATUS, ROSTER_STATUS_ORDER } from '../data/roster';
 import { PlanningStore } from '../state/planning.store';
 import { ReviewStore } from '../state/review.store';
 import { TeamImportDialog, type TeamImportChoice, type TeamImportData } from './team-import.dialog';
@@ -44,14 +44,8 @@ interface RosterRow {
   readonly last: string;
 }
 
-const STATUS: Readonly<Record<RosterStatus, { label: string; tone: Tone; action: string }>> = {
-  NONE: { label: 'Pas de planning', tone: 'red', action: 'Saisir' },
-  DRAFT: { label: 'Brouillon', tone: 'neutral', action: 'Compléter' },
-  REJECTED: { label: 'Rejeté', tone: 'red', action: 'Corriger' },
-  SENT: { label: 'Soumis', tone: 'amber', action: 'Consulter' },
-  OK: { label: 'Validé', tone: 'green', action: 'Consulter' },
-};
-const STATUS_ORDER: readonly RosterStatus[] = ['NONE', 'DRAFT', 'SENT', 'OK', 'REJECTED'];
+const STATUS = ROSTER_STATUS;
+const STATUS_ORDER = ROSTER_STATUS_ORDER;
 const POSTE_ORDER: readonly Poste[] = ['MO', 'CO', 'CF', 'FS', 'ES', 'CS'];
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 

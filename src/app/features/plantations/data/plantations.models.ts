@@ -19,7 +19,11 @@ export interface Plantation {
   readonly sectorCode: string;
   readonly sectorName: string;
   readonly lot: number;
+  /** Section indiquée par la base externe (texte brut) ; l'affectation faite dans SysDE est `sectionId`. */
   readonly section: string;
+  /** Section de SysDE à laquelle le chef secteur a affecté la plantation ; absente tant qu'elle ne l'est pas. */
+  readonly sectionId?: string;
+  readonly sectionName?: string;
   readonly hectares: number;
   readonly plantedYear: number;
   readonly clone: string;
@@ -42,6 +46,9 @@ export interface PlantationDto {
   readonly secteur_nom: string;
   readonly lot: number;
   readonly section: string;
+  /** Affectation faite dans SysDE (section créée par le chef secteur). */
+  readonly section_id?: string | null;
+  readonly section_nom?: string | null;
   readonly superficie_ha: number;
   readonly annee_plantation?: number | null;
   readonly clone?: string | null;

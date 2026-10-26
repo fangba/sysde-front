@@ -1,36 +1,42 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+
+import { CurrentUser } from '@core/auth/current-user';
 
 import { LotsSection } from './lots.section';
+import { SectionsSection } from './sections.section';
 import { SectorsSection } from './sectors.section';
 
-type ReferenceSection = 'sectors' | 'lots';
+type ReferenceSection = 'sectors' | 'lots' | 'sections';
 
 /** Sections de données de référence ; d'autres s'ajouteront ici au fil des besoins. */
 const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string }[] = [
   { id: 'sectors', label: 'Secteurs' },
   { id: 'lots', label: 'Lots' },
+  { id: 'sections', label: 'Sections' },
 ];
 
-/** Données d'origine du programme : secteurs, lots… */
+/** Données d'origine du programme : secteurs, lots, sections… (le chef secteur n'a que les sections). */
 @Component({
   selector: 'sysde-references-tab',
-  imports: [SectorsSection, LotsSection],
+  imports: [SectorsSection, LotsSection, SectionsSection],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="sections" role="tablist" aria-label="Données de référence">
-      @for (s of sections; track s.id) {
-        <button
-          type="button"
-          role="tab"
-          class="section-chip"
-          [class.is-active]="active() === s.id"
-          [attr.aria-selected]="active() === s.id"
-          (click)="active.set(s.id)"
-        >
-          {{ s.label }}
-        </button>
-      }
-    </div>
+    @if (sections().length > 1) {
+      <div class="sections" role="tablist" aria-label="Données de référence">
+        @for (s of sections(); track s.id) {
+          <button
+            type="button"
+            role="tab"
+            class="section-chip"
+            [class.is-active]="active() === s.id"
+            [attr.aria-selected]="active() === s.id"
+            (click)="active.set(s.id)"
+          >
+            {{ s.label }}
+          </button>
+        }
+      </div>
+    }
 
     @switch (active()) {
       @case ('sectors') {
@@ -38,6 +44,9 @@ const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string
       }
       @case ('lots') {
         <sysde-lots-section />
+      }
+      @case ('sections') {
+        <sysde-sections-section />
       }
     }
   `,
@@ -82,6 +91,13 @@ const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string
   `,
 })
 export class ReferencesTab {
-  protected readonly sections = SECTIONS;
-  protected readonly active = signal<ReferenceSection>('sectors');
+  private readonly currentUser = inject(CurrentUser);
+
+  /** L'administrateur voit toutes les références ; le chef secteur, seulement les sections. */
+  protected readonly sections = computed(() =>
+    this.currentUser.isAdministrator() ? SECTIONS : SECTIONS.filter((s) => s.id === 'sections'),
+  );
+  protected readonly active = signal<ReferenceSection>(
+    this.currentUser.isAdministrator() ? 'sectors' : 'sections',
+  );
 }

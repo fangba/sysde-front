@@ -50,6 +50,8 @@ export class CurrentUser {
   readonly canReport = computed(
     () => this.hasGlobalView() || this.isDepartmentHead() || this.isSectorHead(),
   );
+  /** Paramètres : administrateurs (tout) et chefs secteur (sections de leur secteur seulement). */
+  readonly canSettings = computed(() => this.isAdministrator() || this.isSectorHead());
   /** Planning : postes CS, CF, CO, FS, MO et ES. */
   readonly canTask = computed(() => canTask(this.user()));
   readonly dashboardKind = computed(() => dashboardKind(this.user()));

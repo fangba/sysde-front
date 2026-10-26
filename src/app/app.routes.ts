@@ -1,11 +1,11 @@
 import type { Routes } from '@angular/router';
 
 import {
-  adminGuard,
   authGuard,
   guestGuard,
   planningGuard,
   reportingGuard,
+  settingsGuard,
   tasksGuard,
 } from './core/auth/auth.guard';
 import { NAV_ITEMS } from './layout/nav.config';
@@ -78,7 +78,7 @@ export const routes: Routes = [
       },
       {
         path: 'parametres',
-        canActivate: [adminGuard],
+        canActivate: [settingsGuard],
         loadChildren: () =>
           import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
       },

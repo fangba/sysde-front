@@ -26,6 +26,12 @@ export const adminGuard: CanActivateFn = () => {
   return inject(CurrentUser).isAdministrator() ? true : router.createUrlTree(['/']);
 };
 
+/** Ouvre les paramètres aux administrateurs et aux chefs secteur ; les autres vont à l'accueil. */
+export const settingsGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(CurrentUser).canSettings() ? true : router.createUrlTree(['/']);
+};
+
 /** Réserve le reporting aux administrateurs, aux superviseurs et aux chefs de département et de secteur. */
 export const reportingGuard: CanActivateFn = () => {
   const router = inject(Router);

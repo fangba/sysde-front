@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { CurrentUser } from '@core/auth/current-user';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
@@ -32,12 +33,9 @@ export const SETTINGS_TABS: readonly TabLink[] = [
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ui-page-header
-      title="Paramètres"
-      subtitle="Opérateurs, contrats, attributions, exercices, activités, permissions et références."
-    />
+    <ui-page-header title="Paramètres" [subtitle]="subtitle()" />
 
-    <ui-tab-nav [tabs]="tabs" label="Sections des paramètres" />
+    <ui-tab-nav [tabs]="tabs()" label="Sections des paramètres" />
 
     @if (store.status() === 'error') {
       <ui-card>
@@ -60,7 +58,19 @@ export const SETTINGS_TABS: readonly TabLink[] = [
 })
 export class SettingsPage {
   protected readonly store = inject(SettingsStore);
-  protected readonly tabs = SETTINGS_TABS;
+  private readonly currentUser = inject(CurrentUser);
+
+  /** L'administrateur a tous les onglets ; le chef secteur, uniquement Références. */
+  protected readonly tabs = computed(() =>
+    this.currentUser.isAdministrator()
+      ? SETTINGS_TABS
+      : SETTINGS_TABS.filter((tab) => tab.path === 'references'),
+  );
+  protected readonly subtitle = computed(() =>
+    this.currentUser.isAdministrator()
+      ? 'Opérateurs, contrats, attributions, exercices, activités, permissions et références.'
+      : 'Sections des lots de votre secteur.',
+  );
 
   constructor() {
     this.store.load();

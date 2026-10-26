@@ -11,6 +11,7 @@ import type {
   Operator,
   OperatorType,
   Poste,
+  Section,
   Sector,
   User,
 } from './settings.models';
@@ -201,6 +202,18 @@ export function findLotNumberConflict(
 ): Lot | undefined {
   return lots.find(
     (l) => l.id !== ignoreId && l.sectorId === candidate.sectorId && l.number === candidate.number,
+  );
+}
+
+/** Le nom d'une section est unique au sein d'un lot (sans tenir compte de la casse ni des accents). */
+export function findSectionNameConflict(
+  candidate: Pick<Section, 'lotId' | 'name'>,
+  sections: readonly Section[],
+  ignoreId?: string,
+): Section | undefined {
+  const wanted = normalizeLabel(candidate.name);
+  return sections.find(
+    (s) => s.id !== ignoreId && s.lotId === candidate.lotId && normalizeLabel(s.name) === wanted,
   );
 }
 

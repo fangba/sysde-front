@@ -27,7 +27,10 @@
       <span class="nav-label">{{ item.label }}</span>
       @if (item.path === 'planning' && pending() > 0) {
         <span class="nav-badge"
-          >{{ pending() }}<span class="sr-only"> en attente de validation</span></span
+          >{{ pending()
+          }}<span class="sr-only">
+            {{ secretary() ? 'à traiter' : 'en attente de validation' }}</span
+          ></span
         >
       }
     </a>

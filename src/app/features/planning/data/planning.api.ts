@@ -66,19 +66,28 @@ export abstract class PlanningApi {
 export class HttpPlanningApi extends PlanningApi {
   private readonly http = inject(HttpClient);
 
-  mine(year: number): Observable<AnnualPlan> {
-    return this.http.get<AnnualPlan>('/plannings/mon-planning', { params: { annee: year } });
+  /** Planning de l'utilisateur connecté, ou celui d'un collaborateur quand `userId` est donné. */
+  private base(userId?: string): string {
+    return userId ? `/plannings/collaborateurs/${userId}` : '/plannings/mon-planning';
   }
 
-  saveLines(year: number, lines: readonly PlanLineInput[]): Observable<AnnualPlan> {
-    return this.http.put<AnnualPlan>('/plannings/mon-planning/lignes', lines, {
+  mine(year: number, userId?: string): Observable<AnnualPlan> {
+    return this.http.get<AnnualPlan>(this.base(userId), { params: { annee: year } });
+  }
+
+  saveLines(
+    year: number,
+    lines: readonly PlanLineInput[],
+    userId?: string,
+  ): Observable<AnnualPlan> {
+    return this.http.put<AnnualPlan>(`${this.base(userId)}/lignes`, lines, {
       params: { annee: year },
     });
   }
 
-  submit(year: number): Observable<AnnualPlan> {
+  submit(year: number, userId?: string): Observable<AnnualPlan> {
     return this.http.post<AnnualPlan>(
-      '/plannings/mon-planning/soumission',
+      `${this.base(userId)}/soumission`,
       {},
       { params: { annee: year } },
     );

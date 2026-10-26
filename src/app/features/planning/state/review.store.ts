@@ -8,7 +8,7 @@ import { ToastService } from '@core/notifications/toast.service';
 
 import type { User } from '../../settings/data/settings.models';
 import { SettingsStore } from '../../settings/state/settings.store';
-import { PendingReviewService } from './pending-review.service';
+import { PendingReviewService, countToDo } from './pending-review.service';
 import { PlanningApi } from '../data/planning.api';
 import type { ActivitySubmission, AnnualPlan, PlanDecision } from '../data/planning.models';
 import {
@@ -87,6 +87,14 @@ export class ReviewStore {
       ) {
         this.badge.count.set(this.pendingTotal());
       }
+      // Secrétaire : la pastille compte les plannings à saisir, compléter ou corriger.
+      if (
+        this.status() === 'ready' &&
+        this.currentUser.isSecretary() &&
+        this.mine.year() === new Date().getFullYear()
+      ) {
+        this.badge.count.set(countToDo(this.plans()));
+      }
     });
   }
 
@@ -132,6 +140,8 @@ export class ReviewStore {
         activityId: r.activityId,
       })),
   ]);
+  /** Secrétaire : plannings de l'équipe à saisir, compléter ou corriger. */
+  readonly todoTotal = computed(() => countToDo(this.plans()));
   readonly pendingTotal = computed(() => this.items().length);
 
   /** Contrôle automatique de chaque élément, recalculé quand les données changent. */

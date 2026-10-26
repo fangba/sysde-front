@@ -30,6 +30,16 @@ export interface Lot {
 }
 export type LotInput = Omit<Lot, 'id'>;
 
+/** Donnée de référence : subdivision d'un lot, unité d'affectation d'un moniteur. */
+export interface Section {
+  readonly id: string;
+  readonly lotId: string;
+  /** Nom donné par le chef secteur, unique au sein du lot (ex. « A », « Section Nord »). */
+  readonly name: string;
+  readonly description: string;
+}
+export type SectionInput = Omit<Section, 'id'>;
+
 export const CONTRACT_YEARS = 3;
 
 /** Contrat triennal d'un opérateur technique. Dates ISO (aaaa-mm-jj), bornes incluses. */

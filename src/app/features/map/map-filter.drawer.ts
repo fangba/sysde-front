@@ -39,7 +39,9 @@ import { MapStore } from './state/map.store';
           [hint]="
             operatorId()
               ? sectors().length
-                ? 'Secteurs encadrés par cet opérateur.'
+                ? ownSectorCode()
+                  ? 'Votre secteur de rattachement.'
+                  : 'Secteurs encadrés par cet opérateur.'
                 : 'Aucun secteur n’est attribué à cet opérateur.'
               : 'Choisissez d’abord un opérateur.'
           "
@@ -121,8 +123,9 @@ export class MapFilterDrawer {
     section: this.store.filter()?.section ?? '',
   });
 
-  /** Le niveau « section » est proposé au chef secteur. */
-  protected readonly showSections = this.currentUser.isSectorHead();
+  /** Le niveau « section » est proposé au chef secteur et à la secrétaire. */
+  protected readonly showSections =
+    this.currentUser.isSectorHead() || this.currentUser.isSecretary();
 
   protected readonly operatorId = toSignal(this.form.controls.operatorId.valueChanges, {
     initialValue: this.form.controls.operatorId.value,
@@ -131,9 +134,15 @@ export class MapFilterDrawer {
     initialValue: this.form.controls.sectorId.value,
   });
 
-  protected readonly sectors = computed(
-    () => this.operators().find((o) => o.id === this.operatorId())?.sectors ?? [],
+  /** Chef secteur et secrétaire ne voient que leur secteur, dans leur opérateur. */
+  protected readonly ownSectorCode = computed(() =>
+    this.showSections ? (this.currentUser.user().sector?.code ?? '') : '',
   );
+  protected readonly sectors = computed(() => {
+    const all = this.operators().find((o) => o.id === this.operatorId())?.sectors ?? [];
+    const own = this.ownSectorCode();
+    return own ? all.filter((s) => s.code === own) : all;
+  });
   protected readonly lot = toSignal(this.form.controls.lot.valueChanges, {
     initialValue: this.form.controls.lot.value,
   });
@@ -158,6 +167,18 @@ export class MapFilterDrawer {
       }
     });
 
+    // Un seul secteur possible (chef secteur, secrétaire) : il est choisi d'office et verrouillé.
+    effect(() => {
+      const sectors = this.sectors();
+      const control = this.form.controls.sectorId;
+      if (this.ownSectorCode() && sectors.length === 1) {
+        if (!control.value) {
+          control.setValue(sectors[0]?.id ?? '');
+        }
+        control.disable({ emitEvent: false });
+      }
+    });
+
     // Changer d'opérateur ou de secteur invalide les choix qui en dépendent.
     this.form.controls.operatorId.valueChanges.subscribe(() => {
       this.form.controls.sectorId.setValue('');
@@ -174,6 +195,9 @@ export class MapFilterDrawer {
     const { operatorId, sectorId, lot, section } = this.form.getRawValue();
     // Garde-fou : seul un opérateur proposé par la liste peut être demandé.
     if (!operatorId || !this.operators().some((o) => o.id === operatorId)) {
+      return;
+    }
+    if (this.ownSectorCode() && !this.sectors().some((s) => s.id === sectorId)) {
       return;
     }
     this.store.apply({

@@ -73,9 +73,14 @@ export class PlanningPage {
     planningTabsFor({
       sectorHead: this.currentUser.isSectorHead(),
       secretary: this.currentUser.isSecretary(),
-    }).map((tab) =>
-      tab.path === 'validation' ? { ...tab, badge: this.review.pendingTotal() } : tab,
-    ),
+    }).map((tab) => {
+      if (tab.path === 'validation') {
+        return { ...tab, badge: this.review.pendingTotal() };
+      }
+      return tab.path === 'equipe'
+        ? { ...tab, badge: this.review.todoTotal(), badgeLabel: 'à traiter' }
+        : tab;
+    }),
   );
   protected readonly subtitle = computed(() =>
     this.currentUser.isSecretary()

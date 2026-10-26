@@ -35,4 +35,11 @@ describe('toPlantation', () => {
     expect(p.geolocated).toBe(true);
     expect(p.plantedYear).toBe(2012);
   });
+
+  it('reprend l’affectation faite dans SysDE', () => {
+    expect(toPlantation(BASE).sectionId).toBeUndefined();
+    const p = toPlantation({ ...BASE, section_id: 'sc1', section_nom: 'Nord' });
+    expect(p.sectionId).toBe('sc1');
+    expect(p.sectionName).toBe('Nord');
+  });
 });

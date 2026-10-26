@@ -14,6 +14,7 @@ export function toPlantation(dto: PlantationDto): Plantation {
     sectorName: dto.secteur_nom,
     lot: dto.lot,
     section: dto.section,
+    ...(dto.section_id ? { sectionId: dto.section_id, sectionName: dto.section_nom ?? '' } : {}),
     hectares: dto.superficie_ha,
     plantedYear: dto.annee_plantation ?? 0,
     clone: dto.clone?.trim() || UNKNOWN,

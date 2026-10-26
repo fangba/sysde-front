@@ -24,6 +24,7 @@ import {
   lotsOfOperatorInSector,
   findSectorCodeConflict,
   findOperatorAcronymConflict,
+  findSectionNameConflict,
   sectorIdsOfContract,
   sectorsOfOperator,
 } from './settings.rules';
@@ -174,5 +175,25 @@ describe('matricule, lot et section des collaborateurs', () => {
     const matricule = owner?.matricule?.toLowerCase() ?? '';
     expect(findMatriculeConflict(matricule, DEMO_USERS)?.id).toBe(owner?.id);
     expect(findMatriculeConflict(matricule, DEMO_USERS, owner?.id)).toBeUndefined();
+  });
+});
+
+describe('findSectionNameConflict', () => {
+  const sections = [
+    { id: 's1', lotId: 'lot-1', name: 'Section Nord', description: '' },
+    { id: 's2', lotId: 'lot-2', name: 'A', description: '' },
+  ];
+
+  it('refuse un nom déjà pris dans le même lot, sans tenir compte de la casse ni des espaces', () => {
+    expect(findSectionNameConflict({ lotId: 'lot-1', name: ' section  nord ' }, sections)?.id).toBe(
+      's1',
+    );
+  });
+
+  it('accepte le même nom dans un autre lot ou pour la section modifiée', () => {
+    expect(findSectionNameConflict({ lotId: 'lot-3', name: 'A' }, sections)).toBeUndefined();
+    expect(
+      findSectionNameConflict({ lotId: 'lot-1', name: 'Section Nord' }, sections, 's1'),
+    ).toBeUndefined();
   });
 });

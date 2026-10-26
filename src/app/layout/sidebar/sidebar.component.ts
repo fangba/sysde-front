@@ -28,19 +28,22 @@ export class SidebarComponent {
 
   /** Éléments de planning en attente de décision, pour la pastille du chef secteur. */
   protected readonly pending = this.review.count;
+  protected readonly secretary = this.currentUser.isSecretary;
 
   /** Un administrateur voit toutes les sections ; le superviseur, Dashboard, Reporting et Carte ; les autres, celles qui ne leur sont pas réservées. */
   protected readonly items = computed(() =>
     NAV_ITEMS.filter((item) =>
       item.adminOnly
         ? this.currentUser.isAdministrator()
-        : item.planningOnly
-          ? this.currentUser.canPlan()
-          : item.tasksOnly && !this.currentUser.canTask()
-            ? false
-            : item.managersOnly
-              ? this.currentUser.canReport()
-              : true,
+        : item.settingsOnly
+          ? this.currentUser.canSettings()
+          : item.planningOnly
+            ? this.currentUser.canPlan()
+            : item.tasksOnly && !this.currentUser.canTask()
+              ? false
+              : item.managersOnly
+                ? this.currentUser.canReport()
+                : true,
     ),
   );
 }

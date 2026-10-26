@@ -7,6 +7,8 @@ export interface TabLink {
   readonly label: string;
   /** Nombre d'éléments en attente, affiché en pastille (masqué à 0). */
   readonly badge?: number;
+  /** Texte lu par les lecteurs d'écran après le nombre (« en attente » par défaut). */
+  readonly badgeLabel?: string;
 }
 
 /**
@@ -23,7 +25,9 @@ export interface TabLink {
       <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page"
         >{{ tab.label }}
         @if (tab.badge) {
-          <span class="badge">{{ tab.badge }}<span class="sr-only"> en attente</span></span>
+          <span class="badge"
+            >{{ tab.badge }}<span class="sr-only"> {{ tab.badgeLabel ?? 'en attente' }}</span></span
+          >
         }
       </a>
     }

@@ -24,7 +24,11 @@ async function setup(email: string, poste: string) {
       { provide: PlanningApi, useExisting: DemoPlanningApi },
       {
         provide: CurrentUser,
-        useValue: { user: () => ({ email, poste }), isSectorHead: () => poste === 'CS' },
+        useValue: {
+          user: () => ({ email, poste }),
+          isSectorHead: () => poste === 'CS',
+          isSecretary: () => poste === 'SE',
+        },
       },
     ],
   });

@@ -104,12 +104,13 @@ export class MapPage {
   private readonly injector = inject(Injector);
   protected readonly store = inject(MapStore);
   private readonly currentUser = inject(CurrentUser);
-  /** Filtre de plantations : administrateur, chef de département et chef secteur. */
+  /** Filtre de plantations : administrateur, chef de département, chef secteur et secrétaire. */
   protected readonly canFilter = computed(
     () =>
       this.currentUser.hasGlobalView() ||
       this.currentUser.isDepartmentHead() ||
-      this.currentUser.isSectorHead(),
+      this.currentUser.isSectorHead() ||
+      this.currentUser.isSecretary(),
   );
 
   protected readonly basemaps = BASEMAPS;

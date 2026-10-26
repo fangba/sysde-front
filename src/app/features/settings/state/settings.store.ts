@@ -6,6 +6,7 @@ import { forkJoin, tap } from 'rxjs';
 import { toApiError } from '@core/http/api-error';
 
 import { SettingsApi, type Crud } from '../data/settings.api';
+import { lotsOfOperatorInSector } from '../data/settings.rules';
 
 export type LoadStatus = 'loading' | 'ready' | 'error';
 
@@ -49,6 +50,7 @@ export class SettingsStore {
 
   readonly sectorList = new EntityState(this.api.sectors);
   readonly lots = new EntityState(this.api.lots);
+  readonly sections = new EntityState(this.api.sections);
   readonly activities = new EntityState(this.api.activities);
   readonly sectors = computed(() => this.sectorList.items());
 
@@ -86,6 +88,32 @@ export class SettingsStore {
 
   sectorOf(id: string) {
     return this.sectorById().get(id);
+  }
+
+  /** Libellé d'un lot : « S01 · Aboisso — lot 2 ». */
+  lotLabel(id: string): string {
+    const lot = this.lots.items().find((l) => l.id === id);
+    return lot ? `${this.sectorLabel(lot.sectorId)} — lot ${lot.number}` : '—';
+  }
+
+  /**
+   * Lots d'un secteur confiés à un opérateur par ses contrats (attributions) ; sans opérateur
+   * connu, tous les lots du secteur.
+   */
+  lotsOfOperator(sectorId: string, operatorId: string | undefined) {
+    const lots = this.lots.items().filter((l) => l.sectorId === sectorId);
+    if (!operatorId) {
+      return lots;
+    }
+    const numbers = new Set(
+      lotsOfOperatorInSector(
+        operatorId,
+        sectorId,
+        this.contracts.items(),
+        this.attributions.items(),
+      ),
+    );
+    return lots.filter((l) => numbers.has(l.number));
   }
 
   /** Numéros des lots d'un secteur, par ordre croissant. */
@@ -130,6 +158,7 @@ export class SettingsStore {
       users: this.api.users.list(),
       sectors: this.api.sectors.list(),
       lots: this.api.lots.list(),
+      sections: this.api.sections.list(),
       activities: this.api.activities.list(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -142,6 +171,7 @@ export class SettingsStore {
           this.users.setAll(data.users);
           this.sectorList.setAll(data.sectors);
           this.lots.setAll(data.lots);
+          this.sections.setAll(data.sections);
           this.activities.setAll(data.activities);
           this._status.set('ready');
         },

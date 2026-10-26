@@ -1,5 +1,5 @@
 import { Dialog } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, Injector, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, computed, inject } from '@angular/core';
 
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CardComponent } from '@shared/ui/card/card.component';
@@ -17,7 +17,8 @@ import { LotDialog } from './lots.dialog';
   template: `
     <ui-card heading="Lots" subheading="Subdivisions numérotées de chaque secteur.">
       <ui-data-table
-        [columns]="columns"
+        [columns]="columns()"
+        [columnFilters]="true"
         [rows]="rows()"
         [loading]="store.status() === 'loading'"
         caption="Liste des lots"
@@ -39,19 +40,40 @@ export class LotsSection {
   private readonly dialog = inject(Dialog);
   private readonly injector = inject(Injector);
 
-  protected readonly rows = () =>
+  protected readonly rows = computed(() =>
     [...this.store.lots.items()].sort(
       (a, b) =>
         this.store.sectorLabel(a.sectorId).localeCompare(this.store.sectorLabel(b.sectorId)) ||
         a.number - b.number,
-    );
+    ),
+  );
 
   protected readonly rowLabel = (l: Lot) => `${this.store.sectorLabel(l.sectorId)} lot ${l.number}`;
-  protected readonly columns: readonly TableColumn<Lot>[] = [
-    { id: 'sector', header: 'Secteur', text: (l) => this.store.sectorLabel(l.sectorId) },
-    { id: 'number', header: 'Lot', text: (l) => `Lot ${l.number}` },
-    { id: 'description', header: 'Description', text: (l) => l.description || '—' },
-  ];
+  /** Les listes de filtre reprennent les valeurs présentes dans le tableau. */
+  protected readonly columns = computed<readonly TableColumn<Lot>[]>(() => {
+    const rows = this.rows();
+    const distinct = (text: (l: Lot) => string) => [...new Set(rows.map(text))];
+    return [
+      {
+        id: 'sector',
+        header: 'Secteur',
+        text: (l) => this.store.sectorLabel(l.sectorId),
+        filter: distinct((l) => this.store.sectorLabel(l.sectorId)),
+      },
+      {
+        id: 'number',
+        header: 'Lot',
+        text: (l) => `Lot ${l.number}`,
+        filter: distinct((l) => `Lot ${l.number}`),
+      },
+      {
+        id: 'description',
+        header: 'Description',
+        text: (l) => l.description || '—',
+        filter: 'text',
+      },
+    ];
+  });
 
   protected open(item: Lot | null): void {
     this.dialog.open(LotDialog, {

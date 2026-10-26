@@ -10,6 +10,8 @@ export interface NavItem {
   readonly managersOnly?: boolean;
   /** Section soumise à `canTask` (masquée pour SU et CF). */
   readonly tasksOnly?: boolean;
+  /** Section soumise à `canSettings` (administrateurs et chefs secteur). */
+  readonly settingsOnly?: boolean;
   /** Section réservée aux postes qui planifient (voir `canPlan`). */
   readonly planningOnly?: boolean;
 }
@@ -22,7 +24,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Plantations', path: 'plantations', icon: 'leaf' },
   { label: 'Reporting', path: 'reporting', icon: 'chart', managersOnly: true },
   { label: 'Carte', path: 'carte', icon: 'map' },
-  { label: 'Paramètres', path: 'parametres', icon: 'settings', adminOnly: true },
+  { label: 'Paramètres', path: 'parametres', icon: 'settings', settingsOnly: true },
   { label: 'Compte', path: 'compte', icon: 'user' },
 ];
 

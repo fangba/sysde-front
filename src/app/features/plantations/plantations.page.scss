@@ -41,3 +41,13 @@
   font-weight: 700;
   line-height: 1.2;
 }
+
+.file {
+  display: none;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

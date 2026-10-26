@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { delay, of, throwError } from 'rxjs';
 
+import { APP_CONFIG } from '@core/config/app-config';
 import { ApiError } from '@core/http/api-error';
 
 import { DEFAULT_GRANTS, type PermissionGrants } from './permissions.catalog';
@@ -13,6 +14,7 @@ import {
   DEMO_EXERCISES,
   DEMO_LOTS,
   DEMO_OPERATORS,
+  DEMO_SECTIONS,
   DEMO_SECTORS,
   DEMO_USERS,
 } from './settings.demo';
@@ -29,6 +31,8 @@ import type {
   ExerciseInput,
   Operator,
   OperatorInput,
+  Section,
+  SectionInput,
   Sector,
   SectorInput,
   User,
@@ -48,7 +52,15 @@ export interface PermissionsResource {
   save(grants: PermissionGrants): Observable<PermissionGrants>;
 }
 
-/** Contrat d'accès aux données ; deux implémentations interchangeables (démo et HTTP). */
+/**
+ * Contrat d'accès aux données ; deux implémentations interchangeables (démo et HTTP), fournies à la
+ * racine pour que Paramètres, Tâches et Plantations partagent les mêmes données de démonstration.
+ */
+@Injectable({
+  providedIn: 'root',
+  useFactory: () =>
+    inject(APP_CONFIG).useDemoData ? inject(DemoSettingsApi) : inject(HttpSettingsApi),
+})
 export abstract class SettingsApi {
   abstract readonly operators: Crud<Operator, OperatorInput>;
   abstract readonly contracts: Crud<Contract, ContractInput>;
@@ -57,6 +69,7 @@ export abstract class SettingsApi {
   abstract readonly users: Crud<User, UserInput>;
   abstract readonly sectors: Crud<Sector, SectorInput>;
   abstract readonly lots: Crud<Lot, LotInput>;
+  abstract readonly sections: Crud<Section, SectionInput>;
   abstract readonly activities: Crud<Activity, ActivityInput>;
   abstract readonly permissions: PermissionsResource;
 }
@@ -93,7 +106,7 @@ class HttpCrud<T extends { readonly id: string }, I> implements Crud<T, I> {
 }
 
 /** Appelle la passerelle Spring Boot : `GET/POST {apiBaseUrl}/operateurs`, `PUT …/operateurs/{id}`, `GET/PUT …/permissions`, etc. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class HttpSettingsApi extends SettingsApi {
   private readonly http = inject(HttpClient);
 
@@ -104,6 +117,7 @@ export class HttpSettingsApi extends SettingsApi {
   readonly users = new HttpCrud<User, UserInput>(this.http, '/utilisateurs');
   readonly sectors = new HttpCrud<Sector, SectorInput>(this.http, '/secteurs');
   readonly lots = new HttpCrud<Lot, LotInput>(this.http, '/lots');
+  readonly sections = new HttpCrud<Section, SectionInput>(this.http, '/sections');
   readonly activities = new HttpCrud<Activity, ActivityInput>(this.http, '/activites');
   readonly permissions = new HttpPermissions(this.http);
 }
@@ -158,7 +172,7 @@ class MemoryPermissions implements PermissionsResource {
 }
 
 /** Données en mémoire : les modifications durent le temps de la session de navigation. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DemoSettingsApi extends SettingsApi {
   readonly operators = new MemoryCrud<Operator, OperatorInput>(DEMO_OPERATORS, 'op');
   readonly contracts = new MemoryCrud<Contract, ContractInput>(DEMO_CONTRACTS, 'ct');
@@ -167,6 +181,7 @@ export class DemoSettingsApi extends SettingsApi {
   readonly users = new MemoryCrud<User, UserInput>(DEMO_USERS, 'us');
   readonly sectors = new MemoryCrud<Sector, SectorInput>(DEMO_SECTORS, 'sec');
   readonly lots = new MemoryCrud<Lot, LotInput>(DEMO_LOTS, 'lot');
+  readonly sections = new MemoryCrud<Section, SectionInput>(DEMO_SECTIONS, 'sc');
   readonly activities = new MemoryCrud<Activity, ActivityInput>(DEMO_ACTIVITIES, 'ac');
   readonly permissions = new MemoryPermissions();
 }

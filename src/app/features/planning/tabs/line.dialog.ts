@@ -11,7 +11,7 @@ import { FieldComponent } from '@shared/ui/field/field.component';
 import { ACTIVITY_CATEGORIES } from '../../settings/data/settings.constants';
 import { SettingsStore } from '../../settings/state/settings.store';
 import type { PlanLine } from '../data/planning.models';
-import { MAX_HOURS, MAX_PLACE_LENGTH, endFor, spanDays } from '../data/planning.rules';
+import { MAX_PLACE_LENGTH, endFor, spanDays } from '../data/planning.rules';
 import { PlanningStore } from '../state/planning.store';
 
 export interface LineDialogData {
@@ -24,6 +24,9 @@ export interface LineDialogData {
 }
 
 /** Ajout, modification et suppression d'une ligne du brouillon. */
+/** Heures par jour attribuées à une nouvelle date (champ retiré du formulaire). */
+const DEFAULT_HOURS = 4;
+
 @Component({
   selector: 'sysde-plan-line-dialog',
   imports: [ReactiveFormsModule, ButtonComponent, DialogShellComponent, FieldComponent],
@@ -51,9 +54,6 @@ export interface LineDialogData {
             [min]="form.controls.date.value"
             [max]="store.year() + '-12-31'"
           />
-        </ui-field>
-        <ui-field label="Heures par jour" [control]="form.controls.hours">
-          <input class="ui-input" type="number" formControlName="hours" min="0.5" step="0.5" />
         </ui-field>
         <ui-field
           class="span-2"
@@ -175,10 +175,6 @@ export class PlanLineDialog {
     ],
     plantation: [this.item?.plantation ?? '', Validators.maxLength(MAX_PLACE_LENGTH)],
     place: [this.item?.place ?? '', [Validators.required, Validators.maxLength(MAX_PLACE_LENGTH)]],
-    hours: [
-      this.item?.hours ?? 4,
-      [Validators.required, Validators.min(0.5), Validators.max(MAX_HOURS)],
-    ],
   });
 
   private readonly activityId = signal(this.form.controls.activityId.value);
@@ -268,7 +264,8 @@ export class PlanLineDialog {
       activityId: v.activityId,
       place: v.place,
       plantation: this.isVisit() ? v.plantation : undefined,
-      hours: Number(v.hours),
+      // Les heures par jour ne sont plus saisies : une date modifiée garde les siennes.
+      hours: this.item?.hours ?? DEFAULT_HOURS,
     });
     if (message) {
       this.error.set(message);

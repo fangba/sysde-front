@@ -28,13 +28,14 @@
 
 <ui-card heading="Liste des plantations" [subheading]="count()">
   <ui-data-table
-    [columns]="columns"
+    [columns]="columns()"
+    [columnFilters]="true"
     [rows]="rows()"
     caption="Liste des plantations"
     [rowLabel]="rowLabel"
     [loading]="store.loading()"
-    editLabel="Consulter"
-    editIcon="eye"
+    [editLabel]="store.canAssign() ? 'Affecter' : 'Consulter'"
+    [editIcon]="store.canAssign() ? 'edit' : 'eye'"
     searchPlaceholder="Rechercher un planteur, un code, un village…"
     emptyTitle="Aucune plantation"
     [emptyDescription]="
@@ -43,5 +44,37 @@
         : 'Aucune plantation ne correspond à ce périmètre.'
     "
     (rowEdit)="open($event)"
-  />
+  >
+    @if (store.canAssign()) {
+      <div tableActions class="table-actions">
+        <button
+          ui-button
+          variant="secondary"
+          type="button"
+          [loading]="downloading()"
+          (click)="downloadTemplate()"
+        >
+          <ui-icon name="download" /> Modèle Excel
+        </button>
+        <button
+          ui-button
+          variant="primary"
+          type="button"
+          [disabled]="store.saving() || store.loading()"
+          (click)="file.click()"
+        >
+          <ui-icon name="upload" /> Importer des affectations
+        </button>
+        <input
+          #file
+          type="file"
+          class="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          aria-label="Choisir un fichier Excel d'affectations"
+          tabindex="-1"
+          (change)="onFile($event)"
+        />
+      </div>
+    }
+  </ui-data-table>
 </ui-card>

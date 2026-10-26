@@ -18,6 +18,7 @@ import { SectorDialog } from './sectors.dialog';
     <ui-card heading="Secteurs" subheading="Zones d’encadrement du programme.">
       <ui-data-table
         [columns]="columns"
+        [columnFilters]="true"
         [rows]="store.sectors()"
         [loading]="store.status() === 'loading'"
         caption="Liste des secteurs"
@@ -41,12 +42,13 @@ export class SectorsSection {
 
   protected readonly rowLabel = (s: Sector) => `${s.code} ${s.name}`;
   protected readonly columns: readonly TableColumn<Sector>[] = [
-    { id: 'code', header: 'Code', text: (s) => s.code },
-    { id: 'name', header: 'Nom', text: (s) => s.name },
+    { id: 'code', header: 'Code', text: (s) => s.code, filter: 'text' },
+    { id: 'name', header: 'Nom', text: (s) => s.name, filter: 'text' },
     {
       id: 'lots',
       header: 'Lots',
       text: (s) => String(this.store.lotNumbersOf(s.id).length),
+      filter: 'text',
     },
   ];
 
