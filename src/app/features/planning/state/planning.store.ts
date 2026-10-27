@@ -196,8 +196,7 @@ export class PlanningStore {
           line.endDate !== other.endDate ||
           line.activityId !== other.activityId ||
           line.place !== other.place ||
-          (line.plantation ?? '') !== (other.plantation ?? '') ||
-          line.hours !== other.hours
+          (line.plantation ?? '') !== (other.plantation ?? '')
         );
       })
     );

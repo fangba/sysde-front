@@ -17,7 +17,6 @@ const line = (id: string, date: string, endDate: string, activityId = 'a'): Plan
   endDate,
   activityId,
   place: 'Lot 1',
-  hours: 6,
 });
 
 describe('dashboard de terrain', () => {

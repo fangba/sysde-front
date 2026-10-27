@@ -21,7 +21,6 @@ import { SettingsStore } from '../../settings/state/settings.store';
 import type { AnnualPlan } from '../data/planning.models';
 import {
   activityStatusView,
-  formatHours,
   frequencyLabel,
   planStatusView,
   summarize,
@@ -166,9 +165,9 @@ export class ValiderTab {
     },
     { id: 'lines', header: 'Activités', text: (p) => String(p.lines.length) },
     {
-      id: 'hours',
-      header: 'Durée prévue',
-      text: (p) => `${formatHours(summarize(p.lines).hours)} h`,
+      id: 'days',
+      header: 'Jours prévus',
+      text: (p) => `${summarize(p.lines).days} j`,
     },
     {
       id: 'status',

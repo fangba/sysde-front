@@ -10,22 +10,26 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: -6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 
   b {
     color: var(--green-ink);
-    font-weight: 700;
+    font-weight: 800;
   }
 }
 
 .logo {
   flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  filter: drop-shadow(0 4px 10px rgb(11 61 36 / 0.18));
 }
 
 .org {
@@ -203,6 +207,13 @@
   :host(.collapsed) {
     .brand {
       justify-content: center;
+      padding-bottom: 8px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
     }
 
     .brand-name,
@@ -212,10 +223,19 @@
       display: none;
     }
 
+    // Pastilles carrées : les icônes gardent leurs proportions.
     .nav-item,
     .collapse-btn {
       justify-content: center;
+      width: 44px;
+      height: 44px;
+      margin-inline: auto;
       padding: 0;
+    }
+
+    .nav-item ui-icon,
+    .collapse-btn ui-icon {
+      flex: none;
     }
   }
 }

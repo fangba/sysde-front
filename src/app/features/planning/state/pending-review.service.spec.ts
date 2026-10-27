@@ -17,7 +17,6 @@ const line = {
   endDate: '2026-03-01',
   activityId: 'a',
   place: 'Lot 1',
-  hours: 8,
 };
 
 describe('pastilles du menu Planning', () => {

@@ -36,7 +36,6 @@ const line = (over: Partial<PlanLine> = {}): PlanLine => ({
   endDate: '2026-03-10',
   activityId: 'ac-7',
   place: 'Lot 1',
-  hours: 4,
   ...over,
 });
 
@@ -56,11 +55,9 @@ describe('validateLine', () => {
     expect(validateLine(line({ endDate: '2026-03-29' }), 2026, [])).toBeNull();
   });
 
-  it('refuse une activité inconnue, un lieu vide ou une durée hors limites', () => {
+  it('refuse une activité inconnue ou un lieu vide', () => {
     expect(validateLine(line({ activityId: '' }), 2026, [])).toContain('pas proposée');
     expect(validateLine(line({ place: '  ' }), 2026, [])).toContain('obligatoire');
-    expect(validateLine(line({ hours: 0 }), 2026, [])).toContain('heures');
-    expect(validateLine(line({ hours: 13 }), 2026, [])).toContain('heures');
   });
 
   it("refuse une activité qui n'est pas celle du poste", () => {
@@ -79,20 +76,17 @@ describe('validateLine', () => {
 
 describe('sortLines et summarize', () => {
   it('trie par date puis calcule le résumé', () => {
-    const lines = [
-      line({ id: '1', date: '2026-05-01', endDate: '2026-05-01' }),
-      line({ id: '2', hours: 2.5 }),
-    ];
+    const lines = [line({ id: '1', date: '2026-05-01', endDate: '2026-05-01' }), line({ id: '2' })];
     expect(sortLines(lines).map((l) => l.id)).toEqual(['2', '1']);
-    expect(summarize(lines)).toEqual({ count: 2, hours: 6.5, days: 2 });
+    expect(summarize(lines)).toEqual({ count: 2, days: 2 });
   });
 
   it("compte chaque jour d'une période, sans doublon", () => {
     const lines = [
-      line({ id: '1', date: '2026-03-10', endDate: '2026-03-12', hours: 6 }),
-      line({ id: '2', date: '2026-03-12', endDate: '2026-03-12', hours: 2 }),
+      line({ id: '1', date: '2026-03-10', endDate: '2026-03-12' }),
+      line({ id: '2', date: '2026-03-12', endDate: '2026-03-12' }),
     ];
-    expect(summarize(lines)).toEqual({ count: 2, hours: 20, days: 3 });
+    expect(summarize(lines)).toEqual({ count: 2, days: 3 });
     expect(spanDays(lines[0]!)).toBe(3);
     expect(formatPeriod(lines[0]!)).toBe('10/03/2026 → 12/03/2026');
   });
@@ -151,29 +145,28 @@ describe('parseDateCell', () => {
 });
 
 describe('parsePlanRows', () => {
-  const header = ['Date', 'Activité', 'Lot / section', 'Heures par jour'];
+  const header = ['Date', 'Activité', 'Lot / section'];
 
   it('importe des lignes valides, colonnes dans le désordre et accents ignorés', () => {
     const result = parsePlanRows(
       [
         [],
-        ['Heures par jour', 'DATE', 'activite', 'Lot'],
-        ['2,5', new Date('2026-02-05T00:00:00.000Z'), 'visite de plantation', 'Lot 2'],
-        [null, null, null, null],
-        [6, '06/02/2026', 'Visite de conformité', 'Section A'],
+        ['Lot', 'DATE', 'activite'],
+        ['Lot 2', new Date('2026-02-05T00:00:00.000Z'), 'visite de plantation'],
+        [null, null, null],
+        ['Section A', '06/02/2026', 'Visite de conformité'],
       ],
       2026,
       CO,
     );
     expect(result.errors).toEqual([]);
     expect(result.lines).toEqual([
-      { date: '2026-02-05', endDate: '2026-02-05', activityId: 'ac-7', place: 'Lot 2', hours: 2.5 },
+      { date: '2026-02-05', endDate: '2026-02-05', activityId: 'ac-7', place: 'Lot 2' },
       {
         date: '2026-02-06',
         endDate: '2026-02-06',
         activityId: 'ac-8',
         place: 'Section A',
-        hours: 6,
       },
     ]);
   });
@@ -182,9 +175,9 @@ describe('parsePlanRows', () => {
     const cf = DEMO_ACTIVITIES.filter((a) => a.poste === 'CF');
     const result = parsePlanRows(
       [
-        ['Date début', 'Date fin', 'Activité', 'Lot / section', 'Heures par jour'],
-        ['02/02/2026', '', 'Formation à la saignée', 'Lot 1', 6],
-        ['02/06/2026', '04/06/2026', 'Recyclage des saigneurs', 'Lot 1', 6],
+        ['Date début', 'Date fin', 'Activité', 'Lot / section'],
+        ['02/02/2026', '', 'Formation à la saignée', 'Lot 1'],
+        ['02/06/2026', '04/06/2026', 'Recyclage des saigneurs', 'Lot 1'],
       ],
       2026,
       cf,
@@ -198,19 +191,33 @@ describe('parsePlanRows', () => {
     const result = parsePlanRows(
       [
         header,
-        ['2026-02-05', 'Formation initiale', 'Lot 1', 4],
-        ['pas une date', 'Visite de conformité', 'Lot 1', 4],
-        ['2026-02-05', 'Visite de conformité', 'Lot 1', 'beaucoup'],
-        ['2026-02-05', 'Visite de conformité', 'Lot 1', 4],
-        ['2026-02-05', 'Visite de conformité', 'Lot 1', 4],
-        ['2027-01-05', 'Visite de conformité', 'Lot 1', 4],
+        ['2026-02-05', 'Formation initiale', 'Lot 1'],
+        ['pas une date', 'Visite de conformité', 'Lot 1'],
+        ['2026-02-04', 'Visite de conformité', 'Lot 1'],
+        ['2026-02-05', 'Visite de conformité', 'Lot 1'],
+        ['2026-02-05', 'Visite de conformité', 'Lot 1'],
+        ['2027-01-05', 'Visite de conformité', 'Lot 1'],
       ],
       2026,
       CO,
     );
-    expect(result.errors.map((e) => e.row)).toEqual([2, 3, 4, 6, 7]);
+    expect(result.errors.map((e) => e.row)).toEqual([2, 3, 6, 7]);
     expect(result.errors[0]!.message).toContain('Valeurs admises : Visite de plantation');
-    expect(result.errors[3]!.message).toContain('déjà prévue');
+    expect(result.errors[2]!.message).toContain('déjà prévue');
+  });
+
+  it("ignore la colonne « Heures par jour » d'un ancien fichier", () => {
+    const result = parsePlanRows(
+      [
+        ['Date début', 'Date fin', 'Activité', 'Lot / section', 'Heures par jour'],
+        ['05/02/2026', '', 'Visite de plantation', 'Lot 2', 6],
+      ],
+      2026,
+      CO,
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0]).not.toHaveProperty('hours');
   });
 
   it('refuse un fichier vide ou sans la colonne attendue', () => {
@@ -234,7 +241,6 @@ describe('checkFrequency', () => {
     endDate,
     activityId: 'ac-2',
     place: 'Lot 1',
-    hours: 4,
   });
   const quarterly = { frequency: every(4, 'YEAR'), durationDays: 1 };
 
@@ -411,23 +417,16 @@ describe('parseTeamRows', () => {
     { userId: 'u1', matricule: 'SAPH-001', name: 'Kouamé Éric', activities: CO },
     { userId: 'u2', matricule: 'SAPH-002', name: 'Diallo Awa', activities: CO },
   ];
-  const header = [
-    'Matricule',
-    'Date début',
-    'Date fin',
-    'Activité',
-    'Lot / section',
-    'Heures par jour',
-  ];
+  const header = ['Matricule', 'Date début', 'Date fin', 'Activité', 'Lot / section'];
   const label = CO[0]!.label;
 
   it('regroupe les lignes par matricule et garde la numérotation du fichier', () => {
     const rows = [
       header,
-      ['SAPH-001', '10/03/2026', '', label, 'Lot 1', 4],
-      ['saph-002', '11/03/2026', '', 'Inconnue', 'Lot 1', 4],
-      ['SAPH-999', '12/03/2026', '', label, 'Lot 1', 4],
-      ['SAPH-001', '20/03/2026', '', label, 'Lot 1', 4],
+      ['SAPH-001', '10/03/2026', '', label, 'Lot 1'],
+      ['saph-002', '11/03/2026', '', 'Inconnue', 'Lot 1'],
+      ['SAPH-999', '12/03/2026', '', label, 'Lot 1'],
+      ['SAPH-001', '20/03/2026', '', label, 'Lot 1'],
     ];
     const result = parseTeamRows(rows, 2026, members);
     expect(result.fileError).toBeNull();

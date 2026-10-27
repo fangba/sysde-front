@@ -16,7 +16,6 @@ const line = (id: string, date: string, endDate = date): PlanLine => ({
   endDate,
   activityId: 'a',
   place: 'Lot 1',
-  hours: 8,
 });
 
 const entry = (

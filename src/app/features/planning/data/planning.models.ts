@@ -14,8 +14,6 @@ export interface PlanLine {
   readonly place: string;
   /** Nom de la plantation visitée ; renseigné pour les activités de catégorie Visite. */
   readonly plantation?: string;
-  /** Durée prévue, en heures par jour. */
-  readonly hours: number;
 }
 export type PlanLineInput = Omit<PlanLine, 'id'>;
 

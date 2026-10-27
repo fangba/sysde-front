@@ -5,7 +5,7 @@ import { ButtonComponent } from '@shared/ui/button/button.component';
 import { DialogShellComponent } from '@shared/ui/dialog-shell/dialog-shell.component';
 
 import type { ImportResult } from '../data/planning.rules';
-import { formatHours, summarize } from '../data/planning.rules';
+import { summarize } from '../data/planning.rules';
 
 export interface ImportDialogData {
   readonly fileName: string;
@@ -30,8 +30,7 @@ const MAX_SHOWN = 30;
           {{ summary().count }} activité{{ summary().count > 1 ? 's' : '' }} prête{{
             summary().count > 1 ? 's' : ''
           }}
-          à importer · {{ summary().days }} jour{{ summary().days > 1 ? 's' : '' }} ·
-          {{ hours() }} h.
+          à importer · {{ summary().days }} jour{{ summary().days > 1 ? 's' : '' }}.
         </p>
         @if (data.existing > 0) {
           <p class="hint">
@@ -108,5 +107,4 @@ export class PlanImportDialog {
   protected readonly errors = computed(() => this.data.result.errors);
   protected readonly shown = computed(() => this.data.result.errors.slice(0, MAX_SHOWN));
   protected readonly summary = computed(() => summarize(this.data.result.lines));
-  protected readonly hours = computed(() => formatHours(this.summary().hours));
 }

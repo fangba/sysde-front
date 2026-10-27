@@ -24,8 +24,6 @@ export interface LineDialogData {
 }
 
 /** Ajout, modification et suppression d'une ligne du brouillon. */
-/** Heures par jour attribuées à une nouvelle date (champ retiré du formulaire). */
-const DEFAULT_HOURS = 4;
 
 @Component({
   selector: 'sysde-plan-line-dialog',
@@ -264,8 +262,6 @@ export class PlanLineDialog {
       activityId: v.activityId,
       place: v.place,
       plantation: this.isVisit() ? v.plantation : undefined,
-      // Les heures par jour ne sont plus saisies : une date modifiée garde les siennes.
-      hours: this.item?.hours ?? DEFAULT_HOURS,
     });
     if (message) {
       this.error.set(message);

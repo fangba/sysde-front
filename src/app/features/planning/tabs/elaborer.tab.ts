@@ -19,7 +19,7 @@ import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.componen
 
 import { downloadPlanTemplate, readPlanFile } from '../data/planning.excel';
 import type { PlanLine } from '../data/planning.models';
-import { formatHours, parsePlanRows, planStatusView } from '../data/planning.rules';
+import { parsePlanRows, planStatusView } from '../data/planning.rules';
 import { SettingsStore } from '../../settings/state/settings.store';
 import { PlanningStore } from '../state/planning.store';
 import { PlanImportDialog, type ImportChoice } from './import.dialog';
@@ -382,12 +382,12 @@ export class ElaborerTab {
     return this.isSectorHead() ? 'Valider mon planning' : 'Soumettre';
   });
   protected readonly subheading = computed(() => {
-    const { count, hours, days } = this.store.summary();
+    const { count, days } = this.store.summary();
     if (count === 0) {
       return 'Aucune activité prévue.';
     }
     const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`;
-    return `${plural(count, 'activité')} · ${plural(days, 'jour')} · ${formatHours(hours)} h`;
+    return `${plural(count, 'activité')} · ${plural(days, 'jour')}`;
   });
 
   protected readonly categoryOf = (id: string) => this.store.categoryOf(id);

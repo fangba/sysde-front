@@ -9,7 +9,7 @@ import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.componen
 
 import { POSTE_LABEL } from '../../settings/data/settings.constants';
 import { SettingsStore } from '../../settings/state/settings.store';
-import { formatHours, formatPeriod, planStatusView, summarize } from '../data/planning.rules';
+import { formatPeriod, planStatusView, summarize } from '../data/planning.rules';
 import { ReviewStore } from '../state/review.store';
 import { PlanCalendar } from '../ui/plan-calendar.component';
 
@@ -34,7 +34,7 @@ const MIN_REASON = 5;
           <ui-status-pill [tone]="view.tone">{{ view.label }}</ui-status-pill>
           <span class="meta">
             {{ summary().count }} activité{{ summary().count > 1 ? 's' : '' }} ·
-            {{ summary().days }} jour{{ summary().days > 1 ? 's' : '' }} · {{ hours() }} h
+            {{ summary().days }} jour{{ summary().days > 1 ? 's' : '' }}
           </span>
         </div>
 
@@ -81,7 +81,6 @@ const MIN_REASON = 5;
                   <th scope="col">Période</th>
                   <th scope="col">Activité</th>
                   <th scope="col">Lot / section</th>
-                  <th scope="col" class="num">H / jour</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,7 +89,6 @@ const MIN_REASON = 5;
                     <td>{{ formatPeriod(line) }}</td>
                     <td>{{ activityLabel(line.activityId) }}</td>
                     <td>{{ line.place }}</td>
-                    <td class="num">{{ formatHours(line.hours) }} h</td>
                   </tr>
                 }
               </tbody>
@@ -273,7 +271,6 @@ export class PlanReviewDialog {
 
   protected readonly MIN_REASON = MIN_REASON;
   protected readonly formatDate = formatDate;
-  protected readonly formatHours = formatHours;
   protected readonly display = signal<'list' | 'calendar'>('list');
   protected readonly rejecting = signal(false);
   protected readonly categoryOf = (id: string) => this.settings.activityOf(id)?.category;
@@ -299,7 +296,6 @@ export class PlanReviewDialog {
   });
   protected readonly formatPeriod = formatPeriod;
   protected readonly summary = computed(() => summarize(this.plan()?.lines ?? []));
-  protected readonly hours = computed(() => formatHours(this.summary().hours));
 
   protected activityLabel(id: string): string {
     return this.settings.activityLabel(id);

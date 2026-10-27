@@ -98,10 +98,10 @@ const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string
 export class ReferencesTab {
   private readonly currentUser = inject(CurrentUser);
 
-  /** L'administrateur voit toutes les références ; le chef secteur, seulement sections et groupes. */
+  /** L'administrateur gère les secteurs et les lots ; le chef secteur, ses sections et ses groupes. */
   protected readonly sections = computed(() =>
     this.currentUser.isAdministrator()
-      ? SECTIONS.filter((s) => s.id !== 'groups')
+      ? SECTIONS.filter((s) => s.id === 'sectors' || s.id === 'lots')
       : SECTIONS.filter((s) => s.id === 'sections' || s.id === 'groups'),
   );
   protected readonly active = signal<ReferenceSection>(

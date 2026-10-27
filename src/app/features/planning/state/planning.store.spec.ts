@@ -43,7 +43,6 @@ const input = (day: number) => ({
   endDate: `${year}-06-${String(day).padStart(2, '0')}`,
   activityId: 'ac-4',
   place: 'Lot 1',
-  hours: 4,
 });
 
 describe('PlanningStore (collaborateur)', () => {

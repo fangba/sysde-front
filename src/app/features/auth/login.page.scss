@@ -64,21 +64,23 @@
 .brand__top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
   position: relative;
 }
 
 .logo {
   flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  filter: drop-shadow(0 8px 20px rgb(0 0 0 / 0.35));
 }
 
 .brand__name {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
 }
 
 .brand__body {
@@ -185,8 +187,9 @@
 
 .logo--small {
   display: none;
-  width: 36px;
-  height: 36px;
+  width: 72px;
+  height: 72px;
+  filter: none;
 
   @include m.max-width(m.$bp-md) {
     display: block;

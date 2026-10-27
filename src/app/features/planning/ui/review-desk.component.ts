@@ -19,7 +19,7 @@ import { POSTE_LABEL } from '../../settings/data/settings.constants';
 import type { Poste } from '../../settings/data/settings.models';
 import { frequencyLabel } from '../../settings/data/settings.rules';
 import { SettingsStore } from '../../settings/state/settings.store';
-import { formatHours, summarize } from '../data/planning.rules';
+import { summarize } from '../data/planning.rules';
 import { PlanningStore } from '../state/planning.store';
 import { ReviewStore, type ActivityAssessment, type ReviewItem } from '../state/review.store';
 import { ActivityReviewDialog } from '../tabs/activity-review.dialog';
@@ -173,7 +173,6 @@ export class ReviewDesk {
         label: 'Activités',
       },
       { value: String(total.days), label: 'Jours' },
-      { value: formatHours(total.hours), label: 'Heures' },
     ];
   });
 

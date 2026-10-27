@@ -15,7 +15,7 @@ import {
   monthName,
 } from '../data/planning.calendar';
 import type { PlanLine } from '../data/planning.models';
-import { formatHours, formatPeriod } from '../data/planning.rules';
+import { formatPeriod } from '../data/planning.rules';
 
 /** Couleur de chaque catégorie : ce sont des données, donc les teintes de séries. */
 /** Mot qui numérote les séances des catégories sans plantation (les visites ont leur plantation). */
@@ -128,7 +128,7 @@ interface MonthView {
                     } @else if (rankLabel(line); as rank) {
                       {{ rank }}
                     } @else {
-                      {{ line.place }} · {{ formatHours(line.hours) }} h/jour
+                      {{ line.place }}
                     }
                     @if (line.endDate !== line.date) {
                       · {{ formatPeriod(line) }}
@@ -169,7 +169,7 @@ export class PlanCalendar {
   /** Catégories de la légende ; toutes par défaut. */
   /** Garde le détail du jour visible en bas de la zone défilante. */
   readonly pinDetail = input(false);
-  /** Une visite se décrit par sa plantation, les autres activités par leur lot et leurs heures. */
+  /** Une visite se décrit par sa plantation, les autres activités par leur lot ou leur section. */
   protected isVisit(line: PlanLine): boolean {
     return this.categoryOf()(line.activityId) === 'VISITE';
   }
@@ -212,7 +212,6 @@ export class PlanCalendar {
   protected readonly weekdays = WEEKDAYS;
   protected readonly today = todayIso(new Date());
   protected readonly longDate = longDate;
-  protected readonly formatHours = formatHours;
   protected readonly formatPeriod = formatPeriod;
   protected readonly selected = signal<string | null>(null);
 

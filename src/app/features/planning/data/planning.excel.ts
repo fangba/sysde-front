@@ -17,12 +17,11 @@ export async function downloadPlanTemplate(
   const [header, ...examples] = templateRows(year, activities);
   const planning = [
     header!.map((value) => ({ value, fontWeight: 'bold' as const })),
-    ...examples.map(([date, endDate, activity, place, hours]) => [
+    ...examples.map(([date, endDate, activity, place]) => [
       { value: toDate(String(date)), type: Date, format: 'dd/mm/yyyy' },
       { value: toDate(String(endDate)), type: Date, format: 'dd/mm/yyyy' },
       activity!,
       place!,
-      hours!,
     ]),
   ];
   const help = [
@@ -41,14 +40,13 @@ export async function downloadPlanTemplate(
     ['Une ligne par activité, même si elle dure plusieurs jours.'],
     ['Les dates de début et de fin doivent être dans l’année du planning.'],
     ['Date fin : facultative, déduite de la durée de l’activité si vous la laissez vide.'],
-    ['Heures par jour : 12 au maximum.'],
   ];
   await writeXlsxFile(
     [
       {
         data: planning,
         sheet: `Planning ${year}`,
-        columns: [{ width: 14 }, { width: 14 }, { width: 26 }, { width: 18 }, { width: 16 }],
+        columns: [{ width: 14 }, { width: 14 }, { width: 26 }, { width: 18 }],
       },
       { data: help, sheet: 'Aide', columns: [{ width: 60 }] },
     ],
@@ -70,13 +68,12 @@ export async function downloadTeamTemplate(
   const [header, ...examples] = teamTemplateRows(year, members);
   const planning = [
     header!.map((value) => ({ value, fontWeight: 'bold' as const })),
-    ...examples.map(([matricule, date, endDate, activity, place, hours]) => [
+    ...examples.map(([matricule, date, endDate, activity, place]) => [
       matricule!,
       { value: toDate(String(date)), type: Date, format: 'dd/mm/yyyy' },
       { value: toDate(String(endDate)), type: Date, format: 'dd/mm/yyyy' },
       activity!,
       place!,
-      hours!,
     ]),
   ];
   const roster = [
@@ -94,21 +91,13 @@ export async function downloadTeamTemplate(
     ['Les activités admises dépendent du poste : voir la feuille Équipe.'],
     ['Les dates de début et de fin doivent être dans l’année du planning.'],
     ['Date fin : facultative, déduite de la durée de l’activité si vous la laissez vide.'],
-    ['Heures par jour : 12 au maximum.'],
   ];
   await writeXlsxFile(
     [
       {
         data: planning,
         sheet: `Planning ${year}`,
-        columns: [
-          { width: 14 },
-          { width: 14 },
-          { width: 14 },
-          { width: 26 },
-          { width: 18 },
-          { width: 16 },
-        ],
+        columns: [{ width: 14 }, { width: 14 }, { width: 14 }, { width: 26 }, { width: 18 }],
       },
       { data: roster, sheet: 'Équipe', columns: [{ width: 14 }, { width: 28 }, { width: 70 }] },
       { data: help, sheet: 'Aide', columns: [{ width: 80 }] },

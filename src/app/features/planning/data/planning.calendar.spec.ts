@@ -32,7 +32,6 @@ describe('dates et regroupement', () => {
         endDate: '2026-02-05',
         activityId: 'a',
         place: 'Lot 1',
-        hours: 2,
       },
       {
         id: '2',
@@ -40,7 +39,6 @@ describe('dates et regroupement', () => {
         endDate: '2026-02-05',
         activityId: 'b',
         place: 'Lot 2',
-        hours: 3,
       },
       {
         id: '3',
@@ -48,7 +46,6 @@ describe('dates et regroupement', () => {
         endDate: '2026-02-06',
         activityId: 'a',
         place: 'Lot 1',
-        hours: 1,
       },
     ]);
     expect(map.get('2026-02-05')).toHaveLength(2);
@@ -64,7 +61,6 @@ describe('dates et regroupement', () => {
         endDate: '2026-03-02',
         activityId: 'a',
         place: 'Lot 1',
-        hours: 6,
       },
     ]);
     expect([...map.keys()]).toEqual(['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02']);

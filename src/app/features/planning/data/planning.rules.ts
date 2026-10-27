@@ -17,17 +17,10 @@ import type {
   PlanStatus,
 } from './planning.models';
 
-export const MAX_HOURS = 12;
 export const MAX_PLACE_LENGTH = 60;
 export const MAX_IMPORT_ROWS = 2000;
 
-export const TEMPLATE_HEADERS = [
-  'Date début',
-  'Date fin',
-  'Activité',
-  'Lot / section',
-  'Heures par jour',
-] as const;
+export const TEMPLATE_HEADERS = ['Date début', 'Date fin', 'Activité', 'Lot / section'] as const;
 
 export function normalizeText(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -69,9 +62,6 @@ export function validateLine(
   if (place.length > MAX_PLACE_LENGTH) {
     return `Le lot ou la section ne peut pas dépasser ${MAX_PLACE_LENGTH} caractères.`;
   }
-  if (!Number.isFinite(line.hours) || line.hours <= 0 || line.hours > MAX_HOURS) {
-    return `Les heures par jour doivent être comprises entre 0 et ${MAX_HOURS}.`;
-  }
   const key = lineKey(line);
   if (others.some((other) => other.id !== selfId && lineKey(other) === key)) {
     return 'Cette activité est déjà prévue ce jour-là pour ce lot ou cette section.';
@@ -109,19 +99,17 @@ export function sortLines<T extends PlanLineInput>(lines: readonly T[]): T[] {
 
 export interface PlanSummary {
   readonly count: number;
-  readonly hours: number;
   readonly days: number;
 }
 
 export function summarize(lines: readonly PlanLineInput[]): PlanSummary {
-  const hours = lines.reduce((sum, line) => sum + line.hours * spanDays(line), 0);
   const days = new Set<string>();
   for (const line of lines) {
     for (let i = 0; i < spanDays(line); i++) {
       days.add(addDays(line.date, i));
     }
   }
-  return { count: lines.length, hours: Math.round(hours * 100) / 100, days: days.size };
+  return { count: lines.length, days: days.size };
 }
 
 /** Avancement d'une activité : séances prévues au planning face à l'objectif annuel. */
@@ -334,13 +322,6 @@ export function checkAllMessage(
   };
 }
 
-const HOURS_FORMAT = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
-
-/** 6 → « 6 », 2.5 → « 2,5 » */
-export function formatHours(hours: number): string {
-  return HOURS_FORMAT.format(hours);
-}
-
 export function isEditable(status: PlanStatus): boolean {
   return status === 'BROUILLON';
 }
@@ -426,7 +407,6 @@ const HEADER_ALIASES: Readonly<Record<ImportKey, readonly string[]>> = {
   endDate: ['date fin', 'fin'],
   activityId: ['activite', 'type d activite', 'type activite'],
   place: ['lot / section', 'lot/section', 'lot', 'section', 'lieu', 'lot section'],
-  hours: ['heures par jour', 'duree (heures)', 'duree', 'duree (h)', 'heures'],
 };
 
 function isBlank(cell: unknown): boolean {
@@ -451,17 +431,6 @@ export function parseDateCell(cell: unknown): string | null {
     ? `${french[3]}-${french[2]!.padStart(2, '0')}-${french[1]!.padStart(2, '0')}`
     : text.slice(0, 10);
   return isValidIso(iso) ? iso : null;
-}
-
-function parseHoursCell(cell: unknown): number | null {
-  if (typeof cell === 'number') {
-    return cell;
-  }
-  if (typeof cell === 'string') {
-    const value = Number(cell.trim().replace(',', '.'));
-    return cell.trim() !== '' && Number.isFinite(value) ? value : null;
-  }
-  return null;
 }
 
 function activityIdOf(cell: unknown, activities: readonly Activity[]): string | null {
@@ -533,7 +502,6 @@ export function parsePlanRows(
     const endCell = columns.endDate >= 0 ? cells[columns.endDate] : null;
     const endDate = isBlank(endCell) ? null : parseDateCell(endCell);
     const activityId = activityIdOf(cells[columns.activityId], activities);
-    const hours = parseHoursCell(cells[columns.hours]);
     const place = String(cells[columns.place] ?? '').trim();
     if (date === null) {
       errors.push({ row, message: "La date n'est pas valide (jj/mm/aaaa)." });
@@ -549,10 +517,6 @@ export function parsePlanRows(
       });
       return;
     }
-    if (hours === null) {
-      errors.push({ row, message: 'Les heures par jour ne sont pas un nombre.' });
-      return;
-    }
     if (!isBlank(endCell) && endDate === null) {
       errors.push({ row, message: "La date de fin n'est pas valide (jj/mm/aaaa)." });
       return;
@@ -563,7 +527,6 @@ export function parsePlanRows(
       endDate: endDate ?? endFor(date, duration),
       activityId,
       place,
-      hours: Math.round(hours * 100) / 100,
     };
     const message = validateLine(
       line,
@@ -600,14 +563,12 @@ export function templateRows(year: number, activities: readonly Activity[]): (st
             endFor(`${year}-02-05`, first.durationDays).split('-').reverse().join('/'),
             first.label,
             'Lot 1',
-            6,
           ],
           [
             `06/02/${year}`,
             endFor(`${year}-02-06`, second.durationDays).split('-').reverse().join('/'),
             second.label,
             'Section A',
-            4,
           ],
         ]
       : []),

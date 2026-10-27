@@ -218,7 +218,7 @@ export class DemoPlanningApi extends PlanningApi {
     const signature = (items: readonly PlanLineInput[], activityId: string) =>
       items
         .filter((l) => l.activityId === activityId)
-        .map((l) => `${l.date}~${l.endDate}~${l.place}~${l.plantation ?? ''}~${l.hours}`)
+        .map((l) => `${l.date}~${l.endDate}~${l.place}~${l.plantation ?? ''}`)
         .sort()
         .join('|');
     const lockedChanged = (current.submissions ?? [])
