@@ -1,15 +1,15 @@
 <div class="login">
   <aside class="brand" aria-hidden="false">
-    <svg class="brand__pattern" viewBox="0 0 400 400" aria-hidden="true">
-      <g fill="none" stroke="currentColor" stroke-width="1">
-        <circle cx="400" cy="400" r="120" />
-        <circle cx="400" cy="400" r="200" />
-        <circle cx="400" cy="400" r="280" />
-        <circle cx="400" cy="400" r="360" />
-      </g>
-    </svg>
+    <img
+      class="brand__image"
+      src="images/login-hevea.jpg"
+      alt=""
+      width="1280"
+      height="720"
+      fetchpriority="high"
+    />
     <div class="brand__top">
-      <span class="logo" aria-hidden="true">S</span>
+      <img class="logo" src="images/logo.png" alt="" width="40" height="40" />
       <span class="brand__name">SysDE</span>
     </div>
     <div class="brand__body">
@@ -32,7 +32,7 @@
 
     <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <header>
-        <span class="logo logo--small" aria-hidden="true">S</span>
+        <img class="logo logo--small" src="images/logo.png" alt="" width="36" height="36" />
         <h2>Connexion</h2>
         <p>Entrez vos identifiants pour accéder à votre espace.</p>
       </header>

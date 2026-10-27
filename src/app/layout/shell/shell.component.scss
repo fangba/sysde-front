@@ -107,14 +107,10 @@
 }
 
 .logo {
-  display: grid;
-  place-items: center;
+  flex: none;
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--logo-bg);
-  color: var(--logo-fg);
-  font-weight: 700;
 }
 
 .topbar__actions {

@@ -11,6 +11,7 @@ import type {
   Operator,
   OperatorType,
   Poste,
+  Group,
   Section,
   Sector,
   User,
@@ -215,6 +216,34 @@ export function findSectionNameConflict(
   return sections.find(
     (s) => s.id !== ignoreId && s.lotId === candidate.lotId && normalizeLabel(s.name) === wanted,
   );
+}
+
+/** Le nom d'un groupe est unique au sein d'une section. */
+export function findGroupNameConflict(
+  candidate: Pick<Group, 'sectionId' | 'name'>,
+  groups: readonly Group[],
+  ignoreId?: string,
+): Group | undefined {
+  const wanted = normalizeLabel(candidate.name);
+  return groups.find(
+    (g) =>
+      g.id !== ignoreId && g.sectionId === candidate.sectionId && normalizeLabel(g.name) === wanted,
+  );
+}
+
+/** Moniteurs actifs d'un opérateur dans un secteur : ceux qui peuvent gérer un groupe. */
+export function monitorsOf(
+  users: readonly User[],
+  sectorId: string,
+  operatorId: string,
+): readonly User[] {
+  return users
+    .filter(
+      (u) => u.poste === 'MO' && u.active && u.sectorId === sectorId && u.operatorId === operatorId,
+    )
+    .sort((a, b) =>
+      `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'fr'),
+    );
 }
 
 function normalizeLabel(value: string): string {

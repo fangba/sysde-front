@@ -51,6 +51,7 @@ export class SettingsStore {
   readonly sectorList = new EntityState(this.api.sectors);
   readonly lots = new EntityState(this.api.lots);
   readonly sections = new EntityState(this.api.sections);
+  readonly groups = new EntityState(this.api.groups);
   readonly activities = new EntityState(this.api.activities);
   readonly sectors = computed(() => this.sectorList.items());
 
@@ -88,6 +89,17 @@ export class SettingsStore {
 
   sectorOf(id: string) {
     return this.sectorById().get(id);
+  }
+
+  /** Nom d'une section, ou « — » si elle n'existe plus. */
+  sectionName(id: string): string {
+    return this.sections.items().find((s) => s.id === id)?.name ?? '—';
+  }
+
+  /** « Nom Prénom » d'un utilisateur, ou « — » s'il n'existe plus. */
+  userName(id: string): string {
+    const u = this.users.items().find((x) => x.id === id);
+    return u ? `${u.lastName} ${u.firstName}` : '—';
   }
 
   /** Libellé d'un lot : « S01 · Aboisso — lot 2 ». */
@@ -159,6 +171,7 @@ export class SettingsStore {
       sectors: this.api.sectors.list(),
       lots: this.api.lots.list(),
       sections: this.api.sections.list(),
+      groups: this.api.groups.list(),
       activities: this.api.activities.list(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -172,6 +185,7 @@ export class SettingsStore {
           this.sectorList.setAll(data.sectors);
           this.lots.setAll(data.lots);
           this.sections.setAll(data.sections);
+          this.groups.setAll(data.groups);
           this.activities.setAll(data.activities);
           this._status.set('ready');
         },

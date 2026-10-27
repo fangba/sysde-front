@@ -12,6 +12,7 @@ import type {
   PlanningPoste,
   Sector,
   User,
+  Group,
   Section,
 } from './settings.models';
 
@@ -67,6 +68,9 @@ export const DEMO_LOTS: readonly Lot[] = DEMO_SECTORS.flatMap((sector, s) =>
 
 /** Aucune section au départ : c'est le chef secteur qui les crée et les nomme. */
 export const DEMO_SECTIONS: readonly Section[] = [];
+
+/** Aucun groupe au départ : le chef secteur les crée dans ses sections. */
+export const DEMO_GROUPS: readonly Group[] = [];
 
 export const DEMO_CONTRACTS: readonly Contract[] = [
   {

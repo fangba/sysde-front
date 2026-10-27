@@ -69,7 +69,7 @@ export class SettingsPage {
   protected readonly subtitle = computed(() =>
     this.currentUser.isAdministrator()
       ? 'Opérateurs, contrats, attributions, exercices, activités, permissions et références.'
-      : 'Sections des lots de votre secteur.',
+      : 'Sections et groupes de vulgarisation de votre secteur.',
   );
 
   constructor() {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Group, User } from './settings.models';
+
 import {
   DEMO_ACTIVITIES,
   DEMO_ATTRIBUTIONS,
@@ -18,10 +20,12 @@ import {
   findContractConflict,
   findEmailConflict,
   findExerciseDuplicate,
+  findGroupNameConflict,
   findLotConflict,
   findLotNumberConflict,
   findMatriculeConflict,
   lotsOfOperatorInSector,
+  monitorsOf,
   findSectorCodeConflict,
   findOperatorAcronymConflict,
   findSectionNameConflict,
@@ -195,5 +199,51 @@ describe('findSectionNameConflict', () => {
     expect(
       findSectionNameConflict({ lotId: 'lot-1', name: 'Section Nord' }, sections, 's1'),
     ).toBeUndefined();
+  });
+});
+
+describe('groupes de vulgarisation', () => {
+  const group = (over: Partial<Group>): Group => ({
+    id: 'g1',
+    lotId: 'l1',
+    sectionId: 's1',
+    name: 'Kouassikro',
+    village: '',
+    delegate: '',
+    monitorId: 'u1',
+    ...over,
+  });
+
+  it('refuse un nom déjà pris dans la même section, sans tenir compte de la casse ni des accents', () => {
+    const groups = [group({})];
+    expect(findGroupNameConflict({ sectionId: 's1', name: ' KOUASSIKRO ' }, groups)?.id).toBe('g1');
+    expect(findGroupNameConflict({ sectionId: 's2', name: 'Kouassikro' }, groups)).toBeUndefined();
+    expect(
+      findGroupNameConflict({ sectionId: 's1', name: 'Kouassikro' }, groups, 'g1'),
+    ).toBeUndefined();
+  });
+
+  it('ne propose que les moniteurs actifs de l’opérateur dans le secteur', () => {
+    const u = (id: string, over: Partial<User>): User => ({
+      id,
+      lastName: id,
+      firstName: 'X',
+      email: '',
+      phone: '',
+      operatorId: 'op-3',
+      poste: 'MO',
+      sectorId: 'sec-1',
+      active: true,
+      ...over,
+    });
+    const users = [
+      u('b', {}),
+      u('a', {}),
+      u('inactif', { active: false }),
+      u('autre-secteur', { sectorId: 'sec-2' }),
+      u('autre-operateur', { operatorId: 'op-4' }),
+      u('pas-moniteur', { poste: 'CF' }),
+    ];
+    expect(monitorsOf(users, 'sec-1', 'op-3').map((m) => m.id)).toEqual(['a', 'b']);
   });
 });

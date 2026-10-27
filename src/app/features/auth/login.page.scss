@@ -25,25 +25,40 @@
   padding: 48px 56px;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(
-    155deg,
-    var(--green-800) 0%,
-    var(--green-900) 55%,
-    var(--green-950) 100%
-  );
+  background: var(--green-950);
 
   @include m.max-width(m.$bp-md) {
     display: none;
   }
 }
 
-.brand__pattern {
+.brand__image {
   position: absolute;
-  right: -80px;
-  bottom: -80px;
-  width: 560px;
-  color: rgb(255 255 255 / 0.1);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   pointer-events: none;
+}
+
+/* Voile sombre : garde le texte lisible sur la photo, en haut et surtout en bas. */
+.brand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(5 28 16 / 0.55) 0%,
+    rgb(5 28 16 / 0.35) 35%,
+    rgb(5 28 16 / 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+.brand__top,
+.brand__body,
+.brand__foot {
+  z-index: 1;
 }
 
 .brand__top {
@@ -54,20 +69,10 @@
 }
 
 .logo {
-  display: grid;
-  place-items: center;
+  flex: none;
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: var(--logo-bg);
-  color: var(--logo-fg);
-  font-weight: 800;
-  font-size: 20px;
-}
-
-.brand .logo {
-  background: #fff;
-  color: var(--green-900);
 }
 
 .brand__name {
@@ -182,10 +187,9 @@
   display: none;
   width: 36px;
   height: 36px;
-  font-size: 18px;
 
   @include m.max-width(m.$bp-md) {
-    display: grid;
+    display: block;
   }
 }
 

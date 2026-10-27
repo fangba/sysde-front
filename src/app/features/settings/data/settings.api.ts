@@ -14,6 +14,7 @@ import {
   DEMO_EXERCISES,
   DEMO_LOTS,
   DEMO_OPERATORS,
+  DEMO_GROUPS,
   DEMO_SECTIONS,
   DEMO_SECTORS,
   DEMO_USERS,
@@ -31,6 +32,8 @@ import type {
   ExerciseInput,
   Operator,
   OperatorInput,
+  Group,
+  GroupInput,
   Section,
   SectionInput,
   Sector,
@@ -70,6 +73,7 @@ export abstract class SettingsApi {
   abstract readonly sectors: Crud<Sector, SectorInput>;
   abstract readonly lots: Crud<Lot, LotInput>;
   abstract readonly sections: Crud<Section, SectionInput>;
+  abstract readonly groups: Crud<Group, GroupInput>;
   abstract readonly activities: Crud<Activity, ActivityInput>;
   abstract readonly permissions: PermissionsResource;
 }
@@ -118,6 +122,7 @@ export class HttpSettingsApi extends SettingsApi {
   readonly sectors = new HttpCrud<Sector, SectorInput>(this.http, '/secteurs');
   readonly lots = new HttpCrud<Lot, LotInput>(this.http, '/lots');
   readonly sections = new HttpCrud<Section, SectionInput>(this.http, '/sections');
+  readonly groups = new HttpCrud<Group, GroupInput>(this.http, '/groupes');
   readonly activities = new HttpCrud<Activity, ActivityInput>(this.http, '/activites');
   readonly permissions = new HttpPermissions(this.http);
 }
@@ -182,6 +187,7 @@ export class DemoSettingsApi extends SettingsApi {
   readonly sectors = new MemoryCrud<Sector, SectorInput>(DEMO_SECTORS, 'sec');
   readonly lots = new MemoryCrud<Lot, LotInput>(DEMO_LOTS, 'lot');
   readonly sections = new MemoryCrud<Section, SectionInput>(DEMO_SECTIONS, 'sc');
+  readonly groups = new MemoryCrud<Group, GroupInput>(DEMO_GROUPS, 'gr');
   readonly activities = new MemoryCrud<Activity, ActivityInput>(DEMO_ACTIVITIES, 'ac');
   readonly permissions = new MemoryPermissions();
 }

@@ -2,23 +2,25 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 
 import { CurrentUser } from '@core/auth/current-user';
 
+import { GroupsSection } from './groups.section';
 import { LotsSection } from './lots.section';
 import { SectionsSection } from './sections.section';
 import { SectorsSection } from './sectors.section';
 
-type ReferenceSection = 'sectors' | 'lots' | 'sections';
+type ReferenceSection = 'sectors' | 'lots' | 'sections' | 'groups';
 
 /** Sections de données de référence ; d'autres s'ajouteront ici au fil des besoins. */
 const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string }[] = [
   { id: 'sectors', label: 'Secteurs' },
   { id: 'lots', label: 'Lots' },
   { id: 'sections', label: 'Sections' },
+  { id: 'groups', label: 'Groupes' },
 ];
 
-/** Données d'origine du programme : secteurs, lots, sections… (le chef secteur n'a que les sections). */
+/** Données d'origine du programme : secteurs, lots, sections… (le chef secteur : sections et groupes). */
 @Component({
   selector: 'sysde-references-tab',
-  imports: [SectorsSection, LotsSection, SectionsSection],
+  imports: [SectorsSection, LotsSection, SectionsSection, GroupsSection],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (sections().length > 1) {
@@ -47,6 +49,9 @@ const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string
       }
       @case ('sections') {
         <sysde-sections-section />
+      }
+      @case ('groups') {
+        <sysde-groups-section />
       }
     }
   `,
@@ -93,9 +98,11 @@ const SECTIONS: readonly { readonly id: ReferenceSection; readonly label: string
 export class ReferencesTab {
   private readonly currentUser = inject(CurrentUser);
 
-  /** L'administrateur voit toutes les références ; le chef secteur, seulement les sections. */
+  /** L'administrateur voit toutes les références ; le chef secteur, seulement sections et groupes. */
   protected readonly sections = computed(() =>
-    this.currentUser.isAdministrator() ? SECTIONS : SECTIONS.filter((s) => s.id === 'sections'),
+    this.currentUser.isAdministrator()
+      ? SECTIONS.filter((s) => s.id !== 'groups')
+      : SECTIONS.filter((s) => s.id === 'sections' || s.id === 'groups'),
   );
   protected readonly active = signal<ReferenceSection>(
     this.currentUser.isAdministrator() ? 'sectors' : 'sections',

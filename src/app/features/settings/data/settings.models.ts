@@ -40,6 +40,24 @@ export interface Section {
 }
 export type SectionInput = Omit<Section, 'id'>;
 
+/**
+ * Groupe de vulgarisation : toujours dans une section précise d'un lot, et toujours géré par un
+ * moniteur. Le village et le délégué du groupe sont facultatifs.
+ */
+export interface Group {
+  readonly id: string;
+  readonly lotId: string;
+  readonly sectionId: string;
+  /** Nom du groupe, unique au sein de la section. */
+  readonly name: string;
+  readonly village: string;
+  /** Délégué du groupe (un planteur), en texte libre. */
+  readonly delegate: string;
+  /** Moniteur (utilisateur de poste MO) qui gère le groupe. */
+  readonly monitorId: string;
+}
+export type GroupInput = Omit<Group, 'id'>;
+
 export const CONTRACT_YEARS = 3;
 
 /** Contrat triennal d'un opérateur technique. Dates ISO (aaaa-mm-jj), bornes incluses. */
